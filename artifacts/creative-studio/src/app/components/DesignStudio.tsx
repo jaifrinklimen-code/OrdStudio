@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { Download, Share2, Image, Type, Sparkles } from 'lucide-react';
+import { Download, Share2, Image, Type, Sparkles, ArrowLeft } from 'lucide-react';
+import { FadeIn } from './FadeIn';
 
 const templates = [
-  { id: 1, name: 'Instagram Post', category: 'Social Media', size: '1080x1080', color: 'bg-gradient-to-br from-purple-400 to-pink-400', premium: false },
-  { id: 2, name: 'LinkedIn Banner', category: 'Social Media', size: '1584x396', color: 'bg-gradient-to-br from-blue-400 to-cyan-400', premium: true },
-  { id: 3, name: 'Presentation Slide', category: 'Presentation', size: '1920x1080', color: 'bg-gradient-to-br from-orange-400 to-red-400', premium: false },
-  { id: 4, name: 'YouTube Thumbnail', category: 'Social Media', size: '1280x720', color: 'bg-gradient-to-br from-green-400 to-emerald-400', premium: false },
-  { id: 5, name: 'Poster A4', category: 'Print', size: '2480x3508', color: 'bg-gradient-to-br from-violet-400 to-purple-400', premium: true },
-  { id: 6, name: 'Twitter Header', category: 'Social Media', size: '1500x500', color: 'bg-gradient-to-br from-sky-400 to-blue-400', premium: false },
-  { id: 7, name: 'Story Template', category: 'Social Media', size: '1080x1920', color: 'bg-gradient-to-br from-pink-400 to-rose-400', premium: true },
-  { id: 8, name: 'Business Card', category: 'Print', size: '1050x600', color: 'bg-gradient-to-br from-amber-400 to-yellow-400', premium: false },
+  { id: 1, name: 'Instagram Post', category: 'Social Media', size: '1080×1080', color: 'from-zinc-800 to-zinc-700', premium: false },
+  { id: 2, name: 'LinkedIn Banner', category: 'Social Media', size: '1584×396', color: 'from-zinc-900 to-zinc-700', premium: true },
+  { id: 3, name: 'Presentation Slide', category: 'Presentation', size: '1920×1080', color: 'from-neutral-900 to-neutral-700', premium: false },
+  { id: 4, name: 'YouTube Thumbnail', category: 'Social Media', size: '1280×720', color: 'from-stone-900 to-stone-700', premium: false },
+  { id: 5, name: 'Poster A4', category: 'Print', size: '2480×3508', color: 'from-zinc-800 to-zinc-600', premium: true },
+  { id: 6, name: 'Twitter Header', category: 'Social Media', size: '1500×500', color: 'from-neutral-800 to-neutral-600', premium: false },
+  { id: 7, name: 'Story Template', category: 'Social Media', size: '1080×1920', color: 'from-stone-800 to-stone-600', premium: true },
+  { id: 8, name: 'Business Card', category: 'Print', size: '1050×600', color: 'from-zinc-900 to-zinc-700', premium: false },
 ];
 
 export function DesignStudio() {
@@ -17,103 +18,107 @@ export function DesignStudio() {
   const [filter, setFilter] = useState('all');
 
   const categories = ['all', 'Social Media', 'Presentation', 'Print'];
-  const filteredTemplates = filter === 'all'
-    ? templates
-    : templates.filter(t => t.category === filter);
+  const filteredTemplates = filter === 'all' ? templates : templates.filter(t => t.category === filter);
 
   return (
-    <div className="flex-1 overflow-auto relative z-10">
-      <div className="max-w-7xl mx-auto p-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Design Studio</h2>
-          <p className="text-gray-600 mt-2">Create stunning designs with our professional templates</p>
+    <div className="min-h-screen bg-black pt-24 pb-16 px-6 md:px-12 lg:px-16">
+      <FadeIn delay={100} duration={600}>
+        <div className="mb-10">
+          <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">Tools</p>
+          <h2 className="text-4xl md:text-5xl font-light text-white" style={{ letterSpacing: '-0.03em' }}>
+            Design Studio
+          </h2>
+          <p className="text-gray-400 mt-3 text-base">Professional templates for every format.</p>
         </div>
+      </FadeIn>
 
-        {!selectedTemplate ? (
-          <>
-            <div className="flex gap-3 mb-6">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all ${
-                    filter === cat
-                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
-                      : 'backdrop-blur-lg bg-white/70 text-gray-700 border border-gray-200/50 hover:bg-white/90'
-                  }`}
-                >
-                  {cat === 'all' ? 'All Templates' : cat}
-                </button>
-              ))}
-            </div>
+      {!selectedTemplate ? (
+        <FadeIn delay={200} duration={700}>
+          <div className="flex gap-3 mb-8 flex-wrap">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  filter === cat
+                    ? 'bg-white text-black'
+                    : 'liquid-glass border border-white/10 text-gray-400 hover:text-white'
+                }`}
+              >
+                {cat === 'all' ? 'All' : cat}
+              </button>
+            ))}
+          </div>
 
-            <div className="grid grid-cols-4 gap-6">
-              {filteredTemplates.map((template) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredTemplates.map((template, i) => (
+              <FadeIn key={template.id} delay={200 + i * 60} duration={500}>
                 <div
-                  key={template.id}
                   onClick={() => setSelectedTemplate(template.id)}
-                  className="backdrop-blur-xl bg-white/70 rounded-2xl overflow-hidden border border-gray-200/50 shadow-xl hover:shadow-2xl hover:bg-white/90 transition-all cursor-pointer transform hover:-translate-y-2 hover:scale-105"
+                  className="group cursor-pointer border border-white/10 rounded-xl overflow-hidden hover:border-white/30 transition-all duration-300"
                 >
-                  <div className={`${template.color} h-48 flex items-center justify-center relative`}>
-                    <div className="text-white text-6xl opacity-50">📄</div>
+                  <div className={`bg-gradient-to-br ${template.color} h-44 flex items-center justify-center relative`}>
+                    <div className="text-5xl opacity-20 group-hover:opacity-30 transition-opacity">▣</div>
                     {template.premium && (
-                      <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
-                        <Sparkles size={12} />
+                      <div className="absolute top-3 right-3 liquid-glass border border-white/20 text-white px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+                        <Sparkles size={10} />
                         PRO
                       </div>
                     )}
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-gray-900">{template.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{template.size}px</p>
-                    <div className="mt-2 text-xs text-purple-600 font-medium">{template.category}</div>
+                  <div className="p-4 bg-zinc-950">
+                    <h3 className="font-medium text-white text-sm">{template.name}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{template.size}px</p>
+                    <div className="mt-2 text-xs text-gray-600">{template.category}</div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="backdrop-blur-xl bg-white/70 rounded-2xl shadow-2xl border border-gray-200/50">
-            <div className="border-b border-gray-200/50 p-4 flex items-center justify-between">
+              </FadeIn>
+            ))}
+          </div>
+        </FadeIn>
+      ) : (
+        <FadeIn delay={0} duration={400}>
+          <div className="border border-white/10 rounded-2xl overflow-hidden">
+            <div className="border-b border-white/10 p-4 flex items-center justify-between bg-zinc-950">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setSelectedTemplate(null)}
-                  className="px-4 py-2 bg-white/70 backdrop-blur-lg text-gray-700 rounded-xl hover:bg-white/90 transition-colors border border-gray-200/50"
+                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
                 >
-                  ← Back to Templates
+                  <ArrowLeft size={16} />
+                  Back
                 </button>
-                <h3 className="font-bold text-gray-900">
+                <span className="text-white font-medium text-sm">
                   {templates.find(t => t.id === selectedTemplate)?.name}
-                </h3>
+                </span>
               </div>
               <div className="flex gap-2">
-                <button className="p-2 hover:bg-white/50 backdrop-blur-lg rounded-xl transition-colors text-gray-700 border border-gray-200/50" title="Add Image">
-                  <Image size={20} />
+                <button className="p-2 text-gray-400 hover:text-white transition-colors border border-white/10 rounded-lg">
+                  <Image size={18} />
                 </button>
-                <button className="p-2 hover:bg-white/50 backdrop-blur-lg rounded-xl transition-colors text-gray-700 border border-gray-200/50" title="Add Text">
-                  <Type size={20} />
+                <button className="p-2 text-gray-400 hover:text-white transition-colors border border-white/10 rounded-lg">
+                  <Type size={18} />
                 </button>
-                <button className="p-2 hover:bg-white/50 backdrop-blur-lg rounded-xl transition-colors text-gray-700 border border-gray-200/50" title="Share">
-                  <Share2 size={20} />
+                <button className="p-2 text-gray-400 hover:text-white transition-colors border border-white/10 rounded-lg">
+                  <Share2 size={18} />
                 </button>
-                <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2">
-                  <Download size={18} />
+                <button className="px-4 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-2">
+                  <Download size={16} />
                   Download
                 </button>
               </div>
             </div>
-            <div className="p-8 flex items-center justify-center min-h-[600px]">
-              <div className={`${templates.find(t => t.id === selectedTemplate)?.color} w-full max-w-2xl aspect-square rounded-2xl shadow-2xl flex items-center justify-center`}>
-                <div className="text-center text-white">
-                  <div className="text-8xl mb-4">✨</div>
-                  <h3 className="text-3xl font-bold mb-2 drop-shadow-lg">Your Design Here</h3>
-                  <p className="text-lg opacity-90">Drag and drop elements to customize</p>
+            <div className="p-12 flex items-center justify-center min-h-[560px] bg-zinc-950">
+              <div className={`bg-gradient-to-br ${templates.find(t => t.id === selectedTemplate)?.color} w-full max-w-2xl aspect-video rounded-xl border border-white/10 flex items-center justify-center`}>
+                <div className="text-center text-white/60">
+                  <div className="text-6xl mb-4 font-light">▣</div>
+                  <p className="text-sm font-light tracking-wide">Your canvas awaits</p>
                 </div>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </FadeIn>
+      )}
     </div>
   );
 }

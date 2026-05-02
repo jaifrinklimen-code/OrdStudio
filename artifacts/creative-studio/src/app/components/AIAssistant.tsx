@@ -1,92 +1,118 @@
-import { useState } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Send, Bot, User, ArrowUp } from 'lucide-react';
+import { FadeIn } from './FadeIn';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
+const suggestions = [
+  'Help me create a brand identity',
+  'Generate ideas for a pitch deck',
+  'What templates suit a tech startup?',
+  'How do I make viral content?',
+];
+
 export function AIAssistant() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hello! I'm your AI assistant. I can help you navigate the platform, suggest templates, and answer any questions you have. How can I help you today?"
+      content: "Hello. I'm your creative AI. Ask me anything about design, content strategy, or your next venture.",
     }
   ]);
   const [input, setInput] = useState('');
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages([...messages, userMessage]);
-
+  const handleSend = (text?: string) => {
+    const msg = text ?? input;
+    if (!msg.trim()) return;
+    const userMessage: Message = { role: 'user', content: msg };
+    setMessages(prev => [...prev, userMessage]);
     setTimeout(() => {
       const responses = [
-        'I can help you create amazing designs! Try our Design Studio with over 100+ templates.',
-        'Looking for content? Our AI Content Generator can create essays, articles, and more in seconds.',
-        'Need custom stickers? Check out our Sticker Lab for AI-powered sticker creation!',
-        'You can search for any template or feature using our Smart Search engine.',
+        'Great question. For brand identity, start with a clear value proposition and visual language that reflects your core mission.',
+        'For a pitch deck, lead with the problem you solve, then your unique solution, market size, traction, and team.',
+        'Tech startups typically benefit from minimalist, grid-based layouts — check out our Presentation Slide templates.',
+        'Viral content often balances utility with emotion. Short, specific, shareable. Want me to help you draft something?',
       ];
-      const assistantMessage: Message = {
+      setMessages(prev => [...prev, {
         role: 'assistant',
         content: responses[Math.floor(Math.random() * responses.length)]
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-    }, 500);
-
+      }]);
+    }, 600);
     setInput('');
   };
 
   return (
-    <div className="flex-1 flex flex-col relative z-10">
-      <div className="border-b border-gray-200/50 backdrop-blur-xl bg-white/70 p-6">
-        <h2 className="text-3xl font-bold text-gray-900">AI Assistant</h2>
-        <p className="text-gray-600 mt-2">Your personal guide to Ord-SevenEight</p>
-      </div>
+    <div className="min-h-screen bg-black flex flex-col pt-24">
+      <FadeIn delay={100} duration={600} className="px-6 md:px-12 lg:px-16 mb-8">
+        <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">AI</p>
+        <h2 className="text-4xl md:text-5xl font-light text-white" style={{ letterSpacing: '-0.03em' }}>
+          Creative Assistant
+        </h2>
+      </FadeIn>
 
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-4">
+      <FadeIn delay={200} duration={600} className="px-6 md:px-12 lg:px-16 mb-6 flex flex-wrap gap-2">
+        {suggestions.map((s) => (
+          <button
+            key={s}
+            onClick={() => handleSend(s)}
+            className="liquid-glass border border-white/10 text-gray-400 hover:text-white text-sm px-4 py-2 rounded-lg transition-colors duration-200"
+          >
+            {s}
+          </button>
+        ))}
+      </FadeIn>
+
+      <div className="flex-1 overflow-auto px-6 md:px-12 lg:px-16 pb-4">
+        <div className="max-w-3xl space-y-6">
           {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex items-start gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
-            >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                message.role === 'assistant'
-                  ? 'bg-gradient-to-br from-purple-600 to-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}>
-                {message.role === 'assistant' ? <Bot size={20} /> : <User size={20} />}
+            <FadeIn key={index} delay={0} duration={400}>
+              <div className={`flex items-start gap-4 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  message.role === 'assistant'
+                    ? 'bg-white text-black'
+                    : 'bg-zinc-800 text-white'
+                }`}>
+                  {message.role === 'assistant'
+                    ? <Bot size={15} />
+                    : <User size={15} />
+                  }
+                </div>
+                <div className={`max-w-xl px-5 py-4 rounded-2xl text-sm leading-relaxed ${
+                  message.role === 'assistant'
+                    ? 'bg-zinc-900 border border-white/10 text-gray-200'
+                    : 'bg-white text-black'
+                }`}>
+                  {message.content}
+                </div>
               </div>
-              <div className={`max-w-2xl px-4 py-3 rounded-2xl ${
-                message.role === 'assistant'
-                  ? 'backdrop-blur-xl bg-white/70 border border-gray-200/50 shadow-lg text-gray-900'
-                  : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
-              }`}>
-                {message.content}
-              </div>
-            </div>
+            </FadeIn>
           ))}
+          <div ref={bottomRef} />
         </div>
       </div>
 
-      <div className="border-t border-gray-200/50 backdrop-blur-xl bg-white/70 p-6">
-        <div className="max-w-4xl mx-auto flex gap-3">
+      <div className="px-6 md:px-12 lg:px-16 py-6 border-t border-white/10 bg-black">
+        <div className="max-w-3xl flex gap-3 items-center">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask me anything..."
-            className="flex-1 px-4 py-3 border border-gray-300 backdrop-blur-lg bg-white/70 text-gray-900 placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+            className="flex-1 bg-zinc-900 border border-white/10 text-white placeholder-gray-600 px-5 py-3 rounded-xl text-sm focus:outline-none focus:border-white/30 transition-colors"
           />
           <button
-            onClick={handleSend}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+            onClick={() => handleSend()}
+            className="w-11 h-11 bg-white text-black rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
           >
-            <Send size={18} />
-            Send
+            <ArrowUp size={18} />
           </button>
         </div>
       </div>
