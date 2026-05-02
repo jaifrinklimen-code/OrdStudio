@@ -1,16 +1,28 @@
 import { useEffect, useRef } from 'react';
 
-interface Particle {
+const WORDS = [
+  'Essay', 'Article', 'Blog Post', 'Story', 'Script', 'Poem',
+  'Pitch', 'Proposal', 'Summary', 'Report', 'Newsletter', 'Caption',
+  'Headline', 'Tagline', 'Content', 'Copy', 'Lyrics', 'Abstract',
+  'Generate', 'Create', 'Compose', 'Draft', 'Craft', 'Publish',
+  'Write', 'Design', 'Build', 'Transform', 'Automate', 'Imagine',
+  'Professional', 'Creative', 'Academic', 'Engaging', 'Persuasive',
+  'SEO', 'Marketing', 'Brand', 'Voice', 'Tone', 'Style',
+  'Outline', 'Structure', 'Paragraph', 'Chapter', 'Thesis',
+];
+
+interface Col {
   x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  opacity: number;
-  hue: number;
-  pulse: number;
-  pulseSpeed: number;
+  headY: number;   // y of the leading (bottom) word
+  speed: number;
+  lineH: number;
+  fontSize: number;
+  trailLen: number;
+  words: string[];
+  tier: 0 | 1 | 2; // 0=bright, 1=mid, 2=dim
 }
+
+const rand = (a: number, b: number) => Math.random() * (b - a) + a;
 
 export function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -21,174 +33,155 @@ export function AnimatedBackground() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animId: number;
-    let particles: Particle[] = [];
-    const PARTICLE_COUNT = 90;
-    const CONNECTION_DIST = 160;
-    const MOUSE = { x: -9999, y: -9999 };
+    let raf: number;
+    let cols: Col[] = [];
+
+    const pickWords = (n: number) =>
+      Array.from({ length: n }, () => WORDS[Math.floor(Math.random() * WORDS.length)]);
+
+    const build = (W: number, H: number) => {
+      cols = [];
+      // Denser columns — 1 per ~100px — so the screen fills nicely
+      const count = Math.max(10, Math.floor(W / 100));
+      const colW = W / count;
+      for (let c = 0; c < count; c++) {
+        const r = Math.random();
+        // More bright/mid columns; fewer pure dim
+        const tier: Col['tier'] = r < 0.28 ? 0 : r < 0.60 ? 1 : 2;
+        const fontSize = tier === 0 ? 13 : tier === 1 ? 12 : 11;
+        const lineH = fontSize + 10;
+        // Longer trails for better vertical coverage
+        const trailLen = tier === 0 ? 22 : tier === 1 ? 14 : 8;
+        const speed = tier === 0 ? rand(0.55, 0.95) : tier === 1 ? rand(0.28, 0.58) : rand(0.12, 0.30);
+        // Stagger heads so trails are spread across the FULL screen height.
+        // headY = position of leading (bottom) word; trail goes upward.
+        // We want trails to cover both top and bottom halves evenly.
+        const headY = rand(trailLen * lineH * 0.3, H);
+        cols.push({
+          x: (c + 0.5) * colW + rand(-18, 18),
+          headY,
+          speed,
+          lineH,
+          fontSize,
+          trailLen,
+          words: pickWords(trailLen + 4),
+          tier,
+        });
+      }
+    };
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
+      build(canvas.width, canvas.height);
     };
-
-    const createParticle = (w: number, h: number): Particle => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      vx: (Math.random() - 0.5) * 0.45,
-      vy: (Math.random() - 0.5) * 0.45,
-      size: Math.random() * 1.8 + 0.6,
-      opacity: Math.random() * 0.5 + 0.2,
-      hue: Math.random() * 60 + 200,
-      pulse: Math.random() * Math.PI * 2,
-      pulseSpeed: Math.random() * 0.015 + 0.005,
-    });
-
-    const init = () => {
-      resize();
-      particles = Array.from({ length: PARTICLE_COUNT }, () =>
-        createParticle(canvas.width, canvas.height)
-      );
-    };
-
-    let time = 0;
 
     const draw = () => {
-      time += 0.005;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
 
-      // Subtle radial gradient background glow
-      const grad = ctx.createRadialGradient(
-        canvas.width * 0.5, canvas.height * 0.6, 0,
-        canvas.width * 0.5, canvas.height * 0.6, canvas.width * 0.7
-      );
-      grad.addColorStop(0, 'rgba(30, 20, 60, 0.35)');
-      grad.addColorStop(0.5, 'rgba(10, 5, 25, 0.2)');
-      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Deep dark background
+      ctx.fillStyle = '#00000c';
+      ctx.fillRect(0, 0, W, H);
 
-      // Update and draw particles
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.pulse += p.pulseSpeed;
+      // Ambient purple / blue radial blobs
+      const blobs = [
+        { x: W * 0.18, y: H * 0.5,  r: W * 0.40, c: '68,22,138', a: 0.15 },
+        { x: W * 0.82, y: H * 0.5,  r: W * 0.40, c: '28,48,178', a: 0.12 },
+        { x: W * 0.5,  y: H * 0.45, r: W * 0.30, c: '88,32,158', a: 0.10 },
+      ];
+      for (const b of blobs) {
+        const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+        g.addColorStop(0, `rgba(${b.c},${b.a})`);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+      }
 
-        // Mouse influence — gently repel
-        const dxm = p.x - MOUSE.x;
-        const dym = p.y - MOUSE.y;
-        const dm = Math.sqrt(dxm * dxm + dym * dym);
-        if (dm < 120) {
-          const force = (120 - dm) / 120;
-          p.vx += (dxm / dm) * force * 0.06;
-          p.vy += (dym / dm) * force * 0.06;
+      // Draw columns
+      for (const col of cols) {
+        col.headY += col.speed;
+        // Reset when head (and its full trail) has gone off the bottom
+        if (col.headY - col.lineH * col.trailLen > H + col.lineH) {
+          col.headY = -col.lineH * col.trailLen;
+          col.words = pickWords(col.trailLen + 2);
         }
 
-        // Speed cap
-        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-        if (speed > 1.2) { p.vx *= 0.95; p.vy *= 0.95; }
+        ctx.font = `300 ${col.fontSize}px Inter, sans-serif`;
+        ctx.textBaseline = 'top';
 
-        // Wrap edges
-        if (p.x < -10) p.x = canvas.width + 10;
-        if (p.x > canvas.width + 10) p.x = -10;
-        if (p.y < -10) p.y = canvas.height + 10;
-        if (p.y > canvas.height + 10) p.y = -10;
+        for (let i = 0; i < col.trailLen; i++) {
+          const wy = col.headY - i * col.lineH; // head is bottom; trail goes up
+          if (wy < -col.lineH || wy > H + col.lineH) continue;
 
-        // Pulsing opacity
-        const alpha = p.opacity * (0.7 + 0.3 * Math.sin(p.pulse));
-
-        // Draw connections
-        for (let j = i + 1; j < particles.length; j++) {
-          const q = particles[j];
-          const dx = p.x - q.x;
-          const dy = p.y - q.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < CONNECTION_DIST) {
-            const lineOpacity = (1 - dist / CONNECTION_DIST) * 0.18 * alpha;
-            const hueBlend = (p.hue + q.hue) / 2;
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `hsla(${hueBlend}, 60%, 70%, ${lineOpacity})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
+          const t = i / (col.trailLen - 1); // 0 = head, 1 = tail
+          let alpha: number;
+          if (col.tier === 0) {
+            alpha = i === 0 ? 0.95 : (1 - t) * (1 - t) * 0.70;
+          } else if (col.tier === 1) {
+            alpha = i === 0 ? 0.50 : (1 - t) * (1 - t) * 0.30;
+          } else {
+            alpha = i === 0 ? 0.18 : (1 - t) * (1 - t) * 0.11;
           }
+          if (alpha < 0.01) continue;
+
+          const word = col.words[i % col.words.length];
+
+          ctx.shadowBlur = 0;
+          if (i === 0) {
+            if (col.tier === 0) {
+              ctx.shadowColor = 'rgba(195,135,255,0.95)';
+              ctx.shadowBlur = 20;
+              ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+            } else if (col.tier === 1) {
+              ctx.shadowColor = 'rgba(165,115,245,0.65)';
+              ctx.shadowBlur = 12;
+              ctx.fillStyle = `rgba(225,195,255,${alpha})`;
+            } else {
+              ctx.fillStyle = `rgba(170,150,220,${alpha})`;
+            }
+          } else {
+            // Trail: purple-blue gradient by tier
+            const [r2, g2, b2] = col.tier === 0 ? [178,138,255] : col.tier === 1 ? [148,118,235] : [112,98,205];
+            ctx.fillStyle = `rgba(${r2},${g2},${b2},${alpha})`;
+          }
+
+          ctx.fillText(word, col.x, wy);
+          ctx.shadowBlur = 0;
         }
-
-        // Draw particle
-        const glowR = p.size * (2.5 + 1.5 * Math.sin(p.pulse));
-        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR * 3);
-        glow.addColorStop(0, `hsla(${p.hue}, 70%, 85%, ${alpha * 0.9})`);
-        glow.addColorStop(0.4, `hsla(${p.hue}, 60%, 60%, ${alpha * 0.4})`);
-        glow.addColorStop(1, `hsla(${p.hue}, 50%, 40%, 0)`);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, glowR * 3, 0, Math.PI * 2);
-        ctx.fillStyle = glow;
-        ctx.fill();
-
-        // Hard core
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${p.hue}, 80%, 88%, ${alpha})`;
-        ctx.fill();
       }
 
-      // Drifting aurora bands
-      for (let b = 0; b < 3; b++) {
-        const bx = canvas.width * (0.2 + b * 0.3 + 0.05 * Math.sin(time * 0.4 + b * 2));
-        const by = canvas.height * (0.3 + 0.15 * Math.sin(time * 0.25 + b));
-        const auroraGrad = ctx.createRadialGradient(bx, by, 0, bx, by, canvas.width * 0.35);
-        const hues = [260, 200, 300];
-        auroraGrad.addColorStop(0, `hsla(${hues[b]}, 70%, 55%, 0.045)`);
-        auroraGrad.addColorStop(0.5, `hsla(${hues[b]}, 60%, 45%, 0.02)`);
-        auroraGrad.addColorStop(1, 'hsla(0,0%,0%,0)');
-        ctx.fillStyle = auroraGrad;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
+      // Top mask (fade to background color)
+      const topM = ctx.createLinearGradient(0, 0, 0, 80);
+      topM.addColorStop(0, 'rgba(0,0,12,1)');
+      topM.addColorStop(1, 'rgba(0,0,12,0)');
+      ctx.fillStyle = topM;
+      ctx.fillRect(0, 0, W, 80);
 
-      animId = requestAnimationFrame(draw);
+      // Bottom mask
+      const botM = ctx.createLinearGradient(0, H - 190, 0, H);
+      botM.addColorStop(0, 'rgba(0,0,12,0)');
+      botM.addColorStop(1, 'rgba(0,0,12,1)');
+      ctx.fillStyle = botM;
+      ctx.fillRect(0, H - 190, W, 190);
+
+      raf = requestAnimationFrame(draw);
     };
 
-    const onMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      MOUSE.x = e.clientX - rect.left;
-      MOUSE.y = e.clientY - rect.top;
-    };
-    const onMouseLeave = () => { MOUSE.x = -9999; MOUSE.y = -9999; };
-
-    const ro = new ResizeObserver(() => {
-      resize();
-      particles = Array.from({ length: PARTICLE_COUNT }, () =>
-        createParticle(canvas.width, canvas.height)
-      );
-    });
-
-    init();
+    const ro = new ResizeObserver(resize);
+    resize();
     draw();
-    canvas.addEventListener('mousemove', onMouseMove);
-    canvas.addEventListener('mouseleave', onMouseLeave);
     ro.observe(canvas);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      canvas.removeEventListener('mousemove', onMouseMove);
-      canvas.removeEventListener('mouseleave', onMouseLeave);
-      ro.disconnect();
-    };
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
       style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 0,
-        display: 'block',
+        position: 'absolute', top: 0, left: 0,
+        width: '100%', height: '100%',
+        zIndex: 0, display: 'block',
       }}
     />
   );
