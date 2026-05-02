@@ -1,5 +1,6 @@
 import { AnimatedHeading } from './AnimatedHeading';
 import { FadeIn } from './FadeIn';
+import { AnimatedBackground } from './AnimatedBackground';
 
 interface HeroProps {
   onNavigate: (tab: string) => void;
@@ -14,25 +15,10 @@ export function Hero({ onNavigate }: HeroProps) {
       overflow: 'hidden',
       backgroundColor: '#000',
     }}>
-      {/* Video background - raw, no overlay */}
-      <video
-        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          zIndex: 0,
-        }}
-      />
+      {/* Canvas particle animation background */}
+      <AnimatedBackground />
 
-      {/* Hero content anchored to bottom-left */}
+      {/* Hero content anchored to bottom */}
       <div style={{
         position: 'absolute',
         bottom: '3.5rem',
