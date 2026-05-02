@@ -26,6 +26,7 @@ body {
   box-sizing: border-box;
 }
 
+/* ─── Liquid glass ─────────────────────────────────────────── */
 .liquid-glass {
   background: rgba(15, 12, 40, 0.55);
   background-blend-mode: luminosity;
@@ -56,4 +57,76 @@ body {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+
+/* ─── 3D Page transition ───────────────────────────────────── */
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: perspective(1400px) translateY(48px) translateZ(-120px) rotateX(6deg) scale(0.97);
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1400px) translateY(0) translateZ(0) rotateX(0deg) scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* ─── Hero 3D float ────────────────────────────────────────── */
+@keyframes heroFloat {
+  0%, 100% {
+    transform: perspective(1200px) translateY(0px) rotateX(0deg);
+  }
+  50% {
+    transform: perspective(1200px) translateY(-8px) rotateX(0.8deg);
+  }
+}
+
+/* ─── 3D card entrance (staggered) ─────────────────────────── */
+@keyframes cardReveal {
+  0% {
+    opacity: 0;
+    transform: perspective(800px) translateY(28px) translateZ(-60px) rotateX(8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(800px) translateY(0) translateZ(0) rotateX(0deg);
+  }
+}
+
+.card-3d-enter {
+  animation: cardReveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Shimmer skeleton loader ───────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(120, 80, 255, 0.06) 25%,
+    rgba(160, 120, 255, 0.14) 50%,
+    rgba(120, 80, 255, 0.06) 75%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 0.5rem;
+}
+
+/* ─── Floating label animation ──────────────────────────────── */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.3); }
+  50%       { box-shadow: 0 0 36px rgba(124, 58, 237, 0.6), 0 0 60px rgba(99, 102, 241, 0.3); }
+}
+
+.glow-pulse {
+  animation: pulseGlow 2.8s ease-in-out infinite;
 }

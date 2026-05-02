@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Sparkles, Download } from 'lucide-react';
 import { FadeIn } from './FadeIn';
+import { TiltCard } from './TiltCard';
 
 const categories = [
   { id: 'minimal',    name: 'Minimal'    },
@@ -38,7 +39,6 @@ export function StickerLab() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #07071a 0%, #0d0a2e 40%, #080e24 100%)', paddingTop: '6rem', paddingBottom: '4rem', position: 'relative' }} className="px-6 md:px-12 lg:px-16">
-      {/* Ambient glows */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
         <div style={{ position: 'absolute', top: '5%', right: '10%', width: '36%', height: '50%', background: 'radial-gradient(ellipse, rgba(200,60,200,0.09) 0%, transparent 70%)', filter: 'blur(50px)' }} />
         <div style={{ position: 'absolute', bottom: '10%', left: '5%', width: '32%', height: '40%', background: 'radial-gradient(ellipse, rgba(60,100,255,0.09) 0%, transparent 70%)', filter: 'blur(50px)' }} />
@@ -69,17 +69,11 @@ export function StickerLab() {
                   placeholder="e.g., Minimalist geometric mark with bold contrast"
                   rows={4}
                   style={{
-                    width: '100%',
-                    background: 'rgba(8,6,24,0.8)',
-                    border: '1px solid rgba(120,80,255,0.2)',
-                    color: '#fff',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '0.625rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    fontFamily: 'inherit',
-                    resize: 'none',
-                    transition: 'border-color 0.2s',
+                    width: '100%', background: 'rgba(8,6,24,0.8)',
+                    border: '1px solid rgba(120,80,255,0.2)', color: '#fff',
+                    padding: '0.75rem 1rem', borderRadius: '0.625rem',
+                    fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit',
+                    resize: 'none', transition: 'border-color 0.2s',
                   }}
                   className="focus:border-purple-400/50 placeholder:text-purple-300/20"
                 />
@@ -89,23 +83,17 @@ export function StickerLab() {
                 <label style={{ display: 'block', fontSize: '0.75rem', color: 'rgba(180,165,255,0.6)', marginBottom: '0.5rem' }}>Style</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
+                    <button key={cat.id} onClick={() => setSelectedCategory(cat.id)}
                       style={{
-                        flex: 1, padding: '0.5rem',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.75rem', fontWeight: 500,
-                        cursor: 'pointer', fontFamily: 'inherit',
+                        flex: 1, padding: '0.5rem', borderRadius: '0.5rem',
+                        fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
                         transition: 'all 0.2s',
                         background: selectedCategory === cat.id ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : 'rgba(10,8,30,0.7)',
                         border: selectedCategory === cat.id ? 'none' : '1px solid rgba(120,80,255,0.18)',
                         color: selectedCategory === cat.id ? '#fff' : 'rgba(180,165,255,0.55)',
                         boxShadow: selectedCategory === cat.id ? '0 0 16px rgba(124,58,237,0.3)' : 'none',
                       }}
-                    >
-                      {cat.name}
-                    </button>
+                    >{cat.name}</button>
                   ))}
                 </div>
               </div>
@@ -113,6 +101,7 @@ export function StickerLab() {
               <button
                 onClick={handleGenerate}
                 disabled={isGenerating || !prompt.trim()}
+                className={!isGenerating && prompt.trim() ? 'glow-pulse' : ''}
                 style={{
                   width: '100%', padding: '0.75rem',
                   background: isGenerating || !prompt.trim() ? 'rgba(100,70,200,0.2)' : 'linear-gradient(135deg, #7c3aed, #4f46e5)',
@@ -121,15 +110,12 @@ export function StickerLab() {
                   cursor: isGenerating || !prompt.trim() ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                  boxShadow: isGenerating || !prompt.trim() ? 'none' : '0 0 24px rgba(124,58,237,0.4)',
                   transition: 'all 0.2s',
                 }}
               >
-                {isGenerating ? (
-                  <><div style={{ width: '0.9rem', height: '0.9rem', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} className="animate-spin" />Generating...</>
-                ) : (
-                  <><Sparkles size={14} />Generate</>
-                )}
+                {isGenerating
+                  ? <><div style={{ width: '0.9rem', height: '0.9rem', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} className="animate-spin" />Generating...</>
+                  : <><Sparkles size={14} />Generate</>}
               </button>
 
               <p style={{ fontSize: '0.72rem', color: 'rgba(140,110,200,0.45)' }}>
@@ -147,31 +133,30 @@ export function StickerLab() {
                   Download All
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-4">
                 {stickers.map((sticker, i) => (
-                  <FadeIn key={sticker.id} delay={300 + i * 80} duration={500}>
-                    <div
-                      style={{ borderRadius: '0.875rem', border: '1px solid rgba(120,80,255,0.1)', cursor: 'pointer', position: 'relative', overflow: 'hidden', transition: 'all 0.3s' }}
-                      className={`aspect-square bg-gradient-to-br ${sticker.bg} flex items-center justify-center group hover:border-purple-400/40 hover:shadow-[0_0_30px_rgba(120,60,255,0.25)]`}
+                  <div key={sticker.id} className="card-3d-enter" style={{ animationDelay: `${i * 70}ms` }}>
+                    <TiltCard
+                      intensity={16}
+                      style={{ borderRadius: '0.875rem', overflow: 'hidden' }}
                     >
-                      <span style={{ fontSize: '2.5rem', color: 'rgba(255,255,255,0.45)', transition: 'all 0.2s', fontWeight: 300 }} className="group-hover:text-white/70 group-hover:scale-110">
-                        {sticker.emoji}
-                      </span>
-                      <button
-                        style={{
-                          position: 'absolute', bottom: '0.5rem', right: '0.5rem',
-                          padding: '0.35rem',
+                      <div className={`aspect-square bg-gradient-to-br ${sticker.bg} flex items-center justify-center relative group`}
+                        style={{ border: '1px solid rgba(120,80,255,0.12)', cursor: 'pointer' }}>
+                        <span style={{ fontSize: '2.8rem', color: 'rgba(255,255,255,0.5)', fontWeight: 300, transform: 'translateZ(24px)', display: 'block', transition: 'all 0.2s' }}
+                          className="group-hover:text-white/80">
+                          {sticker.emoji}
+                        </span>
+                        <button style={{
+                          position: 'absolute', bottom: '0.5rem', right: '0.5rem', padding: '0.35rem',
                           background: 'rgba(14,11,42,0.8)', backdropFilter: 'blur(8px)',
-                          border: '1px solid rgba(120,80,255,0.3)',
-                          borderRadius: '0.45rem', cursor: 'pointer',
-                          opacity: 0, transition: 'opacity 0.2s',
-                        }}
-                        className="group-hover:opacity-100"
-                      >
-                        <Download size={12} color="rgba(200,185,255,0.9)" />
-                      </button>
-                    </div>
-                  </FadeIn>
+                          border: '1px solid rgba(120,80,255,0.3)', borderRadius: '0.45rem', cursor: 'pointer',
+                          opacity: 0, transition: 'opacity 0.2s', transform: 'translateZ(30px)',
+                        }} className="group-hover:opacity-100">
+                          <Download size={12} color="rgba(200,185,255,0.9)" />
+                        </button>
+                      </div>
+                    </TiltCard>
+                  </div>
                 ))}
               </div>
             </div>

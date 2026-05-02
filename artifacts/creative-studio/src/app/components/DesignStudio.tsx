@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, Share2, Image, Type, Sparkles, ArrowLeft } from 'lucide-react';
 import { FadeIn } from './FadeIn';
+import { TiltCard } from './TiltCard';
 
 const templates = [
   { id: 1, name: 'Instagram Post',     category: 'Social Media',  size: '1080×1080', color: 'from-violet-700 via-purple-700 to-indigo-800',  premium: false },
@@ -21,11 +22,12 @@ const pageStyle: React.CSSProperties = {
   position: 'relative',
 };
 
-const cardStyle: React.CSSProperties = {
+const cardBase: React.CSSProperties = {
   background: 'rgba(14, 11, 42, 0.85)',
   border: '1px solid rgba(120, 80, 255, 0.18)',
   borderRadius: '0.875rem',
   backdropFilter: 'blur(8px)',
+  overflow: 'hidden',
 };
 
 export function DesignStudio() {
@@ -38,8 +40,8 @@ export function DesignStudio() {
   return (
     <div style={pageStyle} className="px-6 md:px-12 lg:px-16">
       {/* Ambient glow */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-        <div style={{ position: 'absolute', top: '10%', left: '5%',  width: '35%', height: '45%', background: 'radial-gradient(ellipse, rgba(120,60,255,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '35%', height: '45%', background: 'radial-gradient(ellipse, rgba(120,60,255,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
         <div style={{ position: 'absolute', top: '30%', right: '5%', width: '30%', height: '40%', background: 'radial-gradient(ellipse, rgba(60,100,255,0.10) 0%, transparent 70%)', filter: 'blur(40px)' }} />
       </div>
 
@@ -64,25 +66,15 @@ export function DesignStudio() {
                   onClick={() => setFilter(cat)}
                   style={filter === cat ? {
                     background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '0.45rem 1.1rem',
-                    borderRadius: '0.5rem',
-                    fontSize: '0.82rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    boxShadow: '0 0 20px rgba(124,58,237,0.4)',
+                    color: '#fff', border: 'none',
+                    padding: '0.45rem 1.1rem', borderRadius: '0.5rem',
+                    fontSize: '0.82rem', fontWeight: 500, cursor: 'pointer',
+                    fontFamily: 'inherit', boxShadow: '0 0 20px rgba(124,58,237,0.4)',
                   } : {
-                    background: 'rgba(14, 11, 42, 0.7)',
-                    color: 'rgba(200,185,255,0.55)',
+                    background: 'rgba(14, 11, 42, 0.7)', color: 'rgba(200,185,255,0.55)',
                     border: '1px solid rgba(120,80,255,0.2)',
-                    padding: '0.45rem 1.1rem',
-                    borderRadius: '0.5rem',
-                    fontSize: '0.82rem',
-                    fontWeight: 400,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
+                    padding: '0.45rem 1.1rem', borderRadius: '0.5rem',
+                    fontSize: '0.82rem', fontWeight: 400, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
                   {cat === 'all' ? 'All' : cat}
@@ -92,50 +84,51 @@ export function DesignStudio() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredTemplates.map((template, i) => (
-                <FadeIn key={template.id} delay={200 + i * 60} duration={500}>
-                  <div
+                <div
+                  key={template.id}
+                  className="card-3d-enter"
+                  style={{ animationDelay: `${i * 55}ms` }}
+                >
+                  <TiltCard
+                    style={cardBase}
                     onClick={() => setSelectedTemplate(template.id)}
-                    style={{
-                      ...cardStyle,
-                      cursor: 'pointer',
-                      transition: 'all 0.25s ease',
-                      overflow: 'hidden',
-                    }}
-                    className="group hover:border-purple-400/40 hover:shadow-[0_0_30px_rgba(120,60,255,0.2)]"
+                    intensity={12}
                   >
-                    <div className={`bg-gradient-to-br ${template.color} h-44 flex items-center justify-center relative`}>
-                      <div style={{ fontSize: '3rem', color: 'rgba(255,255,255,0.25)', transition: 'opacity 0.2s' }} className="group-hover:opacity-40">▣</div>
+                    <div className={`bg-gradient-to-br ${template.color} h-44 flex items-center justify-center relative`}
+                      style={{ transformStyle: 'preserve-3d' }}>
+                      <div style={{ fontSize: '3.2rem', color: 'rgba(255,255,255,0.22)', transform: 'translateZ(20px)', transition: 'transform 0.2s' }}>▣</div>
                       {template.premium && (
                         <div style={{
                           position: 'absolute', top: '0.75rem', right: '0.75rem',
                           background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
-                          border: '1px solid rgba(255,255,255,0.2)',
-                          color: '#fff', padding: '0.2rem 0.55rem', borderRadius: '0.4rem',
-                          fontSize: '0.7rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem',
+                          border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
+                          padding: '0.2rem 0.55rem', borderRadius: '0.4rem',
+                          fontSize: '0.7rem', fontWeight: 600,
+                          display: 'flex', alignItems: 'center', gap: '0.25rem',
+                          transform: 'translateZ(30px)',
                         }}>
                           <Sparkles size={9} /> PRO
                         </div>
                       )}
                     </div>
-                    <div style={{ padding: '1rem', background: 'rgba(10, 8, 32, 0.6)' }}>
+                    <div style={{ padding: '1rem', background: 'rgba(10, 8, 32, 0.6)', transform: 'translateZ(10px)' }}>
                       <h3 style={{ fontWeight: 500, color: '#fff', fontSize: '0.85rem' }}>{template.name}</h3>
                       <p style={{ fontSize: '0.72rem', color: 'rgba(160,140,220,0.6)', marginTop: '0.25rem' }}>{template.size}px</p>
                       <div style={{ marginTop: '0.4rem', fontSize: '0.7rem', color: 'rgba(140,120,200,0.45)' }}>{template.category}</div>
                     </div>
-                  </div>
-                </FadeIn>
+                  </TiltCard>
+                </div>
               ))}
             </div>
           </FadeIn>
         ) : (
           <FadeIn delay={0} duration={400}>
-            <div style={{ ...cardStyle, overflow: 'hidden' }}>
+            <div style={{ ...cardBase }}>
               <div style={{ borderBottom: '1px solid rgba(120,80,255,0.15)', padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(10,8,30,0.6)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <button
                     onClick={() => setSelectedTemplate(null)}
                     style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'rgba(180,160,255,0.6)', fontSize: '0.85rem', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                    className="hover:text-white transition-colors"
                   >
                     <ArrowLeft size={15} /> Back
                   </button>
@@ -145,7 +138,7 @@ export function DesignStudio() {
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   {[<Image size={17} />, <Type size={17} />, <Share2 size={17} />].map((icon, i) => (
-                    <button key={i} style={{ padding: '0.45rem', color: 'rgba(180,160,255,0.5)', background: 'rgba(14,11,42,0.7)', border: '1px solid rgba(120,80,255,0.18)', borderRadius: '0.5rem', cursor: 'pointer' }} className="hover:text-white transition-colors">
+                    <button key={i} style={{ padding: '0.45rem', color: 'rgba(180,160,255,0.5)', background: 'rgba(14,11,42,0.7)', border: '1px solid rgba(120,80,255,0.18)', borderRadius: '0.5rem', cursor: 'pointer' }}>
                       {icon}
                     </button>
                   ))}
@@ -155,12 +148,14 @@ export function DesignStudio() {
                 </div>
               </div>
               <div style={{ padding: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '560px', background: 'rgba(8,6,24,0.7)' }}>
-                <div className={`bg-gradient-to-br ${templates.find(t => t.id === selectedTemplate)?.color} w-full max-w-2xl aspect-video rounded-xl border border-white/10 flex items-center justify-center`}>
-                  <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.55)' }}>
-                    <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: 300 }}>▣</div>
-                    <p style={{ fontSize: '0.85rem', fontWeight: 300, letterSpacing: '0.05em' }}>Your canvas awaits</p>
+                <TiltCard intensity={6} style={{ width: '100%', maxWidth: '42rem' }}>
+                  <div className={`bg-gradient-to-br ${templates.find(t => t.id === selectedTemplate)?.color} w-full aspect-video rounded-xl border border-white/10 flex items-center justify-center`}>
+                    <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.55)', transform: 'translateZ(20px)' }}>
+                      <div style={{ fontSize: '4rem', marginBottom: '1rem', fontWeight: 300 }}>▣</div>
+                      <p style={{ fontSize: '0.85rem', fontWeight: 300, letterSpacing: '0.05em' }}>Your canvas awaits</p>
+                    </div>
                   </div>
-                </div>
+                </TiltCard>
               </div>
             </div>
           </FadeIn>
