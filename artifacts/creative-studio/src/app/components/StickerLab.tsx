@@ -3,165 +3,130 @@ import { Sparkles, Download } from 'lucide-react';
 import { FadeIn } from './FadeIn';
 import { TiltCard } from './TiltCard';
 
-const categories = [
-  { id: 'minimal',    name: 'Minimal'    },
-  { id: 'abstract',   name: 'Abstract'   },
-  { id: 'expressive', name: 'Expressive' },
+const styles = ['Minimal', 'Abstract', 'Expressive'];
+
+const stickers = [
+  { id: 1, icon: '◈' }, { id: 2, icon: '✦' },
+  { id: 3, icon: '◉' }, { id: 4, icon: '◎' },
+  { id: 5, icon: '⬡' }, { id: 6, icon: '◆' },
 ];
 
-const sampleStickers = [
-  { id: 1, emoji: '◈', bg: 'from-violet-600 via-purple-600 to-indigo-700'  },
-  { id: 2, emoji: '✦', bg: 'from-blue-600 via-indigo-600 to-violet-700'    },
-  { id: 3, emoji: '◉', bg: 'from-fuchsia-600 via-pink-600 to-rose-700'     },
-  { id: 4, emoji: '◎', bg: 'from-indigo-600 via-blue-600 to-cyan-700'      },
-  { id: 5, emoji: '⬡', bg: 'from-emerald-600 via-teal-600 to-indigo-700'   },
-  { id: 6, emoji: '⬢', bg: 'from-amber-600 via-orange-600 to-rose-700'     },
-];
-
-const cardStyle: React.CSSProperties = {
-  background: 'rgba(14, 11, 42, 0.85)',
-  border: '1px solid rgba(120, 80, 255, 0.18)',
-  borderRadius: '0.875rem',
-  backdropFilter: 'blur(8px)',
+const card: React.CSSProperties = {
+  background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px',
 };
 
 export function StickerLab() {
   const [prompt, setPrompt] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('minimal');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [stickers] = useState(sampleStickers);
+  const [style, setStyle] = useState('Minimal');
+  const [generating, setGenerating] = useState(false);
 
   const handleGenerate = () => {
     if (!prompt.trim()) return;
-    setIsGenerating(true);
-    setTimeout(() => setIsGenerating(false), 2000);
+    setGenerating(true);
+    setTimeout(() => setGenerating(false), 1800);
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #07071a 0%, #0d0a2e 40%, #080e24 100%)', paddingTop: '6rem', paddingBottom: '4rem', position: 'relative' }} className="px-6 md:px-12 lg:px-16">
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-        <div style={{ position: 'absolute', top: '5%', right: '10%', width: '36%', height: '50%', background: 'radial-gradient(ellipse, rgba(200,60,200,0.09) 0%, transparent 70%)', filter: 'blur(50px)' }} />
-        <div style={{ position: 'absolute', bottom: '10%', left: '5%', width: '32%', height: '40%', background: 'radial-gradient(ellipse, rgba(60,100,255,0.09) 0%, transparent 70%)', filter: 'blur(50px)' }} />
-      </div>
+    <div style={{ minHeight: '100vh', background: '#090909', paddingTop: '5.5rem', paddingBottom: '4rem' }} className="px-10 lg:px-16">
+      <FadeIn delay={80} duration={500}>
+        <div style={{ marginBottom: '2.25rem' }}>
+          <p style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(139,92,246,0.65)', marginBottom: '0.35rem' }}>Tools</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 500, letterSpacing: '-0.035em', color: '#fff', margin: 0 }}>Sticker Lab</h2>
+          <p style={{ color: 'rgba(255,255,255,0.32)', marginTop: '0.5rem', fontSize: '0.875rem' }}>AI-generated stickers, your style.</p>
+        </div>
+      </FadeIn>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <FadeIn delay={100} duration={600}>
-          <div className="mb-10">
-            <p style={{ fontSize: '0.7rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(160,130,255,0.7)', marginBottom: '0.5rem' }}>Tools</p>
-            <h2 style={{ fontSize: 'clamp(2rem,5vw,3rem)', fontWeight: 300, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #fff 30%, #c4a8ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Sticker Lab
-            </h2>
-            <p style={{ color: 'rgba(200,185,255,0.55)', marginTop: '0.75rem', fontSize: '0.95rem' }}>AI-generated stickers, your style.</p>
-          </div>
-        </FadeIn>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Controls */}
+        <FadeIn delay={160} duration={500}>
+          <div style={{ ...card, padding: '1.25rem', position: 'sticky', top: '5.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <p style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>Create</p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Controls */}
-          <FadeIn delay={200} duration={600}>
-            <div style={{ ...cardStyle, padding: '1.25rem', position: 'sticky', top: '6rem' }} className="space-y-5">
-              <p style={{ fontSize: '0.68rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(160,130,255,0.6)' }}>Create</p>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: 'rgba(180,165,255,0.6)', marginBottom: '0.4rem' }}>Describe your sticker</label>
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="e.g., Minimalist geometric mark with bold contrast"
-                  rows={4}
-                  style={{
-                    width: '100%', background: 'rgba(8,6,24,0.8)',
-                    border: '1px solid rgba(120,80,255,0.2)', color: '#fff',
-                    padding: '0.75rem 1rem', borderRadius: '0.625rem',
-                    fontSize: '0.875rem', outline: 'none', fontFamily: 'inherit',
-                    resize: 'none', transition: 'border-color 0.2s',
-                  }}
-                  className="focus:border-purple-400/50 placeholder:text-purple-300/20"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: 'rgba(180,165,255,0.6)', marginBottom: '0.5rem' }}>Style</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {categories.map((cat) => (
-                    <button key={cat.id} onClick={() => setSelectedCategory(cat.id)}
-                      style={{
-                        flex: 1, padding: '0.5rem', borderRadius: '0.5rem',
-                        fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-                        transition: 'all 0.2s',
-                        background: selectedCategory === cat.id ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : 'rgba(10,8,30,0.7)',
-                        border: selectedCategory === cat.id ? 'none' : '1px solid rgba(120,80,255,0.18)',
-                        color: selectedCategory === cat.id ? '#fff' : 'rgba(180,165,255,0.55)',
-                        boxShadow: selectedCategory === cat.id ? '0 0 16px rgba(124,58,237,0.3)' : 'none',
-                      }}
-                    >{cat.name}</button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating || !prompt.trim()}
-                className={!isGenerating && prompt.trim() ? 'glow-pulse' : ''}
-                style={{
-                  width: '100%', padding: '0.75rem',
-                  background: isGenerating || !prompt.trim() ? 'rgba(100,70,200,0.2)' : 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                  color: '#fff', border: 'none', borderRadius: '0.625rem',
-                  fontSize: '0.875rem', fontWeight: 500,
-                  cursor: isGenerating || !prompt.trim() ? 'not-allowed' : 'pointer',
-                  fontFamily: 'inherit',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {isGenerating
-                  ? <><div style={{ width: '0.9rem', height: '0.9rem', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} className="animate-spin" />Generating...</>
-                  : <><Sparkles size={14} />Generate</>}
-              </button>
-
-              <p style={{ fontSize: '0.72rem', color: 'rgba(140,110,200,0.45)' }}>
-                Be specific with your description for better results.
-              </p>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', marginBottom: '0.4rem' }}>Describe your sticker</label>
+              <textarea value={prompt} onChange={e => setPrompt(e.target.value)}
+                placeholder="e.g., Minimalist geometric mark with bold contrast"
+                rows={4} className="input-field"
+                style={{ resize: 'none', padding: '0.7rem 1rem' }}
+              />
             </div>
-          </FadeIn>
 
-          {/* Gallery */}
-          <FadeIn delay={300} duration={600} className="lg:col-span-2">
-            <div style={cardStyle} className="p-5">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                <p style={{ fontSize: '0.68rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(160,130,255,0.6)' }}>Gallery</p>
-                <button style={{ fontSize: '0.75rem', color: 'rgba(160,130,255,0.5)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', transition: 'color 0.2s' }} className="hover:text-white">
-                  Download All
-                </button>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                {stickers.map((sticker, i) => (
-                  <div key={sticker.id} className="card-3d-enter" style={{ animationDelay: `${i * 70}ms` }}>
-                    <TiltCard
-                      intensity={16}
-                      style={{ borderRadius: '0.875rem', overflow: 'hidden' }}
-                    >
-                      <div className={`aspect-square bg-gradient-to-br ${sticker.bg} flex items-center justify-center relative group`}
-                        style={{ border: '1px solid rgba(120,80,255,0.12)', cursor: 'pointer' }}>
-                        <span style={{ fontSize: '2.8rem', color: 'rgba(255,255,255,0.5)', fontWeight: 300, transform: 'translateZ(24px)', display: 'block', transition: 'all 0.2s' }}
-                          className="group-hover:text-white/80">
-                          {sticker.emoji}
-                        </span>
-                        <button style={{
-                          position: 'absolute', bottom: '0.5rem', right: '0.5rem', padding: '0.35rem',
-                          background: 'rgba(14,11,42,0.8)', backdropFilter: 'blur(8px)',
-                          border: '1px solid rgba(120,80,255,0.3)', borderRadius: '0.45rem', cursor: 'pointer',
-                          opacity: 0, transition: 'opacity 0.2s', transform: 'translateZ(30px)',
-                        }} className="group-hover:opacity-100">
-                          <Download size={12} color="rgba(200,185,255,0.9)" />
-                        </button>
-                      </div>
-                    </TiltCard>
-                  </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', marginBottom: '0.5rem' }}>Style</label>
+              <div style={{ display: 'flex', gap: '0.375rem' }}>
+                {styles.map(s => (
+                  <button key={s} onClick={() => setStyle(s)} style={{
+                    flex: 1, padding: '0.45rem', borderRadius: '6px',
+                    fontSize: '0.75rem', fontWeight: style === s ? 500 : 400,
+                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+                    background: style === s ? 'rgba(139,92,246,0.15)' : 'transparent',
+                    border: `1px solid ${style === s ? 'rgba(139,92,246,0.35)' : 'rgba(255,255,255,0.07)'}`,
+                    color: style === s ? '#fff' : 'rgba(255,255,255,0.4)',
+                  }}>{s}</button>
                 ))}
               </div>
             </div>
-          </FadeIn>
-        </div>
+
+            <button onClick={handleGenerate} disabled={generating || !prompt.trim()}
+              className={!generating && prompt.trim() ? 'glow-pulse' : ''}
+              style={{
+                padding: '0.7rem', fontFamily: 'inherit', fontWeight: 500,
+                fontSize: '0.875rem', border: 'none', borderRadius: '8px', cursor: !generating && prompt.trim() ? 'pointer' : 'not-allowed',
+                background: !generating && prompt.trim() ? '#8b5cf6' : 'rgba(139,92,246,0.15)',
+                color: !generating && prompt.trim() ? '#fff' : 'rgba(255,255,255,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                transition: 'all 0.15s',
+              }}>
+              {generating
+                ? <><div style={{ width: '0.85rem', height: '0.85rem', border: '2px solid rgba(255,255,255,0.2)', borderTop: '2px solid #fff', borderRadius: '50%' }} className="animate-spin" />Generating...</>
+                : <><Sparkles size={13} />Generate</>}
+            </button>
+
+            <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', lineHeight: 1.5 }}>
+              Be specific for better results. Style affects shape, weight, and detail.
+            </p>
+          </div>
+        </FadeIn>
+
+        {/* Gallery */}
+        <FadeIn delay={240} duration={500} className="lg:col-span-2">
+          <div style={card} className="p-5">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              <p style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>Gallery</p>
+              <button style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.28)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', transition: 'color 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.28)'}
+              >Download All</button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {stickers.map((s, i) => (
+                <div key={s.id} className="card-up" style={{ animationDelay: `${i * 60}ms` }}>
+                  <TiltCard intensity={14} style={{ borderRadius: '10px', overflow: 'hidden' }}>
+                    <div className="group" style={{
+                      aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.10)',
+                      cursor: 'pointer', position: 'relative', borderRadius: '10px',
+                      transition: 'background 0.18s, border-color 0.18s',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.10)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.22)'; const btn = e.currentTarget.querySelector('.dl-btn') as HTMLElement; if (btn) btn.style.opacity = '1'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.06)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.10)'; const btn = e.currentTarget.querySelector('.dl-btn') as HTMLElement; if (btn) btn.style.opacity = '0'; }}
+                    >
+                      <span style={{ fontSize: '2.6rem', color: 'rgba(139,92,246,0.35)', display: 'block', transform: 'translateZ(20px)', transition: 'color 0.18s' }}>{s.icon}</span>
+                      <button className="dl-btn" style={{
+                        position: 'absolute', bottom: '0.5rem', right: '0.5rem',
+                        padding: '0.3rem', background: 'rgba(9,9,9,0.9)', backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(139,92,246,0.25)', borderRadius: '5px',
+                        cursor: 'pointer', opacity: 0, transition: 'opacity 0.18s', transform: 'translateZ(28px)',
+                      }}>
+                        <Download size={11} color="rgba(139,92,246,0.8)" />
+                      </button>
+                    </div>
+                  </TiltCard>
+                </div>
+              ))}
+            </div>
+          </div>
+        </FadeIn>
       </div>
     </div>
   );

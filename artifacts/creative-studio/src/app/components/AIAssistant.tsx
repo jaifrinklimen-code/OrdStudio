@@ -2,10 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Bot, User, ArrowUp, Sparkles } from 'lucide-react';
 import { FadeIn } from './FadeIn';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+interface Message { role: 'user' | 'assistant'; content: string; }
 
 const suggestions = [
   'Help me create a brand identity',
@@ -14,167 +11,144 @@ const suggestions = [
   'How do I make viral content?',
 ];
 
-const pageStyle: React.CSSProperties = {
-  minHeight: '100vh',
-  background: 'linear-gradient(135deg, #07071a 0%, #0d0a2e 40%, #080e24 100%)',
-  display: 'flex',
-  flexDirection: 'column',
-  paddingTop: '6rem',
-  position: 'relative',
-};
+const responses = [
+  'For brand identity, start with a clear value proposition and a visual language that reflects your core mission — typography, a restrained color palette, and purposeful spacing.',
+  'Lead your pitch deck with the problem you solve, then your unique solution, market size, traction, and team. Keep slides sparse and data-driven.',
+  'Tech startups typically benefit from minimalist, grid-based layouts. Explore our Presentation Slide and LinkedIn Banner templates.',
+  'Viral content balances utility with emotion — short, specific, shareable. Want me to help you draft a hook?',
+];
 
 export function AIAssistant() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hello. I'm your creative AI. Ask me anything about design, content strategy, or your next venture." }
+    { role: 'assistant', content: "Hello. I'm your creative AI — ask me anything about design, content strategy, or your next venture." }
   ]);
   const [input, setInput] = useState('');
+  const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, typing]);
 
   const handleSend = (text?: string) => {
-    const msg = text ?? input;
-    if (!msg.trim()) return;
+    const msg = (text ?? input).trim();
+    if (!msg) return;
     setMessages(prev => [...prev, { role: 'user', content: msg }]);
-    setTimeout(() => {
-      const responses = [
-        'Great question. For brand identity, start with a clear value proposition and visual language that reflects your core mission.',
-        'For a pitch deck, lead with the problem you solve, then your unique solution, market size, traction, and team.',
-        'Tech startups typically benefit from minimalist, grid-based layouts — check out our Presentation Slide templates.',
-        'Viral content often balances utility with emotion. Short, specific, shareable. Want me to help you draft something?',
-      ];
-      setMessages(prev => [...prev, { role: 'assistant', content: responses[Math.floor(Math.random() * responses.length)] }]);
-    }, 600);
     setInput('');
+    setTyping(true);
+    setTimeout(() => {
+      setTyping(false);
+      setMessages(prev => [...prev, { role: 'assistant', content: responses[Math.floor(Math.random() * responses.length)] }]);
+    }, 780);
   };
 
   return (
-    <div style={pageStyle}>
-      {/* Ambient glow */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-        <div style={{ position: 'absolute', top: '5%',  left: '0%',  width: '40%', height: '50%', background: 'radial-gradient(ellipse, rgba(120,60,255,0.10) 0%, transparent 70%)', filter: 'blur(50px)' }} />
-        <div style={{ position: 'absolute', bottom: '10%', right: '0%', width: '35%', height: '45%', background: 'radial-gradient(ellipse, rgba(60,100,255,0.09) 0%, transparent 70%)', filter: 'blur(50px)' }} />
-      </div>
-
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <FadeIn delay={100} duration={600} className="px-6 md:px-12 lg:px-16 mb-6">
-          <p style={{ fontSize: '0.7rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(160,130,255,0.7)', marginBottom: '0.5rem' }}>AI</p>
-          <h2 style={{ fontSize: 'clamp(2rem,5vw,3rem)', fontWeight: 300, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #fff 30%, #c4a8ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Creative Assistant
-          </h2>
+    <div style={{
+      height: '100vh', display: 'flex', flexDirection: 'column',
+      background: '#090909', paddingTop: '4.5rem',
+    }}>
+      {/* Header */}
+      <div style={{ padding: '1.5rem 3rem 0', flexShrink: 0 }}>
+        <FadeIn delay={80} duration={500}>
+          <p style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(139,92,246,0.65)', marginBottom: '0.35rem' }}>AI</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 500, letterSpacing: '-0.035em', color: '#fff', margin: 0 }}>Creative Assistant</h2>
         </FadeIn>
 
         {/* Suggestion chips */}
-        <FadeIn delay={200} duration={600} className="px-6 md:px-12 lg:px-16 mb-6 flex flex-wrap gap-2">
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              onClick={() => handleSend(s)}
-              style={{
-                background: 'rgba(14, 11, 42, 0.8)',
-                border: '1px solid rgba(120,80,255,0.22)',
-                color: 'rgba(200,185,255,0.65)',
-                padding: '0.45rem 1rem',
-                borderRadius: '0.5rem',
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                display: 'flex', alignItems: 'center', gap: '0.4rem',
-                transition: 'all 0.2s',
+        <FadeIn delay={180} duration={500}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem', paddingBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            {suggestions.map((s) => (
+              <button key={s} onClick={() => handleSend(s)} style={{
+                padding: '0.4rem 0.875rem',
+                background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)',
+                color: 'rgba(255,255,255,0.55)', borderRadius: '6px',
+                fontSize: '0.78rem', cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: '0.35rem', transition: 'all 0.15s',
               }}
-              className="hover:border-purple-400/50 hover:text-white"
-            >
-              <Sparkles size={11} style={{ color: 'rgba(160,130,255,0.7)' }} />
-              {s}
-            </button>
-          ))}
-        </FadeIn>
-
-        {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 0 1rem' }} className="px-6 md:px-12 lg:px-16">
-          <div className="max-w-3xl space-y-5">
-            {messages.map((message, index) => (
-              <FadeIn key={index} delay={0} duration={400}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem', flexDirection: message.role === 'user' ? 'row-reverse' : 'row' }}>
-                  <div style={{
-                    width: '2rem', height: '2rem', borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    background: message.role === 'assistant'
-                      ? 'linear-gradient(135deg, #7c3aed, #4f46e5)'
-                      : 'rgba(255,255,255,0.12)',
-                    border: message.role === 'assistant' ? 'none' : '1px solid rgba(255,255,255,0.2)',
-                    boxShadow: message.role === 'assistant' ? '0 0 16px rgba(124,58,237,0.4)' : 'none',
-                  }}>
-                    {message.role === 'assistant' ? <Bot size={14} color="#fff" /> : <User size={14} color="#fff" />}
-                  </div>
-                  <div style={{
-                    maxWidth: '36rem',
-                    padding: '0.875rem 1.25rem',
-                    borderRadius: message.role === 'user' ? '1.2rem 0.4rem 1.2rem 1.2rem' : '0.4rem 1.2rem 1.2rem 1.2rem',
-                    fontSize: '0.875rem',
-                    lineHeight: 1.65,
-                    background: message.role === 'assistant'
-                      ? 'rgba(14, 11, 42, 0.9)'
-                      : 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(79,70,229,0.2))',
-                    border: message.role === 'assistant'
-                      ? '1px solid rgba(120,80,255,0.18)'
-                      : '1px solid rgba(150,110,255,0.3)',
-                    color: message.role === 'assistant' ? 'rgba(220,210,255,0.9)' : '#fff',
-                  }}>
-                    {message.content}
-                  </div>
-                </div>
-              </FadeIn>
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.15)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.2)'; }}
+              >
+                <Sparkles size={10} color="rgba(139,92,246,0.7)" />
+                {s}
+              </button>
             ))}
-            <div ref={bottomRef} />
           </div>
-        </div>
+        </FadeIn>
+      </div>
 
-        {/* Input bar */}
-        <div style={{
-          padding: '1.25rem',
-          borderTop: '1px solid rgba(120,80,255,0.15)',
-          background: 'rgba(7,7,26,0.95)',
-          backdropFilter: 'blur(16px)',
-        }} className="px-6 md:px-12 lg:px-16">
-          <div className="max-w-3xl" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask me anything..."
-              style={{
-                flex: 1,
-                background: 'rgba(14, 11, 42, 0.9)',
-                border: '1px solid rgba(120,80,255,0.2)',
-                color: '#fff',
-                padding: '0.75rem 1.25rem',
-                borderRadius: '0.875rem',
-                fontSize: '0.875rem',
-                outline: 'none',
-                fontFamily: 'inherit',
-              }}
-              className="focus:border-purple-400/50 placeholder:text-purple-300/20 transition-colors"
-            />
-            <button
-              onClick={() => handleSend()}
-              style={{
-                width: '2.75rem', height: '2.75rem', flexShrink: 0,
-                background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                border: 'none', borderRadius: '0.875rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 0 20px rgba(124,58,237,0.4)',
-                transition: 'opacity 0.2s',
-              }}
-              className="hover:opacity-85"
-            >
-              <ArrowUp size={17} color="#fff" />
-            </button>
-          </div>
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 3rem' }}>
+        <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {messages.map((msg, i) => (
+            <FadeIn key={i} delay={0} duration={350}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row' }}>
+                <div style={{
+                  width: '1.85rem', height: '1.85rem', borderRadius: '50%', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: msg.role === 'assistant' ? '#8b5cf6' : 'rgba(255,255,255,0.08)',
+                  border: msg.role === 'assistant' ? 'none' : '1px solid rgba(255,255,255,0.12)',
+                  boxShadow: msg.role === 'assistant' ? '0 0 12px rgba(139,92,246,0.4)' : 'none',
+                }}>
+                  {msg.role === 'assistant' ? <Bot size={13} color="#fff" /> : <User size={13} color="rgba(255,255,255,0.7)" />}
+                </div>
+                <div style={{
+                  maxWidth: '36rem', padding: '0.8rem 1.1rem',
+                  borderRadius: msg.role === 'user' ? '12px 4px 12px 12px' : '4px 12px 12px 12px',
+                  fontSize: '0.875rem', lineHeight: 1.65,
+                  background: msg.role === 'user' ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${msg.role === 'user' ? 'rgba(139,92,246,0.22)' : 'rgba(255,255,255,0.06)'}`,
+                  color: msg.role === 'user' ? '#fff' : 'rgba(255,255,255,0.8)',
+                }}>
+                  {msg.content}
+                </div>
+              </div>
+            </FadeIn>
+          ))}
+
+          {typing && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+              <div style={{ width: '1.85rem', height: '1.85rem', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#8b5cf6', boxShadow: '0 0 12px rgba(139,92,246,0.4)' }}>
+                <Bot size={13} color="#fff" />
+              </div>
+              <div style={{ padding: '0.85rem 1.1rem', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px 12px 12px 12px', display: 'flex', gap: '5px', alignItems: 'center' }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{
+                    width: '5px', height: '5px', borderRadius: '50%', background: 'rgba(139,92,246,0.7)',
+                    animation: 'pulse 1.2s ease-in-out infinite', animationDelay: `${i * 0.18}s`,
+                  }} className="animate-pulse" />
+                ))}
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {/* Input */}
+      <div style={{
+        padding: '1rem 3rem 1.5rem', flexShrink: 0,
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        background: 'rgba(9,9,9,0.95)', backdropFilter: 'blur(16px)',
+      }}>
+        <div style={{ maxWidth: '680px', display: 'flex', gap: '0.625rem', alignItems: 'center' }}>
+          <input
+            type="text" value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSend()}
+            placeholder="Ask me anything…"
+            className="input-field"
+            style={{ flex: 1, padding: '0.75rem 1.1rem', fontSize: '0.875rem' }}
+          />
+          <button onClick={() => handleSend()} style={{
+            width: '2.625rem', height: '2.625rem', flexShrink: 0,
+            background: input.trim() ? '#8b5cf6' : 'rgba(139,92,246,0.2)',
+            border: 'none', borderRadius: '8px', cursor: input.trim() ? 'pointer' : 'default',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.15s',
+            boxShadow: input.trim() ? '0 0 16px rgba(139,92,246,0.35)' : 'none',
+          }}>
+            <ArrowUp size={16} color={input.trim() ? '#fff' : 'rgba(255,255,255,0.3)'} />
+          </button>
         </div>
       </div>
     </div>
