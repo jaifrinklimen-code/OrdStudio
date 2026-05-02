@@ -25,7 +25,7 @@ export default function App() {
     <div style={{
       width: '100%',
       height: '100vh',
-      backgroundColor: '#000',
+      backgroundColor: '#07071a',
       color: '#fff',
       fontFamily: "'Inter', sans-serif",
       overflow: activeTab === 'home' ? 'hidden' : 'auto',
