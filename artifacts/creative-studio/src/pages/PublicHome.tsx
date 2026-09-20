@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import {
   Sparkles, Wand2, Presentation, Sticker, Palette, FileText,
   ArrowRight, ShieldCheck, Zap, Heart, CheckCircle2,
-  RotateCw, ChevronRight, Terminal
+  RotateCw, ChevronRight, Terminal, Layers, Star, Activity
 } from 'lucide-react';
 
 interface SlideData {
@@ -128,9 +128,9 @@ export default function PublicHome() {
               </div>
               
               {/* Hero Right Column */}
-              <div className="lg:col-span-7 relative mt-12 lg:mt-0 z-20 flex justify-end items-center">
+              <div className="lg:col-span-7 relative mt-12 lg:mt-0 z-20 flex justify-end items-center lg:items-start">
                 
-                <div className="relative w-[125%] sm:w-[135%] max-w-[850px] right-[-15%] sm:right-[-20%] lg:right-[-25%] xl:right-[-15%] z-10 transform hover:scale-[1.02] transition-transform duration-700">
+                <div className="relative w-[125%] sm:w-[135%] max-w-[850px] right-[-15%] sm:right-[-20%] lg:right-[-25%] xl:right-[-15%] z-10 transform hover:scale-[1.02] transition-transform duration-700 lg:-mt-8 xl:-mt-12">
                   {/* Subtle fade mask so the image's dark purple edges blend perfectly with the #09090c page background */}
                   <img 
                     src="/design-studio-hero.jpg" 
@@ -146,37 +146,70 @@ export default function PublicHome() {
           </div>
         </section>
 
-        {/* STATS SECTION */}
-        <section className="py-8 border-b border-white/[0.03] bg-white/[0.01]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div className="space-y-1">
-                <div className="text-3xl font-extrabold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
-                  {stats.projectsCount}
+          {/* STATS SECTION */}
+          <section className="py-8 relative z-30">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              
+              <div className="bg-[#0f0f16]/90 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-6 lg:p-8 shadow-[0_0_50px_rgba(139,92,246,0.1)]">
+                <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-white/[0.08] gap-6 md:gap-0">
+                  
+                  {/* Stat 1 */}
+                  <div className="flex-1 flex items-center gap-4 justify-center md:justify-start md:px-6 first:pl-0">
+                    <div className="w-12 h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
+                      <Layers size={20} className="text-purple-400" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <div className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
+                        300
+                      </div>
+                      <div className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mt-1.5">Design Templates Available</div>
+                    </div>
+                  </div>
+
+                  {/* Stat 2 */}
+                  <div className="flex-1 flex items-center gap-4 justify-center md:justify-start md:px-6 pt-6 md:pt-0">
+                    <div className="w-12 h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
+                      <Presentation size={20} className="text-blue-400" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <div className="text-3xl font-extrabold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
+                        {stats.templatesCount}
+                      </div>
+                      <div className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mt-1.5">Presentation Templates</div>
+                    </div>
+                  </div>
+
+                  {/* Stat 3 */}
+                  <div className="flex-1 flex items-center gap-4 justify-center md:justify-start md:px-6 pt-6 md:pt-0">
+                    <div className="w-12 h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
+                      <Star size={20} className="text-purple-400" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <div className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
+                        {stats.stickersCount}
+                      </div>
+                      <div className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mt-1.5">Stickers Exported</div>
+                    </div>
+                  </div>
+
+                  {/* Stat 4 */}
+                  <div className="flex-1 flex items-center gap-4 justify-center md:justify-start md:px-6 pt-6 md:pt-0 last:pr-0">
+                    <div className="w-12 h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
+                      <Activity size={20} className="text-purple-400" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <div className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
+                        {stats.status === 'Operational' ? '100%' : '99.2%'}
+                      </div>
+                      <div className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mt-1.5">System Status (Operational)</div>
+                    </div>
+                  </div>
+
                 </div>
-                <div className="text-xs text-white/40 uppercase tracking-wider font-mono">Presentations Generated</div>
               </div>
-              <div className="space-y-1">
-                <div className="text-3xl font-extrabold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
-                  {stats.stickersCount}
-                </div>
-                <div className="text-xs text-white/40 uppercase tracking-wider font-mono">Stickers Exported</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-3xl font-extrabold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
-                  {stats.status === 'Operational' ? '100%' : '99.2%'}
-                </div>
-                <div className="text-xs text-white/40 uppercase tracking-wider font-mono">System Status ({stats.status})</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-3xl font-extrabold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
-                  {stats.templatesCount}
-                </div>
-                <div className="text-xs text-white/40 uppercase tracking-wider font-mono">Design Templates Available</div>
-              </div>
+              
             </div>
-          </div>
-        </section>
+          </section>
 
         {/* FEATURES GRID SECTION */}
         <section id="features" className="py-16 relative border-b border-white/[0.03]">
