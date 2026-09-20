@@ -293,7 +293,7 @@ export default function PublicHome() {
               </div>
               
               {/* Hero Right Column (Interactive AI Simulator) */}
-              <div className="lg:col-span-5 lg:col-start-8 relative mt-12 lg:mt-0 lg:scale-[1.4] lg:origin-right z-20">
+              <div className="lg:col-span-5 lg:col-start-8 relative mt-12 lg:mt-0 lg:translate-y-12 lg:-translate-x-12 lg:scale-[1.4] lg:origin-right z-20">
                 <div className="absolute -top-10 -left-10 w-[240px] h-[240px] bg-purple-500/10 rounded-full blur-[60px] pointer-events-none" />
                 <div className="absolute -bottom-10 -right-10 w-[260px] h-[260px] bg-cyan-500/10 rounded-full blur-[70px] pointer-events-none" />
                 
