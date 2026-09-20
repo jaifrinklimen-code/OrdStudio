@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getAppUrl } from "@/lib/getAppUrl";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, CheckCircle2, ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
 
@@ -73,7 +74,7 @@ export default function SignupPage() {
     }
 
     setIsSubmitting(true);
-    const redirectOrigin = window.location.origin;
+    const redirectOrigin = getAppUrl();
     const emailRedirectTo = `${redirectOrigin}/login`;
 
     try {
@@ -129,7 +130,7 @@ export default function SignupPage() {
     setIsResending(true);
     setResendStatus(null);
     try {
-      const redirectOrigin = window.location.origin;
+      const redirectOrigin = getAppUrl();
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: targetEmail,

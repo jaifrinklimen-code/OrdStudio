@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getAppUrl } from "@/lib/getAppUrl";
 import { useNavigate } from "react-router-dom";
-
-// Allowed redirect origins for password reset
-const ALLOWED_REDIRECT_ORIGIN = import.meta.env.VITE_APP_URL || window.location.origin;
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -39,7 +37,7 @@ export default function ForgotPasswordPage() {
     const { error } = await supabase.auth.resetPasswordForEmail(
       email.trim(),
       {
-        redirectTo: `${ALLOWED_REDIRECT_ORIGIN}/reset-password`,
+        redirectTo: `${getAppUrl()}/reset-password`,
       }
     );
 

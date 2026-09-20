@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { getAppUrl } from "@/lib/getAppUrl";
 import { Eye, EyeOff, Mail, RefreshCw, ArrowLeft } from "lucide-react";
 type AuthPageProps = {
   onGoogleLogin: () => void;
@@ -85,7 +86,7 @@ export default function AuthPage({ onGoogleLogin }: AuthPageProps) {
     setIsResending(true);
     setResendStatus(null);
     try {
-      const redirectOrigin = window.location.origin;
+      const redirectOrigin = getAppUrl();
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: unverifiedEmail,

@@ -47,6 +47,7 @@ import { AssetUploader } from './components/AssetUploader';
 import { SettingsPage } from './components/SettingsPage';
 import { TemplateAuditPage } from './components/TemplateAuditPage';
 import { checkSupabaseConnection, supabase } from "../lib/supabase";
+import { getAppUrl } from "../lib/getAppUrl";
 import { Session } from "@supabase/supabase-js";
 import { toast } from 'sonner';
 import { secureFetch } from '../lib/secureFetch';
@@ -196,7 +197,7 @@ export default function App() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: `${getAppUrl()}/login`,
       },
     });
 
