@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -24,7 +25,20 @@ const navLinks = [
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const isActive = (href: string) => location.pathname === href;
 
@@ -113,7 +127,7 @@ export function Header() {
 
         {/* CTA */}
         <div className="pub-header-actions">
-          <Link to="/login" className="pub-header-cta">
+          <Link to={isLoggedIn ? "/dashboard" : "/login"} className="pub-header-cta">
             Launch Studio
           </Link>
         </div>
@@ -159,7 +173,7 @@ export function Header() {
             )
           )}
           <Link
-            to="/login"
+            to={isLoggedIn ? "/dashboard" : "/login"}
             className="pub-mobile-cta"
             onClick={() => setMobileOpen(false)}
           >

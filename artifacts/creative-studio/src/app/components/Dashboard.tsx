@@ -78,23 +78,7 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
     }
   });
   const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
-  const [savedProjects, setSavedProjects] = useState<any[]>(() => {
-    try {
-      const stored = localStorage.getItem('ds_recent_projects');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          return parsed.filter((p: any) =>
-            p &&
-            p.name !== 'Brand Kit v2' &&
-            p.name !== 'Product Launch' &&
-            p.name !== 'Q4 Presentation'
-          );
-        }
-      }
-    } catch {}
-    return [];
-  });
+  const [savedProjects, setSavedProjects] = useState<any[]>([]);
   const [apiTemplates, setApiTemplates] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -115,48 +99,15 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
   useEffect(() => {
     let mounted = true;
 
-    // Check active Supabase session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      if (session?.user) {
-        setUserName(getResolvedDisplayName(session.user));
+    const loadUserDataAndProjects = (user: any) => {
+      setUserName(getResolvedDisplayName(user));
+      if (!user) {
+        setSavedProjects([]);
+        return;
       }
-    }).catch(() => {});
-
-    // Listen for auth state changes (login, logout, switch user)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) return;
-      setUserName(getResolvedDisplayName(session?.user || null));
-    });
-
-    // Listen for profile changes from settings or other tabs
-    const handleProfileUpdate = () => {
-      if (!mounted) return;
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (!mounted) return;
-        setUserName(getResolvedDisplayName(user));
-      }).catch(() => {
-        if (!mounted) return;
-        setUserName(getResolvedDisplayName(null));
-      });
-    };
-
-    window.addEventListener('storage', handleProfileUpdate);
-    window.addEventListener('ord_user_updated', handleProfileUpdate);
-
-    return () => {
-      mounted = false;
-      subscription?.unsubscribe();
-      window.removeEventListener('storage', handleProfileUpdate);
-      window.removeEventListener('ord_user_updated', handleProfileUpdate);
-    };
-  }, []);
-
-  // Listen for saved project updates from editor across tabs or components
-  useEffect(() => {
-    const reloadSaved = () => {
       try {
-        const stored = localStorage.getItem('ds_recent_projects');
+        const storageKey = `ds_recent_projects_${user.id}`;
+        const stored = localStorage.getItem(storageKey);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed)) {
@@ -164,17 +115,47 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
               .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
               .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
             setSavedProjects(valid);
+            return;
           }
         }
       } catch {}
+      setSavedProjects([]);
     };
 
-    window.addEventListener('storage', reloadSaved);
-    window.addEventListener('ds_projects_updated', reloadSaved);
+    // Check active Supabase session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      loadUserDataAndProjects(session?.user || null);
+    }).catch(() => {});
+
+    // Listen for auth state changes (login, logout, switch user)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      loadUserDataAndProjects(session?.user || null);
+    });
+
+    // Listen for profile changes from settings or other tabs
+    const handleProfileUpdate = () => {
+      if (!mounted) return;
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!mounted) return;
+        loadUserDataAndProjects(user);
+      }).catch(() => {
+        if (!mounted) return;
+        loadUserDataAndProjects(null);
+      });
+    };
+
+    window.addEventListener('storage', handleProfileUpdate);
+    window.addEventListener('ord_user_updated', handleProfileUpdate);
+    window.addEventListener('ds_projects_updated', handleProfileUpdate);
 
     return () => {
-      window.removeEventListener('storage', reloadSaved);
-      window.removeEventListener('ds_projects_updated', reloadSaved);
+      mounted = false;
+      subscription?.unsubscribe();
+      window.removeEventListener('storage', handleProfileUpdate);
+      window.removeEventListener('ord_user_updated', handleProfileUpdate);
+      window.removeEventListener('ds_projects_updated', handleProfileUpdate);
     };
   }, []);
 
@@ -190,45 +171,59 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
       })
       .catch(() => {});
 
-    // Refresh saved projects from localStorage / API
-    secureFetch('/api/projects')
-      .then(res => res.json())
-      .then(projects => {
-        if (mounted && Array.isArray(projects) && projects.length > 0) {
-          setSavedProjects(prev => {
-            const normalizedBack = projects.map(p => ({
-              ...p,
-              slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
-              elements: p.elements || (Array.isArray(p.slides?.[0]) ? p.slides[0] : (p.pages?.[0] || [])),
-              canvasWidth: p.canvasWidth || p.dimensions?.width,
-              canvasHeight: p.canvasHeight || p.dimensions?.height,
-              thumbnailUrl: p.thumbnailUrl || p.thumbnail,
-              updatedAt: p.updatedAt || new Date().toISOString(),
-              isSavedProject: true
-            }));
+    // Refresh saved projects from API if user is authenticated
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!mounted || !user) return;
+      secureFetch('/api/projects')
+        .then(res => res.json())
+        .then(projects => {
+          if (mounted && Array.isArray(projects) && projects.length > 0) {
+            // Strictly require project to match this authenticated user's ID
+            const userProjects = projects.filter((p: any) => p && p.user_id && String(p.user_id) === String(user.id));
+            if (userProjects.length > 0) {
+              setSavedProjects(prev => {
+                const normalizedBack = userProjects.map(p => ({
+                  ...p,
+                  slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
+                  elements: p.elements || (Array.isArray(p.slides?.[0]) ? p.slides[0] : (p.pages?.[0] || [])),
+                  canvasWidth: p.canvasWidth || p.dimensions?.width,
+                  canvasHeight: p.canvasHeight || p.dimensions?.height,
+                  thumbnailUrl: p.thumbnailUrl || p.thumbnail,
+                  updatedAt: p.updatedAt || new Date().toISOString(),
+                  isSavedProject: true
+                }));
 
-            const map = new Map<string, any>();
-            for (const item of [...prev, ...normalizedBack]) {
-              const key = String(item.id || item.name);
-              if (!map.has(key)) {
-                map.set(key, item);
-              } else {
-                const existing = map.get(key);
-                const itemTime = new Date(item.updatedAt || 0).getTime();
-                const existingTime = new Date(existing.updatedAt || 0).getTime();
-                if (itemTime >= existingTime) {
-                  map.set(key, item);
+                const map = new Map<string, any>();
+                for (const item of [...prev, ...normalizedBack]) {
+                  const key = String(item.id || item.name);
+                  if (!map.has(key)) {
+                    map.set(key, item);
+                  } else {
+                    const existing = map.get(key);
+                    const itemTime = new Date(item.updatedAt || 0).getTime();
+                    const existingTime = new Date(existing.updatedAt || 0).getTime();
+                    if (itemTime >= existingTime) {
+                      map.set(key, item);
+                    }
+                  }
                 }
-              }
+                const mergedList = Array.from(map.values())
+                  .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
+                  .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
+                  .slice(0, 10);
+
+                try {
+                  const storageKey = `ds_recent_projects_${user.id}`;
+                  localStorage.setItem(storageKey, JSON.stringify(mergedList));
+                } catch {}
+
+                return mergedList;
+              });
             }
-            return Array.from(map.values())
-              .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
-              .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
-              .slice(0, 10);
-          });
-        }
-      })
-      .catch(() => {});
+          }
+        })
+        .catch(() => {});
+    });
 
     return () => { mounted = false; };
   }, []);

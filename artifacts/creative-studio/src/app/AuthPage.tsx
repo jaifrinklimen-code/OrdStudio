@@ -1,47 +1,55 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Mail, RefreshCw, ArrowLeft } from "lucide-react";
 type AuthPageProps = {
   onGoogleLogin: () => void;
 };
 
 export default function AuthPage({ onGoogleLogin }: AuthPageProps) {
-const navigate = useNavigate();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [loginAttempts, setLoginAttempts] = useState(0);
-    const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
 
-    const handleEmailLogin = async () => {
-      // Rate limiting check
-      if (lockoutUntil && Date.now() < lockoutUntil) {
-        const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000);
-        alert(`Too many login attempts. Please try again in ${remaining} seconds.`);
-        return;
-      }
+  const handleEmailLogin = async () => {
+    setAuthErrorMessage(null);
 
-      // Email format validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!email.trim() || !emailRegex.test(email.trim())) {
-        alert("Please enter a valid email address.");
-        return;
-      }
+    // Rate limiting check
+    if (lockoutUntil && Date.now() < lockoutUntil) {
+      const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000);
+      setAuthErrorMessage(`Too many login attempts. Please try again in ${remaining} seconds.`);
+      return;
+    }
 
-      if (!password) {
-        alert("Please enter your password.");
-        return;
-      }
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setAuthErrorMessage("Please enter a valid email address.");
+      return;
+    }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+    if (!password) {
+      setAuthErrorMessage("Please enter your password.");
+      return;
+    }
 
-      if (!error) {
-        setLoginAttempts(0);
-        setSessionLockout(null);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    });
+
+    if (error) {
+      const msg = error.message?.toLowerCase() || '';
+      if (msg.includes("email not confirmed") || msg.includes("unconfirmed") || msg.includes("verify your email")) {
+        setUnverifiedEmail(cleanEmail);
         return;
       }
 
@@ -52,17 +60,122 @@ const navigate = useNavigate();
       // Lock out after 5 failed attempts for 60 seconds
       if (newAttempts >= 5) {
         setLockoutUntil(Date.now() + 60000);
-        alert("Too many failed attempts. Please try again in 60 seconds.");
+        setAuthErrorMessage("Too many failed attempts. Please try again in 60 seconds.");
         return;
       }
 
-      // Generic error message — no user enumeration
-      alert("Invalid email or password. Please try again.");
-    };
+      setAuthErrorMessage("Invalid email or password. Please try again.");
+      return;
+    }
 
-    const setSessionLockout = (val: null) => {
-      setLockoutUntil(val);
-    };
+    // Double check if user returned has confirmed email
+    if (data?.user && !data.user.email_confirmed_at && data.user.app_metadata?.provider === 'email') {
+      await supabase.auth.signOut();
+      setUnverifiedEmail(cleanEmail);
+      return;
+    }
+
+    setLoginAttempts(0);
+    setSessionLockout(null);
+    navigate('/dashboard');
+  };
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail) return;
+    setIsResending(true);
+    setResendStatus(null);
+    try {
+      const redirectOrigin = window.location.origin;
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: unverifiedEmail,
+        options: {
+          emailRedirectTo: `${redirectOrigin}/login`,
+        },
+      });
+      if (error) {
+        setResendStatus("Failed to resend verification email. Please try again in a few moments.");
+      } else {
+        setResendStatus("Verification email sent! Please check your inbox.");
+      }
+    } catch {
+      setResendStatus("Unable to resend verification email.");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const setSessionLockout = (val: null) => {
+    setLockoutUntil(val);
+  };
+
+  if (unverifiedEmail) {
+    return (
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-6 py-8">
+        <img
+          src="/image.png"
+          alt="Background"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          draggable={false}
+        />
+        <div className="absolute inset-0 bg-black/40" />
+
+        <div className="relative z-10 w-full max-w-[440px] mx-auto rounded-[32px] px-8 py-10 bg-[#171723]/90 border border-white/10 backdrop-blur-2xl shadow-2xl text-center">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-6">
+            <Mail size={32} className="animate-pulse" />
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            Verify your email
+          </h1>
+
+          <p className="text-white/70 mt-3 text-sm leading-relaxed">
+            Your email address has not been verified yet:
+          </p>
+
+          <div className="mt-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-purple-300 font-mono text-sm break-all font-medium inline-block max-w-full">
+            {unverifiedEmail}
+          </div>
+
+          <p className="text-white/60 mt-4 text-xs leading-relaxed">
+            Please check your inbox and click the verification link before logging in to access Design Studio.
+          </p>
+
+          {resendStatus && (
+            <div className={`mt-4 p-3 rounded-xl text-xs font-medium ${
+              resendStatus.includes("sent") 
+                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300"
+                : "bg-red-500/15 border border-red-500/30 text-red-300"
+            }`}>
+              {resendStatus}
+            </div>
+          )}
+
+          <div className="mt-8 space-y-3">
+            <button
+              onClick={handleResendVerification}
+              disabled={isResending}
+              className="w-full h-11 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-medium transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw size={14} className={isResending ? "animate-spin text-purple-400" : "text-white/60"} />
+              {isResending ? "Resending email..." : "Resend verification email"}
+            </button>
+
+            <button
+              onClick={() => {
+                setUnverifiedEmail(null);
+                setResendStatus(null);
+              }}
+              className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-medium transition flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-purple-600/20"
+            >
+              <ArrowLeft size={16} />
+              Back to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
  return (
 <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-6 py-8">
 
@@ -186,6 +299,12 @@ max-w-[420px]
     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
   </button>
 </div>
+
+{authErrorMessage && (
+  <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs leading-relaxed">
+    {authErrorMessage}
+  </div>
+)}
 
 {/* Sign In */}
 <button

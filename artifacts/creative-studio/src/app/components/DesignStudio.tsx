@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { secureFetch } from '../../lib/secureFetch';
+import { supabase } from '../../lib/supabase';
 import {
   Download, Share2, Image, Type, Sparkles, ArrowLeft, ArrowRight,
   Heart, Eye, Star, Crown, Zap, TrendingUp, Clock, Folder,
@@ -121,7 +122,7 @@ export const templates: any[] = CANONICAL_FALLBACK_TEMPLATES;
 export const templatesWithSlides: any[] = CANONICAL_FALLBACK_TEMPLATES;
 
 /* ── Main component ────────────────────────────────────────── */
-export function DesignStudio() {
+export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any) => void } = {}) {
   const [selected, setSelected] = useState<number | null>(null);
   const [filter, setFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -131,23 +132,7 @@ export function DesignStudio() {
   const [trendingScroll, setTrendingScroll] = useState(0);
   const trendingRef = useRef<HTMLDivElement>(null);
   const [apiTemplates, setApiTemplates] = useState<any[]>([]);
-  const [apiProjects, setApiProjects] = useState<any[]>(() => {
-    try {
-      const stored = localStorage.getItem('ds_recent_projects');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          return parsed.filter((p: any) => 
-            p && 
-            p.name !== 'Brand Kit v2' && 
-            p.name !== 'Product Launch' && 
-            p.name !== 'Q4 Presentation'
-          );
-        }
-      }
-    } catch(e) {}
-    return [];
-  });
+  const [apiProjects, setApiProjects] = useState<any[]>([]);
 
   const [selectedStyle, setSelectedStyle] = useState<string>('All Styles');
   const [selectedOrientation, setSelectedOrientation] = useState<string>('All');
@@ -157,9 +142,16 @@ export function DesignStudio() {
 
   // Listen for saved project updates from editor across tabs or components
   useEffect(() => {
-    const reloadSaved = () => {
+    let mounted = true;
+
+    const reloadUserProjects = (user: any) => {
+      if (!user) {
+        setApiProjects([]);
+        return;
+      }
       try {
-        const stored = localStorage.getItem('ds_recent_projects');
+        const storageKey = `ds_recent_projects_${user.id}`;
+        const stored = localStorage.getItem(storageKey);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed)) {
@@ -167,22 +159,48 @@ export function DesignStudio() {
               .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
               .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
             setApiProjects(valid);
+            return;
           }
         }
       } catch {}
+      setApiProjects([]);
     };
 
-    window.addEventListener('storage', reloadSaved);
-    window.addEventListener('ds_projects_updated', reloadSaved);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      reloadUserProjects(session?.user || null);
+    }).catch(() => {});
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      reloadUserProjects(session?.user || null);
+    });
+
+    const handleProfileUpdate = () => {
+      if (!mounted) return;
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!mounted) return;
+        reloadUserProjects(user);
+      }).catch(() => {
+        if (!mounted) return;
+        reloadUserProjects(null);
+      });
+    };
+
+    window.addEventListener('storage', handleProfileUpdate);
+    window.addEventListener('ds_projects_updated', handleProfileUpdate);
 
     return () => {
-      window.removeEventListener('storage', reloadSaved);
-      window.removeEventListener('ds_projects_updated', reloadSaved);
+      mounted = false;
+      subscription?.unsubscribe();
+      window.removeEventListener('storage', handleProfileUpdate);
+      window.removeEventListener('ds_projects_updated', handleProfileUpdate);
     };
   }, []);
 
-  const handleUseTemplate = (t: any) => {
+  const handleUseTemplate = async (t: any) => {
     if (!t) return;
+    const { data: { session } } = await supabase.auth.getSession();
     const cloneId = 'design_' + Date.now();
     
     // Normalize slides and elements
@@ -211,6 +229,7 @@ export function DesignStudio() {
     const clonedDesign = {
       ...t,
       id: cloneId,
+      user_id: session?.user?.id,
       originalTemplateId: t.id,
       sourceTemplateId: t.id,
       name: t.name.startsWith('My ') ? `${t.name} (Copy)` : `My ${t.name}`,
@@ -230,17 +249,25 @@ export function DesignStudio() {
     };
 
     setApiTemplates(prev => [clonedDesign, ...prev]);
-    setApiProjects(prev => {
-      const updated = [clonedDesign, ...prev.filter(p => String(p.id) !== String(cloneId))].slice(0, 10);
-      try {
-        localStorage.setItem('ds_recent_projects', JSON.stringify(updated));
-        window.dispatchEvent(new Event('ds_projects_updated'));
-      } catch {}
-      return updated;
-    });
-    setSelected(cloneId as any);
+    if (session?.user?.id) {
+      setApiProjects(prev => {
+        const updated = [clonedDesign, ...prev.filter(p => String(p.id) !== String(cloneId))].slice(0, 10);
+        try {
+          const storageKey = `ds_recent_projects_${session.user.id}`;
+          localStorage.setItem(storageKey, JSON.stringify(updated));
+          window.dispatchEvent(new Event('ds_projects_updated'));
+        } catch {}
+        return updated;
+      });
+    }
+
     setPreviewModalTemplate(null);
-    toast.success(`Design "${clonedDesign.name}" created! Ready to customize.`);
+    if (onOpenTemplate) {
+      onOpenTemplate(clonedDesign);
+    } else {
+      setSelected(cloneId as any);
+      toast.success(`Design "${clonedDesign.name}" created! Ready to customize.`);
+    }
   };
 
   const saveTemplate = async (template: any, method: 'POST' | 'PUT' = 'POST') => {
@@ -303,7 +330,11 @@ export function DesignStudio() {
       return updated;
     });
 
-    setSelected(id);
+    if (onOpenTemplate) {
+      onOpenTemplate(newProject);
+    } else {
+      setSelected(id);
+    }
   };
 
   const handleEditTemplate = async (event: React.MouseEvent, template: any) => {
@@ -373,29 +404,14 @@ export function DesignStudio() {
     handleUseTemplate(t);
   };
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('ds_recent_projects');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          const cleaned = parsed.filter((p: any) => 
-            p && 
-            p.name !== 'Brand Kit v2' && 
-            p.name !== 'Product Launch' && 
-            p.name !== 'Q4 Presentation'
-          );
-          localStorage.setItem('ds_recent_projects', JSON.stringify(cleaned));
-        }
-      }
-    } catch(e) {}
-  }, []);
 
   useEffect(() => {
     Promise.all([
       secureFetch('/api/templates').then(r => r.ok ? r.json() : null),
       secureFetch('/api/projects').then(r => r.ok ? r.json() : null)
-    ]).then(([templatesData, projectsData]) => {
+    ]).then(async ([templatesData, projectsData]) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = session?.user;
       const storedCustomTemplates = getStoredCustomTemplates().map(normalizeCustomTemplate);
       const mapped = Array.isArray(templatesData)
         ? templatesData.map((t: any) => {
@@ -444,9 +460,11 @@ export function DesignStudio() {
       }
       setApiTemplates(mergedTemplates);
 
-      if (projectsData && projectsData.length > 0) {
+      if (currentUser && projectsData && projectsData.length > 0) {
         const filteredProjects = projectsData.filter((p: any) => 
           p && 
+          p.user_id &&
+          String(p.user_id) === String(currentUser.id) &&
           p.name !== 'Brand Kit v2' && 
           p.name !== 'Product Launch' && 
           p.name !== 'Q4 Presentation'
@@ -490,7 +508,8 @@ export function DesignStudio() {
               .slice(0, 10);
 
             try {
-              localStorage.setItem('ds_recent_projects', JSON.stringify(mergedList));
+              const storageKey = `ds_recent_projects_${currentUser.id}`;
+              localStorage.setItem(storageKey, JSON.stringify(mergedList));
             } catch(e) {}
 
             return mergedList;
@@ -880,7 +899,11 @@ export function DesignStudio() {
 
                 return (
                   <div key={p.id || i} className="ds-recent-card" tabIndex={0} role="button" aria-label={`Continue ${p.name}`} onClick={() => {
-                    setSelected(p.id);
+                    if (onOpenTemplate) {
+                      onOpenTemplate(savedDesignPayload);
+                    } else {
+                      setSelected(p.id);
+                    }
                   }}>
                     <div className="ds-recent-thumb relative overflow-hidden bg-slate-950 flex items-center justify-center p-2">
                       <TemplateMiniRenderer template={savedDesignPayload} className="w-full h-full" />

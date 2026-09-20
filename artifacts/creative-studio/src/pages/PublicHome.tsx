@@ -30,82 +30,12 @@ interface DemoItem {
   };
 }
 
-const DEMO_PROMPTS: DemoItem[] = [
-  {
-    id: 'slides',
-    label: 'AI Presentation',
-    icon: Presentation,
-    prompt: 'Space-tourism startup pitch deck for a luxury orbital hotel',
-    statusTexts: [
-      'Initializing AI layout engine...',
-      'Structuring narrative slides...',
-      'Applying custom dark-nebula styling...',
-      'Ready!'
-    ],
-    result: {
-      title: 'Architectural Horizon Monograph',
-      subtitle: 'The Future of Hospitality Beyond Earth',
-      slides: [
-        { title: '01. The Opportunity', desc: 'Space tourism TAM is projected to grow to $120B by 2032, driven by ultra-high-net-worth orbital pioneers.' },
-        { title: '02. Orbital Infrastructure', desc: '12 inflatable modules with artificial gravity, panoramic viewport lounges, and space-walk suits.' },
-        { title: '03. Financial Outlook', desc: 'Breakeven projected in Year 3 with 240 guests/year capacity at $2.5M per ticket tier.' },
-        { title: '04. The Launch Team', desc: 'Led by seasoned aerospace engineers, ex-NASA astronauts, and world-class luxury hotel hoteliers.' }
-      ]
-    }
-  },
-  {
-    id: 'stickers',
-    label: 'AI Sticker Lab',
-    icon: Sticker,
-    prompt: 'Cute cyber cat wearing glowing purple glasses, kawaii sticker',
-    statusTexts: [
-      'Computing neural style vectors...',
-      'Tracing high-res bezier paths...',
-      'Applying white die-cut margins...',
-      'Ready!'
-    ],
-    result: {
-      title: 'NeonCyberCat.svg',
-      imageUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&auto=format&fit=crop&q=80',
-      tags: ['Kawaii', '3D Glossy', 'Transparent SVG', 'White Die-Cut']
-    }
-  },
-  {
-    id: 'writer',
-    label: 'AI Copywriter',
-    icon: FileText,
-    prompt: 'Persuasive marketing email sequence for organic matcha tea launch',
-    statusTexts: [
-      'Analyzing copywriting tone weights...',
-      'Drafting engaging subject line...',
-      'Polishing body copy structure...',
-      'Ready!'
-    ],
-    result: {
-      subject: 'Subject: Elevate Your Mornings with Clean Zen Energy 🍃',
-      body: [
-        'Hey Wellness Explorer,',
-        'Forget the morning jitters and the mid-afternoon crash. Our ceremonial-grade organic matcha provides a clean, jitter-free focus that lasts all day.',
-        'Sourced directly from Uji, Japan, and stone-ground to preserve nutrients, it delivers L-Theanine for calm focus and antioxidants for physical vitality.',
-        'Claim 20% off your starter pack today with code MATCHA20.'
-      ]
-    }
-  }
-];
-
 import { secureFetch } from '@/lib/secureFetch';
 
 export default function PublicHome() {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>('slides');
-  const [demoStage, setDemoStage] = useState<'typing' | 'generating' | 'done'>('typing');
-  const [typedPrompt, setTypedPrompt] = useState<string>('');
-  const [statusIndex, setStatusIndex] = useState<number>(0);
-  const [activeSlideIndex, setActiveSlideIndex] = useState<number>(0);
+  const [stats, setStats] = useState({ templatesCount: 50, projectsCount: 0, stickersCount: 12, status: 'Operational' });
   const [showToast, setShowToast] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string>('');
-  const [stats, setStats] = useState({ templatesCount: 50, projectsCount: 0, stickersCount: 12, status: 'Operational' });
-  const typingTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     secureFetch('/api/stats')
@@ -123,108 +53,12 @@ export default function PublicHome() {
       .catch(() => {});
   }, []);
 
-  const activeDemo = DEMO_PROMPTS.find(d => d.id === activeTab) || DEMO_PROMPTS[0];
-
-  useEffect(() => {
-    if (typingTimer.current) clearTimeout(typingTimer.current);
-    
-    setDemoStage('typing');
-    setTypedPrompt('');
-    setStatusIndex(0);
-    setActiveSlideIndex(0);
-
-    let charIdx = 0;
-    const targetText = activeDemo.prompt;
-
-    function typeChar() {
-      if (charIdx < targetText.length) {
-        setTypedPrompt(targetText.slice(0, charIdx + 1));
-        charIdx++;
-        typingTimer.current = setTimeout(typeChar, 30);
-      } else {
-        setDemoStage('generating');
-        let statusIdx = 0;
-        
-        function cycleStatus() {
-          if (statusIdx < activeDemo.statusTexts.length - 1) {
-            setStatusIndex(statusIdx + 1);
-            statusIdx++;
-            typingTimer.current = setTimeout(cycleStatus, 900);
-          } else {
-            setDemoStage('done');
-          }
-        }
-        typingTimer.current = setTimeout(cycleStatus, 800);
-      }
-    }
-
-    typingTimer.current = setTimeout(typeChar, 200);
-
-    return () => {
-      if (typingTimer.current) clearTimeout(typingTimer.current);
-    };
-  }, [activeTab]);
-
   const triggerToast = (msg: string) => {
     setToastMsg(msg);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2500);
   };
-  const handleEditInStudio = async () => {
-    let targetTab = 'design';
-    if (activeTab === 'stickers') {
-      targetTab = 'stickers';
-    } else if (activeTab === 'writer') {
-      targetTab = 'generator';
-    }
-    localStorage.setItem('activeTab', targetTab);
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      sessionStorage.setItem('ord_pending_tab', targetTab);
-      navigate('/login');
-    } else {
-      navigate('/dashboard');
-    }
-  };
-
-  const handleExportFiles = () => {
-    let filename = 'presentation-outline.txt';
-    let mimeType = 'text/plain';
-    let content = 'OrdStudio AI Presentation Outline\n\n' + 
-      'Slide 1: The Opportunity\nSpace tourism TAM is projected to grow to $120B by 2032...\n\n' +
-      'Slide 2: The Solution\nLuxury orbital lodging with zero-g sports and synthetic gravity suites...';
-
-    if (activeTab === 'stickers') {
-      filename = 'sticker-concept.svg';
-      mimeType = 'image/svg+xml';
-      content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-        <rect width="100" height="100" rx="20" fill="url(#grad)" stroke="white" stroke-width="4"/>
-        <defs>
-          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
-          </linearGradient>
-        </defs>
-        <text x="50%" y="65%" font-size="40" text-anchor="middle">👾</text>
-      </svg>`;
-    } else if (activeTab === 'writer') {
-      filename = 'copywriting-draft.md';
-      mimeType = 'text/markdown';
-      content = `# Cold Email: Craft Matcha Latte Launch\n\nSubject: Upgrade your morning ritual 🍵\n\nHey there,\n\nWe know you love clean energy. That's why we crafted the finest ceremonial matcha latte blend...`;
-    }
-
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    triggerToast(`Exported ${filename} successfully!`);
-  };
   return (
     <>
       <SEOHead
@@ -297,186 +131,72 @@ export default function PublicHome() {
                 <div className="absolute -top-10 -left-10 w-[240px] h-[240px] bg-purple-500/10 rounded-full blur-[60px] pointer-events-none" />
                 <div className="absolute -bottom-10 -right-10 w-[260px] h-[260px] bg-cyan-500/10 rounded-full blur-[70px] pointer-events-none" />
                 
-                <div className="glass-3d rounded-2xl overflow-hidden border border-white/[0.08] relative z-10 shadow-2xl">
+                {/* NEW STACKED DESIGN CARD */}
+                <div className="relative w-full aspect-[4/3] perspective-1000 mt-8">
+                  {/* Background Stack Cards */}
+                  <div className="absolute inset-0 bg-[#0f0f15] border border-white/[0.05] rounded-3xl transform -rotate-6 scale-95 translate-y-4 opacity-50 shadow-2xl"></div>
+                  <div className="absolute inset-0 bg-[#0f0f15] border border-white/[0.08] rounded-3xl transform -rotate-3 scale-[0.98] translate-y-2 opacity-80 shadow-2xl"></div>
                   
-                  <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-6 py-4">
-                    <div className="flex gap-1">
-                      <div className="w-3 h-3 rounded-full bg-rose-500/80" />
-                      <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-                      <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                    </div>
-                    <span className="text-[11px] font-bold text-white/30 uppercase tracking-widest font-mono">
-                      ai_workspace_simulator
-                    </span>
-                    <div className="w-8" />
-                  </div>
-                  
-                  <div className="flex border-b border-white/[0.06] bg-white/[0.01]">
-                    {DEMO_PROMPTS.map(d => {
-                      const Icon = d.icon;
-                      const isActive = activeTab === d.id;
-                      return (
-                        <button
-                          key={d.id}
-                          onClick={() => setActiveTab(d.id)}
-                          className={`flex-1 py-3.5 px-3 flex items-center justify-center gap-2 text-xs font-semibold border-b-2 transition-all ${
-                            isActive
-                              ? 'border-purple-500 text-purple-300 bg-purple-500/5'
-                              : 'border-transparent text-white/45 hover:text-white/70 hover:bg-white/[0.02]'
-                          }`}
-                        >
-                          <Icon size={14} />
-                          {d.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="p-6 min-h-[340px] flex flex-col justify-between relative bg-black/20">
+                  {/* Main Front Card */}
+                  <div className="absolute inset-0 bg-[#0a0a0f] border border-white/[0.12] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col p-6 sm:p-8 justify-between z-10 group hover:border-purple-500/50 transition-colors duration-500">
                     
-                    <div className="bg-[#0b0b0e] border border-white/[0.07] rounded-xl p-4 flex items-start gap-3 shadow-inner">
-                      <Terminal size={16} className="text-purple-400 mt-0.5 shrink-0" />
-                      <div className="flex-1 font-mono text-[13px] leading-relaxed">
-                        <span className="text-white/30">user@ordstudio:~$ </span>
-                        <span className="text-white/80">{typedPrompt}</span>
-                        {demoStage === 'typing' && (
-                          <span className="inline-block w-1.5 h-4 bg-purple-400 ml-0.5 animate-pulse" />
-                        )}
-                      </div>
+                    {/* Top Badge */}
+                    <div className="inline-flex items-center gap-2 border border-purple-500/30 bg-purple-500/10 rounded-full px-4 py-1.5 w-fit shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+                      <Sparkles size={14} className="text-purple-400" />
+                      <span className="text-xs font-semibold text-purple-200 tracking-wide">Design Studio</span>
                     </div>
 
-                    {demoStage === 'generating' && (
-                      <div className="flex-1 flex flex-col items-center justify-center my-6 space-y-4">
-                        <div className="relative">
-                          <RotateCw size={36} className="text-purple-400 animate-spin" />
-                          <Sparkles size={16} className="text-cyan-400 absolute top-2.5 left-2.5 animate-pulse" />
-                        </div>
-                        <div className="space-y-1.5 text-center">
-                          <p className="text-sm font-semibold text-purple-200">
-                            {activeDemo.statusTexts[statusIndex]}
-                          </p>
-                          <div className="w-32 h-1 bg-white/[0.06] rounded-full mx-auto overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-300"
-                              style={{ width: `${((statusIndex + 1) / activeDemo.statusTexts.length) * 100}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    {/* Main Title & Subtitle */}
+                    <div className="space-y-2 mt-6 relative z-20 w-2/3">
+                      <h2 className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black leading-[1.1] tracking-tight" style={{ fontFamily: 'Syne, sans-serif' }}>
+                        <span className="text-white block">Architectural</span>
+                        <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent block">Horizon</span>
+                        <span className="text-white block">Monograph</span>
+                      </h2>
+                      <p className="text-white/50 text-xs sm:text-sm font-medium pt-2">
+                        Minimal Spaces. Maximum Stories.
+                      </p>
+                    </div>
 
-                    {demoStage === 'done' && (
-                      <div className="flex-1 flex flex-col justify-center my-4 animate-fade-in">
+                    {/* Bottom CTA */}
+                    <div className="flex items-center gap-3 mt-8 relative z-20">
+                      <div className="w-8 h-8 rounded-full border border-purple-500/40 flex items-center justify-center text-purple-400 bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
+                        <ArrowRight size={14} className="-rotate-45" />
+                      </div>
+                      <span className="text-sm font-medium text-white/70 group-hover:text-white transition-colors cursor-pointer">
+                        Create with AI
+                      </span>
+                    </div>
+
+                    {/* Architectural Sticker Cutout (Right Side) */}
+                    <div className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] transform rotate-6 group-hover:rotate-3 group-hover:scale-105 transition-all duration-500 z-10">
+                      <div className="relative w-full h-full">
+                        {/* Glow behind sticker */}
+                        <div className="absolute inset-0 bg-indigo-500/30 blur-2xl rounded-full scale-110"></div>
                         
-                        {activeTab === 'slides' && activeDemo.result.slides && (
-                          <div className="relative space-y-4 perspective-1000">
-                            {/* Stacked background cards to create a stacked-card composition */}
-                            <div className="absolute inset-0 border border-white/[0.04] bg-white/[0.01] rounded-xl transform scale-[0.88] translate-y-6 opacity-40 -z-20"></div>
-                            <div className="absolute inset-0 border border-white/[0.06] bg-white/[0.02] rounded-xl transform scale-[0.94] translate-y-3 opacity-70 -z-10"></div>
-                            
-                            <div className="border border-white/[0.08] bg-[#0c0c10] rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden z-10 flex flex-col">
-                              {/* Architectural Image integrated into the front card */}
-                              <div className="relative h-32 w-full shrink-0">
-                                <img 
-                                  src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop" 
-                                  alt="Architectural visualization" 
-                                  className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c10] via-transparent to-transparent"></div>
-                                <div className="absolute top-0 right-0 bg-black/50 backdrop-blur-md text-white/80 border-l border-b border-white/[0.08] px-2.5 py-1 text-[10px] font-bold rounded-bl-lg uppercase tracking-wider font-mono">
-                                  Slide {activeSlideIndex + 1} of 4
-                                </div>
-                              </div>
-                              <div className="px-5 pb-5 pt-1 space-y-2">
-                                <h4 className="text-[10px] font-bold text-white/40 font-mono tracking-wider uppercase">
-                                  {activeDemo.result.title}
-                                </h4>
-                                <h3 className="text-lg font-bold text-white leading-snug">
-                                  {activeDemo.result.slides[activeSlideIndex].title}
-                                </h3>
-                                <p className="text-xs text-white/60 leading-relaxed pt-1 line-clamp-2">
-                                  {activeDemo.result.slides[activeSlideIndex].desc}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex justify-between items-center px-1">
-                              <div className="flex gap-1.5">
-                                {activeDemo.result.slides.map((_, idx) => (
-                                  <button
-                                    key={idx}
-                                    onClick={() => setActiveSlideIndex(idx)}
-                                    className={`w-2 h-2 rounded-full transition-all ${
-                                      activeSlideIndex === idx ? 'bg-purple-500 w-4' : 'bg-white/20'
-                                    }`}
-                                    aria-label={`Go to slide ${idx + 1}`}
-                                  />
-                                ))}
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setActiveSlideIndex(prev => (prev + 1) % 4);
-                                }}
-                                className="text-xs text-purple-300 font-bold hover:text-purple-200 flex items-center gap-1"
-                              >
-                                Next slide <ChevronRight size={12} />
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                        {/* Main architectural photo as sticker */}
+                        <div className="relative w-full h-full border-[6px] sm:border-[8px] border-white rounded-2xl overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.5)] transform -rotate-3 bg-white">
+                          <img 
+                            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop" 
+                            alt="Architecture" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
 
-                        {activeTab === 'stickers' && activeDemo.result.imageUrl && (
-                          <div className="flex flex-col items-center space-y-4">
-                            <div className="relative group/sticker">
-                              <div className="absolute inset-0 bg-purple-500/15 blur-md rounded-full transform group-hover/sticker:scale-110 transition-transform duration-300" />
-                              <div className="relative w-36 h-36 rounded-full bg-white p-2.5 shadow-[0_10px_25px_rgba(0,0,0,0.5)] border-[5px] border-white transform rotate-3 hover:rotate-0 transition-all duration-300">
-                                <img
-                                  src={activeDemo.result.imageUrl}
-                                  alt="Mock generated sticker"
-                                  className="w-full h-full object-cover rounded-full"
-                                />
-                                <Sparkles size={20} className="absolute -top-1 -right-1 text-yellow-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap justify-center gap-1.5">
-                              {activeDemo.result.tags?.map(t => (
-                                <span key={t} className="text-[10px] bg-white/[0.06] border border-white/[0.08] text-white/50 px-2 py-0.5 rounded-full">
-                                  {t}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        {/* Hand-written style small sticker overlapping */}
+                        <div className="absolute -bottom-2 -left-4 sm:-left-6 bg-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl border-[3px] border-white shadow-xl transform -rotate-12">
+                          <span className="text-black font-bold text-sm sm:text-lg leading-none block text-center" style={{ fontFamily: 'Caveat, cursive, sans-serif' }}>
+                            Design<br/>Studio
+                          </span>
+                        </div>
 
-                        {activeTab === 'writer' && activeDemo.result.subject && (
-                          <div className="border border-white/[0.08] bg-[#0c0c10] rounded-xl p-4 shadow-inner max-h-[190px] overflow-y-auto space-y-3 font-sans text-xs">
-                            <div className="border-b border-white/[0.06] pb-2 text-[11px] font-bold text-purple-400">
-                              {activeDemo.result.subject}
-                            </div>
-                            <div className="space-y-2 text-white/60 leading-relaxed">
-                              {activeDemo.result.body?.map((p, i) => (
-                                <p key={i}>{p}</p>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
+                        {/* Accent strokes */}
+                        <div className="absolute -top-4 right-0 text-purple-400 transform rotate-12 drop-shadow-md">
+                          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                            <path d="M10 20 L15 15 M20 8 L25 12 M30 15 L25 20" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
                       </div>
-                    )}
-
-                    <div className="flex gap-3 border-t border-white/[0.06] pt-4 mt-2">
-                      <button
-                        onClick={handleEditInStudio}
-                        className="flex-1 text-center py-2.5 rounded-lg text-xs font-bold transition-all bg-purple-600 hover:bg-purple-500 text-white shadow-md active:scale-95"
-                      >
-                        Edit in Studio
-                      </button>
-                      <button
-                        onClick={handleExportFiles}
-                        className="flex-1 text-center py-2.5 rounded-lg text-xs font-bold transition-all bg-white/5 hover:bg-white/10 text-white border border-white/10 active:scale-95"
-                      >
-                        Export Files
-                      </button>
                     </div>
 
                   </div>

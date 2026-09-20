@@ -2,7 +2,7 @@ import AuthPage from "./AuthPage";
 import { useIsMobile } from '@/hooks/use-mobile';
 import SignupPage from "./SignUp page";
 import ForgotPasswordPage from "./ForgotPasswordPage";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 // Public Layout & Pages
@@ -110,64 +110,120 @@ export default function App() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-useEffect(() => {
-  let mounted = true;
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  supabase.auth.getSession().then(({ data: { session }, error }) => {
-    if (!mounted) return;
-    if (error) {
-      console.error("Unable to restore authentication session:", error);
-    }
-    // For local dev or offline demo access, provide default guest session if Supabase is unconfigured
-    const effectiveSession = session || {
-      user: {
-        id: 'guest-creator',
-        email: 'creator@ordstudio.ai',
-        user_metadata: { full_name: 'ORD Creator' }
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data: { session: existingSession }, error }) => {
+      if (!mounted) return;
+      if (error) {
+        console.error("Unable to restore authentication session:", error);
       }
-    } as any;
-    setSession(effectiveSession);
-    setAuthLoading(false);
-  });
+      setSession(existingSession || null);
+      setAuthLoading(false);
+    });
 
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange((_event, session) => {
-    if (!mounted) return;
-    setSession(session);
-    setAuthLoading(false);
-  });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (!mounted) return;
+      setSession(newSession || null);
+      setAuthLoading(false);
+    });
 
-  return () => {
-    mounted = false;
-    subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // When user signs in, check if there was a pending template/design or tab clicked while unauthenticated
+  useEffect(() => {
+    if (session) {
+      try {
+        const pendingTemplate = sessionStorage.getItem('ord_pending_template');
+        if (pendingTemplate) {
+          sessionStorage.removeItem('ord_pending_template');
+          const parsed = JSON.parse(pendingTemplate);
+          if (parsed) {
+            setCustomDesign(parsed);
+            if (window.location.pathname !== '/dashboard') {
+              navigate('/dashboard');
+            }
+            return;
+          }
+        }
+        const pendingTab = sessionStorage.getItem('ord_pending_tab');
+        if (pendingTab) {
+          sessionStorage.removeItem('ord_pending_tab');
+          localStorage.setItem('activeTab', pendingTab);
+          setActiveTab(pendingTab);
+          if (window.location.pathname !== '/dashboard') {
+            navigate('/dashboard');
+          }
+        }
+      } catch (e) {
+        console.warn('Unable to restore pending template from session storage:', e);
+      }
+    }
+  }, [session, navigate]);
+
+  const handleOpenTemplateWithAuth = useCallback((designPayload: any) => {
+    if (!designPayload) return;
+
+    if (!session) {
+      try {
+        sessionStorage.setItem('ord_pending_template', JSON.stringify(designPayload));
+      } catch (e) {
+        console.warn('Unable to save pending template to session storage:', e);
+      }
+      navigate('/login');
+      return;
+    }
+
+    setCustomDesign(designPayload);
+  }, [session, navigate]);
+
+  const handleGoogleLogin = async () => {
+    const isSupabaseAvailable = await checkSupabaseConnection();
+    if (!isSupabaseAvailable) {
+      alert("Google sign-in is unavailable because the Supabase project URL is invalid or unreachable. Update VITE_SUPABASE_URL and restart the app.");
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/login`,
+      },
+    });
+
+    if (error) {
+      console.error("Google sign-in failed:", error);
+      alert("Google sign-in is temporarily unavailable. Please try again.");
+    }
   };
-}, []);
-const handleGoogleLogin = async () => {
-  const isSupabaseAvailable = await checkSupabaseConnection();
-  if (!isSupabaseAvailable) {
-    alert("Google sign-in is unavailable because the Supabase project URL is invalid or unreachable. Update VITE_SUPABASE_URL and restart the app.");
-    return;
-  }
 
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/login`,
-    },
-  });
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setCustomDesign(null);
+    window.dispatchEvent(new Event('ds_projects_updated'));
+    navigate('/');
+  };
 
-  if (error) {
-    console.error("Google sign-in failed:", error);
-    alert("Google sign-in is temporarily unavailable. Please try again.");
-  }
-};
-
-const handleLogout = async () => {
-  await supabase.auth.signOut();
-};
   const renderSection = () => {
     if (customDesign) {
+      if (!session) {
+        try {
+          sessionStorage.setItem('ord_pending_template', JSON.stringify(customDesign));
+        } catch (e) {}
+        setCustomDesign(null);
+        navigate('/login');
+        return null;
+      }
       return (
         <CanvasEditor
           templateName={customDesign.name}
@@ -185,6 +241,7 @@ const handleLogout = async () => {
             const updated = {
               ...customDesign,
               id: designId,
+              user_id: session?.user?.id,
               originalTemplateId: customDesign.originalTemplateId || customDesign.sourceTemplateId || customDesign.templateId,
               sourceTemplateId: customDesign.sourceTemplateId || customDesign.originalTemplateId || customDesign.templateId,
               name: finalName,
@@ -204,16 +261,19 @@ const handleLogout = async () => {
               progress: 100
             };
             setCustomDesign(updated);
-            try {
-              const stored = localStorage.getItem('ds_recent_projects');
-              const prev = stored ? JSON.parse(stored) : [];
-              const next = [
-                updated,
-                ...prev.filter((p: any) => String(p.id) !== String(designId))
-              ].slice(0, 10);
-              localStorage.setItem('ds_recent_projects', JSON.stringify(next));
-              window.dispatchEvent(new Event('ds_projects_updated'));
-            } catch {}
+            if (session?.user?.id) {
+              try {
+                const storageKey = `ds_recent_projects_${session.user.id}`;
+                const stored = localStorage.getItem(storageKey);
+                const prev = stored ? JSON.parse(stored) : [];
+                const next = [
+                  updated,
+                  ...prev.filter((p: any) => String(p.id) !== String(designId))
+                ].slice(0, 10);
+                localStorage.setItem(storageKey, JSON.stringify(next));
+                window.dispatchEvent(new Event('ds_projects_updated'));
+              } catch {}
+            }
 
             secureFetch('/api/projects', {
               method: 'POST',
@@ -227,14 +287,14 @@ const handleLogout = async () => {
       );
     }
     switch (activeTab) {
-      case 'design':    return <DesignStudio />;
+      case 'design':    return <DesignStudio onOpenTemplate={handleOpenTemplateWithAuth} />;
       case 'assistant': return <AIAssistant />;
       case 'generator': return <ContentGenerator />;
-      case 'search':    return <SmartSearch query={globalSearchQuery} setQuery={setGlobalSearchQuery} onNavigate={handleNavigate} onOpenTemplate={(design) => setCustomDesign(design)} />;
+      case 'search':    return <SmartSearch query={globalSearchQuery} setQuery={setGlobalSearchQuery} onNavigate={handleNavigate} onOpenTemplate={handleOpenTemplateWithAuth} />;
       case 'stickers':  return <StickerLab />;
-      case 'upload':    return <AssetUploader onOpenInEditor={(design) => setCustomDesign(design)} />;
+      case 'upload':    return <AssetUploader onOpenInEditor={handleOpenTemplateWithAuth} />;
       case 'settings':  return <SettingsPage />;
-      default:          return <Dashboard onNavigate={handleNavigate} onOpenTemplate={(design) => setCustomDesign(design)} />;
+      default:          return <Dashboard onNavigate={handleNavigate} onOpenTemplate={handleOpenTemplateWithAuth} />;
     }
   };
 
@@ -287,38 +347,34 @@ const handleLogout = async () => {
       <Route path="/template-audit" element={<TemplateAuditPage />} />
       <Route path="/admin/template-audit" element={<TemplateAuditPage />} />
 
-      {/* Protected Dashboard Route */}
+      {/* Dashboard Route - Allows Guest Template Library Discovery & Gated Editing */}
       <Route 
         path="/dashboard" 
         element={
-          session ? (
-            <DashboardLayout
-              isMobile={isMobile}
-              activeTab={activeTab}
-              handleNavigate={handleNavigate}
-              isCollapsed={isCollapsed}
-              setIsCollapsed={setIsCollapsed}
-              customDesign={customDesign}
-              setCustomDesign={setCustomDesign}
-              globalSearchQuery={globalSearchQuery}
-              setGlobalSearchQuery={setGlobalSearchQuery}
-              topSearchRef={topSearchRef}
-              showNotif={showNotif}
-              setShowNotif={setShowNotif}
-              showProfile={showProfile}
-              setShowProfile={setShowProfile}
-              handleGoogleLogin={handleGoogleLogin}
-              handleLogout={handleLogout}
-              notifRef={notifRef}
-              profileRef={profileRef}
-              loading={loading}
-              loadingKey={loadingKey}
-              session={session}
-              renderSection={renderSection}
-            />
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          <DashboardLayout
+            isMobile={isMobile}
+            activeTab={activeTab}
+            handleNavigate={handleNavigate}
+            isCollapsed={isCollapsed}
+            setIsCollapsed={setIsCollapsed}
+            customDesign={customDesign}
+            setCustomDesign={setCustomDesign}
+            globalSearchQuery={globalSearchQuery}
+            setGlobalSearchQuery={setGlobalSearchQuery}
+            topSearchRef={topSearchRef}
+            showNotif={showNotif}
+            setShowNotif={setShowNotif}
+            showProfile={showProfile}
+            setShowProfile={setShowProfile}
+            handleGoogleLogin={handleGoogleLogin}
+            handleLogout={handleLogout}
+            notifRef={notifRef}
+            profileRef={profileRef}
+            loading={loading}
+            loadingKey={loadingKey}
+            session={session}
+            renderSection={renderSection}
+          />
         } 
       />
 
@@ -549,7 +605,16 @@ function DashboardLayout({
                 )}
               </button>
               
-              <div className={`flex items-center gap-3 w-full ${isCollapsed ? 'justify-center' : 'px-2'}`}>
+              <div 
+                className={`flex items-center gap-3 w-full ${isCollapsed ? 'justify-center' : 'px-2'} cursor-pointer hover:opacity-80 transition-opacity`}
+                onClick={() => {
+                  if (!session) {
+                    handleGoogleLogin();
+                  } else {
+                    setShowProfile(!showProfile);
+                  }
+                }}
+              >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-md">
                   {session?.user?.email?.charAt(0).toUpperCase() || "G"}
                 </div>
@@ -559,7 +624,7 @@ function DashboardLayout({
                       {session ? "My Account" : "Sign In"}
                     </span>
                     <span className="text-[10px] text-white/45 truncate mt-1">
-                      {session?.user?.email || "Join OrdStudio"}
+                      {session?.user?.email || "Sign In to ORD Studio"}
                     </span>
                   </div>
                 )}
@@ -641,10 +706,10 @@ function DashboardLayout({
                   <div className="absolute right-0 top-11 w-[250px] bg-[#161622]/95 backdrop-blur-md border border-white/[0.08] rounded-xl p-3 z-50 shadow-2xl flex flex-col gap-2.5">
                     <div className="flex flex-col min-w-0 border-b border-white/[0.05] pb-2">
                       <span className="text-[12.5px] font-bold text-white leading-none">
-                        My Account
+                        {session ? "My Account" : "Guest User"}
                       </span>
                       <span className="text-[11px] text-white/60 truncate mt-1">
-                        {session?.user?.email ?? "Loading..."}
+                        {session?.user?.email ?? "Not signed in"}
                       </span>
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -658,16 +723,28 @@ function DashboardLayout({
                         <Settings size={13} className="text-white/40" />
                         Settings
                       </button>
-                      <button
-                        onClick={async () => {
-                          await handleLogout();
-                          setShowProfile(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-[13px] text-red-400 hover:text-red-300 hover:bg-white/[0.05] rounded-xl flex items-center gap-2.5 cursor-pointer transition-all duration-200 border border-transparent hover:border-red-500/10"
-                      >
-                        <LogOut size={14} className="text-red-400/70" />
-                        Logout
-                      </button>
+                      {session ? (
+                        <button
+                          onClick={async () => {
+                            await handleLogout();
+                            setShowProfile(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-[13px] text-red-400 hover:text-red-300 hover:bg-white/[0.05] rounded-xl flex items-center gap-2.5 cursor-pointer transition-all duration-200 border border-transparent hover:border-red-500/10"
+                        >
+                          <LogOut size={14} className="text-red-400/70" />
+                          Logout
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            handleGoogleLogin();
+                            setShowProfile(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-[13px] text-purple-400 hover:text-purple-300 hover:bg-white/[0.05] rounded-xl flex items-center gap-2.5 cursor-pointer transition-all duration-200 border border-transparent"
+                        >
+                          Sign In / Sign Up
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -769,26 +846,48 @@ function DashboardLayout({
                 >
                   <Settings size={15} />
                 </button>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    background: "rgba(239,68,68,0.12)",
-                    border: "1px solid rgba(239,68,68,0.25)",
-                    borderRadius: "8px",
-                    height: "32px",
-                    padding: "0 10px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "5px",
-                    color: "#f87171",
-                    cursor: "pointer",
-                  }}
-                  title="Logout"
-                >
-                  <LogOut size={13} />
-                  <span style={{ fontSize: "11.5px", fontWeight: "bold" }}>Logout</span>
-                </button>
+                {session ? (
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      background: "rgba(239,68,68,0.12)",
+                      border: "1px solid rgba(239,68,68,0.25)",
+                      borderRadius: "8px",
+                      height: "32px",
+                      padding: "0 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "5px",
+                      color: "#f87171",
+                      cursor: "pointer",
+                    }}
+                    title="Logout"
+                  >
+                    <LogOut size={13} />
+                    <span style={{ fontSize: "11.5px", fontWeight: "bold" }}>Logout</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleGoogleLogin}
+                    style={{
+                      background: "rgba(139,92,246,0.2)",
+                      border: "1px solid rgba(139,92,246,0.4)",
+                      borderRadius: "8px",
+                      height: "32px",
+                      padding: "0 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "5px",
+                      color: "#c084fc",
+                      cursor: "pointer",
+                    }}
+                    title="Sign In"
+                  >
+                    <span style={{ fontSize: "11.5px", fontWeight: "bold" }}>Sign In</span>
+                  </button>
+                )}
               </div>
             </div>
 
