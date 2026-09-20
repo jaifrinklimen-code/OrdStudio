@@ -45,7 +45,7 @@ const values = [
     icon: Shield,
     title: 'Privacy',
     description:
-      'Your creative work belongs to you. We employ end-to-end encryption, minimal data collection, and transparent policies to keep your projects secure.',
+      'Your creative work belongs to you. We use appropriate technical and organizational safeguards and transparent privacy practices to help protect your account and creative work.',
   },
 ];
 
@@ -167,26 +167,9 @@ export default function About() {
                     <p className="text-white/50 text-xs font-mono tracking-wider mt-4">CHENNAI, TAMIL NADU</p>
                   </div>
 
-                  {/* Bottom: Stats Panel with Dividers */}
-                  <div className="grid grid-cols-3 gap-2 border-t border-white/[0.08] pt-6 z-10 text-center font-mono">
-                    <div>
-                      <div className="text-lg sm:text-xl font-black text-white leading-none">
-                        1
-                      </div>
-                      <div className="text-[9px] text-white/40 uppercase tracking-widest mt-1.5">CREATORS</div>
-                    </div>
-                    <div className="border-x border-white/[0.08]">
-                      <div className="text-lg sm:text-xl font-black text-white leading-none">
-                        1
-                      </div>
-                      <div className="text-[9px] text-white/40 uppercase tracking-widest mt-1.5">COUNTRIES</div>
-                    </div>
-                    <div>
-                      <div className="text-lg sm:text-xl font-black text-white leading-none">
-                        {(stats.projectsCount + stats.stickersCount).toLocaleString()}
-                      </div>
-                      <div className="text-[9px] text-white/40 uppercase tracking-widest mt-1.5">DESIGNS</div>
-                    </div>
+                  {/* Bottom: Tagline */}
+                  <div className="border-t border-white/[0.08] pt-6 z-10 text-center font-mono">
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest">Democratizing Design with AI</p>
                   </div>
                 </div>
               </div>
@@ -331,8 +314,7 @@ export default function About() {
                 Ready to Create Something Extraordinary?
               </h2>
               <p className="text-white/50 max-w-lg mx-auto mb-8 leading-relaxed">
-                Join hundreds of thousands of creators who use OrdStudio to bring their ideas to
-                life. Start for free — no credit card required.
+                Join creators, students, teams, and businesses using OrdStudio to bring their ideas to life. Start for free — no credit card required.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link

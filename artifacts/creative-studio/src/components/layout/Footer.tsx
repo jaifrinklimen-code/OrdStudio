@@ -7,7 +7,6 @@ const footerLinks = {
     { label: 'AI Sticker Generator', href: '/features/ai-sticker-generator' },
     { label: 'Vector Editor', href: '/features/vector-editor' },
     { label: 'PPTX Export', href: '/features/pptx-export' },
-    { label: 'SVG Export', href: '/features/svg-export' },
     { label: 'PDF Export', href: '/features/pdf-export' },
   ],
   company: [

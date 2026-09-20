@@ -31,7 +31,6 @@ export default function PrivacyPolicy() {
   <ul>
     <li><strong>Account Information:</strong> Name, email address, password, profile picture, and authentication tokens (e.g., from Google OAuth via Supabase).</li>
     <li><strong>User Content:</strong> Presentation files, text prompts, document drafts, images uploaded for sticker reference, and vector drawings created on our canvas editor.</li>
-    <li><strong>Billing Information:</strong> Credit card information and billing addresses, processed securely via our third-party payment processors.</li>
   </ul>
   <p>We also automatically collect certain technical data when you interact with our website:</p>
   <ul>
@@ -45,7 +44,7 @@ export default function PrivacyPolicy() {
   <p>We utilize the collected information to deliver, improve, and secure our AI creative platform. Specifically, we use it for:</p>
   <ul>
     <li><strong>Service Delivery:</strong> Managing your account, executing AI presentations, rendering vector graphics, and exporting files.</li>
-    <li><strong>AI Processing:</strong> Passing your input prompts to our rotated AI providers (such as Gemini, Nvidia, and Anthropic API endpoints) to generate sticker visuals and slide contents. Your uploaded assets are processed strictly to fulfill your generation requests.</li>
+    <li><strong>AI Processing:</strong> Passing your input prompts to third-party AI service providers used to provide specific AI features to generate sticker visuals and slide contents. Your uploaded assets are processed strictly to fulfill your generation requests.</li>
     <li><strong>Product Optimization:</strong> Analyzing usage metrics to find performance bottlenecks, fix software errors, and improve layout heuristics.</li>
     <li><strong>Security & Abuse Prevention:</strong> Enforcing our terms of service, defending against spam or automated attacks, and preventing illicit use of our AI engines.</li>
     <li><strong>Communication:</strong> Sending transaction notifications, critical system alerts, and marketing newsletters (which you can opt out of at any time).</li>
@@ -57,7 +56,7 @@ export default function PrivacyPolicy() {
   <p>We do not sell your personal data. We only share information with third parties in the following scenarios:</p>
   <ul>
     <li><strong>Service Providers:</strong> We work with trusted vendors for hosting (Supabase, databases), payment gateway processing, analytics, and customer support.</li>
-    <li><strong>AI APIs:</strong> When you generate text or graphics, we pass your text prompts to upstream AI partners (e.g., Google Gemini, Nvidia Inference APIs). Your prompts are governed by their respective API privacy policies which prohibit training on API customer data.</li>
+    <li><strong>AI APIs:</strong> When you generate text or graphics, we pass your text prompts to third-party AI service providers. Your prompts are governed by their respective API privacy policies.</li>
     <li><strong>Legal Compliance:</strong> We may disclose data if required by law, subpoena, or government regulation, or to protect the safety and rights of our users.</li>
   </ul>
 </section>
@@ -69,7 +68,7 @@ export default function PrivacyPolicy() {
 
 <section>
   <h2>6. Your Privacy Rights</h2>
-  <p>Depending on your location (e.g., European Economic Area under GDPR, California under CCPA), you possess specific privacy rights, including:</p>
+  <p>Depending on your location and applicable law, you may have rights concerning access, correction, deletion, portability, restriction, or objection to certain processing of your personal information.</p>
   <ul>
     <li><strong>Access & Portability:</strong> The right to request copies of the personal data we hold about you.</li>
     <li><strong>Correction:</strong> The right to request correction of inaccurate or incomplete personal records.</li>
@@ -81,7 +80,7 @@ export default function PrivacyPolicy() {
 
 <section>
   <h2>7. Data Retention</h2>
-  <p>We retain your personal data for as long as you maintain an active account, or as required to fulfill the purposes outlined in this policy. When you delete your account, your projects and associated account details are permanently purged or anonymized in our databases within 30 days, unless we are legally required to retain them for tax, audit, or compliance reasons.</p>
+  <p>We retain your personal data for as long as you maintain an active account, or as required to fulfill the purposes outlined in this policy. When you delete your account, we will delete or anonymize personal information and associated projects within a reasonable period, subject to applicable legal, security, backup, and compliance requirements.</p>
 </section>
 
 <section>

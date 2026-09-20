@@ -32,7 +32,7 @@ export default function CookiePolicy() {
     <li><strong>Authentication:</strong> Keeping you logged into your account across sessions via Supabase.</li>
     <li><strong>Preferences:</strong> Remembering your UI choices, such as sidebar collapse state, preferred export options, and editor layout.</li>
     <li><strong>Analytics:</strong> Understanding how users navigate the site, which AI tools are most popular, and identifying page load latency.</li>
-    <li><strong>Advertising:</strong> Fulfilling Google AdSense requirements to serve personalized or non-personalized ads, and assessing ad campaign performance.</li>
+    <li><strong>Advertising:</strong> If advertising services are enabled on OrdStudio, advertising technologies may use cookies or similar technologies subject to applicable consent requirements and user privacy preferences.</li>
   </ul>
 </section>
 
@@ -43,7 +43,7 @@ export default function CookiePolicy() {
     <li><strong>Essential Cookies:</strong> These are strictly necessary for the core functionality of the website. Without these cookies, services like login, billing, and canvas editing cannot be provided.</li>
     <li><strong>Functional Cookies:</strong> These allow the Service to remember choices you make (like your username or preferred theme) and provide enhanced, more personal features.</li>
     <li><strong>Performance & Analytics Cookies:</strong> These collect anonymous information about how you use our platform. They help us monitor site performance and resolve technical bugs.</li>
-    <li><strong>Targeting & Advertising Cookies:</strong> These are set by third-party advertising networks (like Google AdSense) to deliver ads relevant to your interests, limit ad frequency, and track ad campaigns.</li>
+    <li><strong>Targeting &amp; Advertising Cookies:</strong> These may be set by third-party advertising networks to deliver relevant ads, limit ad frequency, and track ad campaign performance, where advertising services are enabled.</li>
   </ol>
 </section>
 
@@ -52,7 +52,6 @@ export default function CookiePolicy() {
   <p>You have the right to decide whether to accept or reject non-essential cookies. You can manage your preferences through several methods:</p>
   <ul>
     <li><strong>Browser Settings:</strong> You can configure your web browser to block, delete, or alert you about cookies. Check your browser's "Help" menu for instructions.</li>
-    <li><strong>Cookie Consent Banner:</strong> When you first visit OrdStudio, you can choose which categories of cookies to allow.</li>
     <li><strong>Third-Party Opt-Out:</strong> You can opt-out of personalized advertising served by Google by visiting the Google Ads Settings page.</li>
   </ul>
   <p>Please note that disabling essential cookies will prevent you from logging in and utilizing our design tools.</p>
