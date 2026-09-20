@@ -43,7 +43,7 @@ const DEMO_PROMPTS: DemoItem[] = [
       'Ready!'
     ],
     result: {
-      title: 'Aura Luxury Orbit',
+      title: 'Architectural Horizon Monograph',
       subtitle: 'The Future of Hospitality Beyond Earth',
       slides: [
         { title: '01. The Opportunity', desc: 'Space tourism TAM is projected to grow to $120B by 2032, driven by ultra-high-net-worth orbital pioneers.' },
@@ -369,19 +369,32 @@ export default function PublicHome() {
                       <div className="flex-1 flex flex-col justify-center my-4 animate-fade-in">
                         
                         {activeTab === 'slides' && activeDemo.result.slides && (
-                          <div className="space-y-4">
-                            <div className="border border-white/[0.08] bg-white/[0.03] rounded-xl p-5 shadow-lg relative overflow-hidden">
-                              <div className="absolute top-0 right-0 bg-purple-500/10 text-purple-300 border-l border-b border-white/[0.08] px-2.5 py-1 text-[10px] font-bold rounded-bl-lg uppercase tracking-wider font-mono">
-                                Slide {activeSlideIndex + 1} of 4
+                          <div className="relative space-y-4 perspective-1000">
+                            {/* Stacked background cards to create a stacked-card composition */}
+                            <div className="absolute inset-0 border border-white/[0.04] bg-white/[0.01] rounded-xl transform scale-[0.88] translate-y-6 opacity-40 -z-20"></div>
+                            <div className="absolute inset-0 border border-white/[0.06] bg-white/[0.02] rounded-xl transform scale-[0.94] translate-y-3 opacity-70 -z-10"></div>
+                            
+                            <div className="border border-white/[0.08] bg-[#0c0c10] rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] relative overflow-hidden z-10 flex flex-col">
+                              {/* Architectural Image integrated into the front card */}
+                              <div className="relative h-32 w-full shrink-0">
+                                <img 
+                                  src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop" 
+                                  alt="Architectural visualization" 
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c10] via-transparent to-transparent"></div>
+                                <div className="absolute top-0 right-0 bg-black/50 backdrop-blur-md text-white/80 border-l border-b border-white/[0.08] px-2.5 py-1 text-[10px] font-bold rounded-bl-lg uppercase tracking-wider font-mono">
+                                  Slide {activeSlideIndex + 1} of 4
+                                </div>
                               </div>
-                              <div className="space-y-2 pr-8">
-                                <h4 className="text-xs font-semibold text-purple-400 font-mono tracking-wider uppercase">
+                              <div className="px-5 pb-5 pt-1 space-y-2">
+                                <h4 className="text-[10px] font-bold text-white/40 font-mono tracking-wider uppercase">
                                   {activeDemo.result.title}
                                 </h4>
                                 <h3 className="text-lg font-bold text-white leading-snug">
                                   {activeDemo.result.slides[activeSlideIndex].title}
                                 </h3>
-                                <p className="text-xs text-white/50 leading-relaxed pt-1">
+                                <p className="text-xs text-white/60 leading-relaxed pt-1 line-clamp-2">
                                   {activeDemo.result.slides[activeSlideIndex].desc}
                                 </p>
                               </div>
