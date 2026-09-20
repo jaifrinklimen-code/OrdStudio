@@ -80,16 +80,17 @@ export default function PublicHome() {
               
               {/* Hero Left Column */}
               <div className="lg:col-span-5 text-left space-y-6">
-                <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 text-xs font-semibold text-purple-300 uppercase tracking-wider">
-                  <Sparkles size={12} className="text-purple-400 animate-pulse" />
-                  visual intelligence workspace
+                <div className="text-xs font-mono tracking-widest text-purple-300/80 uppercase flex items-center gap-2">
+                  IDEAS <ArrowRight size={10} className="text-purple-400/50" /> VISUALS <ArrowRight size={10} className="text-purple-400/50" /> IMPACT
                 </div>
                 
-                <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.1] text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
-                  Create Stunning<br />
-                  <span className="bg-gradient-to-r from-purple-400 via-indigo-300 to-cyan-300 bg-clip-text text-transparent filter drop-shadow-[0_2px_20px_rgba(139,92,246,0.3)]">
-                    3D Visuals with AI
+                <h1 className="text-5xl sm:text-6xl lg:text-[4.5rem] font-bold tracking-tight leading-[1.05]" style={{ fontFamily: 'Syne, sans-serif' }}>
+                  <span className="text-white block">Create</span>
+                  <span className="text-white block">Stunning</span>
+                  <span className="block mt-1">
+                    <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">3D Visuals</span> <span className="text-white">with</span>
                   </span>
+                  <span className="bg-gradient-to-r from-cyan-400 to-teal-300 bg-clip-text text-transparent block mt-1">AI</span>
                 </h1>
                 
                 <p className="text-base sm:text-lg text-white/55 leading-relaxed max-w-xl">
@@ -126,26 +127,19 @@ export default function PublicHome() {
                 </div>
               </div>
               
-              {/* Hero Right Column (Interactive AI Simulator) */}
-              <div className="lg:col-span-5 lg:col-start-8 relative mt-12 lg:mt-0 lg:translate-y-12 lg:-translate-x-12 lg:scale-[1.4] lg:origin-right z-20">
-                <div className="absolute -top-10 -left-10 w-[240px] h-[240px] bg-purple-500/10 rounded-full blur-[60px] pointer-events-none" />
-                <div className="absolute -bottom-10 -right-10 w-[260px] h-[260px] bg-cyan-500/10 rounded-full blur-[70px] pointer-events-none" />
+              {/* Hero Right Column */}
+              <div className="lg:col-span-7 relative mt-12 lg:mt-0 z-20 flex justify-end items-center">
                 
-                {/* NEW STACKED DESIGN CARD */}
-                <div className="relative w-full aspect-[4/3] perspective-1000 mt-8">
-                  {/* Background Stack Cards */}
-                  <div className="absolute inset-0 bg-[#0f0f15] border border-white/[0.05] rounded-3xl transform -rotate-6 scale-95 translate-y-4 opacity-50 shadow-2xl"></div>
-                  <div className="absolute inset-0 bg-[#0f0f15] border border-white/[0.08] rounded-3xl transform -rotate-3 scale-[0.98] translate-y-2 opacity-80 shadow-2xl"></div>
-                  
-                  {/* Main Front Card */}
-                  <div className="absolute inset-0 bg-[#0d0d12] border border-white/[0.12] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-10 group overflow-hidden hover:border-purple-500/50 transition-colors duration-500">
-                    <img 
-                      src="/design-studio-hero.jpg" 
-                      alt="Design Studio Showcase" 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  </div>
+                <div className="relative w-[125%] sm:w-[135%] max-w-[850px] right-[-15%] sm:right-[-20%] lg:right-[-25%] xl:right-[-15%] z-10 transform hover:scale-[1.02] transition-transform duration-700">
+                  {/* Subtle fade mask so the image's dark purple edges blend perfectly with the #09090c page background */}
+                  <img 
+                    src="/design-studio-hero.jpg" 
+                    alt="Design Studio Showcase" 
+                    className="w-full h-auto object-contain"
+                    style={{ WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%, black 70%, transparent 100%)', maskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%, black 70%, transparent 100%)' }}
+                  />
                 </div>
+
               </div>
 
             </div>
