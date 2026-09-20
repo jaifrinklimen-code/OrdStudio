@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SEOHead } from '@/components/SEOHead';
+import { supabase } from '@/lib/supabase';
 import {
   Sparkles, Wand2, Presentation, Sticker, Palette, FileText,
   ArrowRight, ShieldCheck, Zap, Heart, CheckCircle2,
@@ -169,7 +170,7 @@ export default function PublicHome() {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2500);
   };
-  const handleEditInStudio = () => {
+  const handleEditInStudio = async () => {
     let targetTab = 'design';
     if (activeTab === 'stickers') {
       targetTab = 'stickers';
@@ -177,7 +178,14 @@ export default function PublicHome() {
       targetTab = 'generator';
     }
     localStorage.setItem('activeTab', targetTab);
-    navigate('/dashboard');
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      sessionStorage.setItem('ord_pending_tab', targetTab);
+      navigate('/login');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleExportFiles = () => {
@@ -232,12 +240,12 @@ export default function PublicHome() {
       <div className="relative overflow-hidden bg-[#09090c] text-white">
         
         {/* HERO SECTION */}
-        <section className="relative pt-24 pb-20 sm:pt-32 sm:pb-28 lg:pt-40 lg:pb-36 border-b border-white/[0.03]">
+        <section className="relative pt-16 pb-12 sm:pt-20 sm:pb-16 lg:pt-24 lg:pb-16 border-b border-white/[0.03]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
               
               {/* Hero Left Column */}
-              <div className="lg:col-span-6 text-left space-y-6">
+              <div className="lg:col-span-5 text-left space-y-6">
                 <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 text-xs font-semibold text-purple-300 uppercase tracking-wider">
                   <Sparkles size={12} className="text-purple-400 animate-pulse" />
                   visual intelligence workspace
@@ -285,7 +293,7 @@ export default function PublicHome() {
               </div>
               
               {/* Hero Right Column (Interactive AI Simulator) */}
-              <div className="lg:col-span-6 relative">
+              <div className="lg:col-span-5 lg:col-start-8 relative mt-12 lg:mt-0 lg:scale-[1.4] lg:origin-right z-20">
                 <div className="absolute -top-10 -left-10 w-[240px] h-[240px] bg-purple-500/10 rounded-full blur-[60px] pointer-events-none" />
                 <div className="absolute -bottom-10 -right-10 w-[260px] h-[260px] bg-cyan-500/10 rounded-full blur-[70px] pointer-events-none" />
                 
@@ -324,7 +332,7 @@ export default function PublicHome() {
                     })}
                   </div>
 
-                  <div className="p-6 min-h-[320px] flex flex-col justify-between relative bg-black/20">
+                  <div className="p-6 min-h-[340px] flex flex-col justify-between relative bg-black/20">
                     
                     <div className="bg-[#0b0b0e] border border-white/[0.07] rounded-xl p-4 flex items-start gap-3 shadow-inner">
                       <Terminal size={16} className="text-purple-400 mt-0.5 shrink-0" />
@@ -366,7 +374,7 @@ export default function PublicHome() {
                               <div className="absolute top-0 right-0 bg-purple-500/10 text-purple-300 border-l border-b border-white/[0.08] px-2.5 py-1 text-[10px] font-bold rounded-bl-lg uppercase tracking-wider font-mono">
                                 Slide {activeSlideIndex + 1} of 4
                               </div>
-                              <div className="space-y-2">
+                              <div className="space-y-2 pr-8">
                                 <h4 className="text-xs font-semibold text-purple-400 font-mono tracking-wider uppercase">
                                   {activeDemo.result.title}
                                 </h4>
@@ -467,7 +475,7 @@ export default function PublicHome() {
         </section>
 
         {/* STATS SECTION */}
-        <section className="py-12 border-b border-white/[0.03] bg-white/[0.01]">
+        <section className="py-8 border-b border-white/[0.03] bg-white/[0.01]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div className="space-y-1">
@@ -499,10 +507,10 @@ export default function PublicHome() {
         </section>
 
         {/* FEATURES GRID SECTION */}
-        <section id="features" className="py-24 relative border-b border-white/[0.03]">
+        <section id="features" className="py-16 relative border-b border-white/[0.03]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             
-            <div className="text-center max-w-2xl mx-auto mb-20 space-y-3">
+            <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
               <div className="text-xs font-extrabold text-purple-400 uppercase tracking-widest font-mono">Feature Workspace</div>
               <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
                 All-In-One AI Design Studio
@@ -633,7 +641,7 @@ export default function PublicHome() {
         </section>
 
         {/* WORKFLOW VALUE PROP */}
-        <section className="py-24 relative bg-white/[0.01] border-b border-white/[0.03]">
+        <section className="py-16 relative bg-white/[0.01] border-b border-white/[0.03]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               
@@ -716,7 +724,7 @@ export default function PublicHome() {
 
 
         {/* FINAL CTA SECTION */}
-        <section className="py-28 relative">
+        <section className="py-20 relative">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6">
             <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
               Bring Your Ideas to Life Instantly
