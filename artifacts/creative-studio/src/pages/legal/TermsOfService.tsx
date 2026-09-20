@@ -44,11 +44,11 @@ export default function TermsofService() {
 
 <section>
   <h2>4. User Content & AI-Generated Content</h2>
-  <p>You retain full ownership and intellectual property rights over any text prompts, uploads, vector drawings, and final designs ("User Content") you input or create within OrdStudio.</p>
+  <p>You retain the rights you have in the text prompts, uploads, vector drawings, and other original content ("User Content") that you input or create within OrdStudio. Your rights may be subject to applicable law and the rights of third parties.</p>
   <p>Regarding AI-generated content (e.g., generated slides, generated copy, generated stickers):</p>
   <ul>
-    <li><strong>Ownership:</strong> We do not claim ownership over AI-generated outputs. They are yours to use, subject to these terms.</li>
-    <li><strong>API Usage:</strong> In order to provide the AI features, you grant us a license to process your prompt inputs via upstream AI providers (such as Gemini, Nvidia, and Anthropic) to produce the outputs.</li>
+    <li><strong>Ownership:</strong> OrdStudio does not claim ownership of AI-generated outputs. Your use of such outputs remains subject to these Terms, applicable law, and any applicable third-party terms. Because legal protection for AI-generated content can vary by jurisdiction and circumstances, we do not guarantee that any particular output will qualify for copyright or other intellectual-property protection.</li>
+    <li><strong>API Usage:</strong> To provide AI features, we may process your prompts and other required inputs through third-party AI service providers used by OrdStudio to generate requested outputs.</li>
     <li><strong>No Guarantee of Uniqueness:</strong> Because AI operates on probabilistic models, other users may input identical prompts and receive identical or highly similar outputs. OrdStudio makes no representation that AI outputs are eligible for copyright protection or trademark registration.</li>
   </ul>
 </section>
@@ -60,7 +60,7 @@ export default function TermsofService() {
     <li>Violates local, state, national, or international laws or regulations.</li>
     <li>Infringes on the intellectual property, privacy, or publicity rights of others.</li>
     <li>Uploads viruses, malware, or malicious code designed to disrupt the Service.</li>
-    <li>Attempts to bypass rate limiters, security parameters, or API key rotation logic.</li>
+    <li>Attempts to bypass rate limits, security controls, authentication mechanisms, or other technical protections of the Service.</li>
     <li>Generates sexually explicit, hateful, defamatory, or harmful content.</li>
   </ul>
 </section>
