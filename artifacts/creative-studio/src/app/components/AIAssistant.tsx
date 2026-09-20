@@ -19,12 +19,19 @@ const responses = [
 ];
 
 export function AIAssistant() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: "Hello. I'm your creative AI — ask me anything about design, content strategy, or your next venture." }
   ]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -42,13 +49,20 @@ export function AIAssistant() {
     }, 780);
   };
 
+  useEffect(() => {
+    const prefilled = localStorage.getItem('prefilled_search_query');
+    if (prefilled) {
+      localStorage.removeItem('prefilled_search_query');
+      handleSend(prefilled);
+    }
+  }, []);
+
   return (
     <div style={{
-      height: '100vh', display: 'flex', flexDirection: 'column',
-      background: '#090909', paddingTop: '4.5rem',
+      height: '100%', display: 'flex', flexDirection: 'column',
     }}>
       {/* Header */}
-      <div style={{ padding: '1.5rem 3rem 0', flexShrink: 0 }}>
+      <div style={{ padding: isMobile ? '1.25rem 1.25rem 0' : '1.5rem 3rem 0', flexShrink: 0 }}>
         <FadeIn delay={80} duration={500}>
           <p style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(139,92,246,0.65)', marginBottom: '0.35rem' }}>AI</p>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 500, letterSpacing: '-0.035em', color: '#fff', margin: 0 }}>Creative Assistant</h2>
@@ -77,7 +91,7 @@ export function AIAssistant() {
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 3rem' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '1rem' : '1.5rem 3rem' }}>
         <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {messages.map((msg, i) => (
             <FadeIn key={i} delay={0} duration={350}>
@@ -126,7 +140,7 @@ export function AIAssistant() {
 
       {/* Input */}
       <div style={{
-        padding: '1rem 3rem 1.5rem', flexShrink: 0,
+        padding: isMobile ? '0.75rem 1rem 1rem' : '1rem 3rem 1.5rem', flexShrink: 0,
         borderTop: '1px solid rgba(255,255,255,0.05)',
         background: 'rgba(9,9,9,0.95)', backdropFilter: 'blur(16px)',
       }}>

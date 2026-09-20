@@ -16,11 +16,12 @@ export function FadeIn({ children, delay = 0, duration = 1000, className = '' }:
   }, [delay]);
 
   return (
-    <div
-      className={`transition-opacity ${className}`}
+    <div 
+      className={className}
       style={{
         opacity: visible ? 1 : 0,
-        transitionDuration: `${duration}ms`,
+        transform: visible ? 'translateY(0)' : 'translateY(16px)',
+        transition: `opacity ${duration}ms cubic-bezier(0.4, 0, 0.2, 1), transform ${duration}ms cubic-bezier(0.4, 0, 0.2, 1)`
       }}
     >
       {children}

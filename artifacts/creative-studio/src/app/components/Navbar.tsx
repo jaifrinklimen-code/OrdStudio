@@ -35,7 +35,7 @@ export function Navbar({ activeTab, onTabChange }: NavbarProps) {
             fontFamily: 'inherit', padding: 0,
           }}
         >
-          VEX
+          OrdStudio
         </button>
 
         {/* Nav */}

@@ -85,7 +85,7 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
             border: '1px solid rgba(139,92,246,0.25)',
             boxShadow: '0 0 40px rgba(139,92,246,0.3), 0 0 80px rgba(139,92,246,0.12)',
           }}>
-            <span style={{ fontSize: '1.75rem', color: '#fff', fontWeight: 700, letterSpacing: '-0.04em' }}>V</span>
+            <span style={{ fontSize: '1.75rem', color: '#fff', fontWeight: 700, letterSpacing: '-0.04em' }}>O</span>
           </div>
 
           <h1 style={{
@@ -94,7 +94,7 @@ export function SplashScreen({ onEnter }: SplashScreenProps) {
             color: '#fff', margin: 0, lineHeight: 1,
             textShadow: '0 0 60px rgba(139,92,246,0.5)',
           }}>
-            VEX
+            OrdStudio
           </h1>
         </div>
 

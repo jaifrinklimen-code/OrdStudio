@@ -47,3 +47,30 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# local env files
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Scratch & temporary tooling
+.kilo/
+scratch/
+ppt/
+*.zip
+*.log
+artifacts/api-server/scratch/
+artifacts/api-server/audit_and_export.*
+artifacts/api-server/generate_contact_sheets.*
+artifacts/api-server/run_audit.*
+artifacts/api-server/scripts_dump.*
+artifacts/api-server/scripts_update_decks.*
+artifacts/creative-studio/scripts_clean_ds.mjs
+artifacts/find_untitled.js
+scratch_gen.js
+
+

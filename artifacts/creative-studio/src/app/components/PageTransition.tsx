@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 interface PageTransitionProps {
   children: React.ReactNode;
@@ -6,27 +6,29 @@ interface PageTransitionProps {
 }
 
 export function PageTransition({ children, tabKey }: PageTransitionProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const [displayChildren, setDisplayChildren] = useState(children);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.animation = 'none';
-    void el.offsetHeight;
-    el.style.animation = 'pageEnter 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-  }, [tabKey]);
+    setIsTransitioning(true);
+    const timer = setTimeout(() => {
+      setDisplayChildren(children);
+      setIsTransitioning(false);
+    }, 200); // Wait for fade out before swapping content
+    return () => clearTimeout(timer);
+  }, [tabKey, children]);
 
   return (
-    <div
-      ref={ref}
-      style={{
-        width: '100%',
+    <div 
+      style={{ 
+        width: '100%', 
         height: '100%',
-        transformOrigin: '50% 0%',
-        willChange: 'transform, opacity',
+        opacity: isTransitioning ? 0 : 1,
+        transform: isTransitioning ? 'scale(0.98)' : 'scale(1)',
+        transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
       }}
     >
-      {children}
+      {displayChildren}
     </div>
   );
 }

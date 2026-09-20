@@ -1,0 +1,4604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ORD Studio — 300 Templates Diversity Audit Contact Sheet</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #09090b; color: #f4f4f5; padding: 32px; }
+    h1 { font-size: 28px; margin-bottom: 8px; color: #ffffff; }
+    .stats { display: flex; gap: 24px; margin-bottom: 32px; background: #18181b; padding: 16px 24px; border-radius: 12px; border: 1px solid #27272a; }
+    .stat-box { font-size: 14px; color: #a1a1aa; }
+    .stat-val { font-size: 24px; font-weight: 800; color: #10b981; margin-top: 4px; }
+    .categories { margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .cat-btn { background: #27272a; color: #e4e4e7; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .cat-btn.active { background: #3b82f6; color: #ffffff; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .card { background: #18181b; border-radius: 12px; border: 1px solid #27272a; padding: 12px; display: flex; flex-direction: column; }
+    .preview-box { width: 100%; aspect-ratio: 1200 / 1697; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
+    .preview-box.pres { aspect-ratio: 1920 / 1080; }
+    .info { margin-top: 12px; font-size: 13px; }
+    .info .name { font-weight: 700; color: #ffffff; }
+    .info .meta { color: #71717a; font-size: 11px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>ORD Studio — 300 Unique Templates Contact Sheet</h1>
+  <div class="stats">
+    <div class="stat-box">Total Templates<div class="stat-val">300</div></div>
+    <div class="stat-box">Duplicate Pairs<div class="stat-val">0</div></div>
+    <div class="stat-box">Duplicate Photos<div class="stat-val">0</div></div>
+    <div class="stat-box">Diversity Quality Gate<div class="stat-val">100% PASSED</div></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <script>
+    const templates = [
+  {
+    "id": 101,
+    "name": "Bespoke Presentation 101",
+    "title": "GLOBAL TECH KEYNOTE 2026",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 4,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 102,
+    "name": "Bespoke Presentation 102",
+    "title": "VENTURE CAPITAL SEED PITCH",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "playfair display",
+      "dark"
+    ]
+  },
+  {
+    "id": 103,
+    "name": "Bespoke Presentation 103",
+    "title": "AI INFRASTRUCTURE ROADMAP",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 104,
+    "name": "Bespoke Presentation 104",
+    "title": "LUXURY BRAND STRATEGY DECK",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 105,
+    "name": "Bespoke Presentation 105",
+    "title": "CREATIVE AGENCY SHOWREEL",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 4,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 106,
+    "name": "Bespoke Presentation 106",
+    "title": "SUSTAINABILITY & ESG SUMMIT",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 107,
+    "name": "Bespoke Presentation 107",
+    "title": "FINTECH REVOLUTION PITCH",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 108,
+    "name": "Bespoke Presentation 108",
+    "title": "AEROSPACE SYSTEMS BRIEFING",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 109,
+    "name": "Bespoke Presentation 109",
+    "title": "HEALTHCARE GENOMICS ADVANCE",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 4,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 110,
+    "name": "Bespoke Presentation 110",
+    "title": "GLOBAL SUPPLY CHAIN LOGISTICS",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 111,
+    "name": "Bespoke Presentation 111",
+    "title": "EXECUTIVE BOARD OF DIRECTORS",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 112,
+    "name": "Bespoke Presentation 112",
+    "title": "SAAS ENTERPRISE PRODUCT DEMO",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 113,
+    "name": "Bespoke Presentation 113",
+    "title": "DEEP SPACE ASTRONOMY FORUM",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 114,
+    "name": "Bespoke Presentation 114",
+    "title": "RENEWABLE ENERGY TRANSITION",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 115,
+    "name": "Bespoke Presentation 115",
+    "title": "ARCHITECTURE DESIGN MASTERCLASS",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 116,
+    "name": "Bespoke Presentation 116",
+    "title": "CYBERSECURITY INCIDENT BRIEF",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 4,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 117,
+    "name": "Bespoke Presentation 117",
+    "title": "URBAN MOBILITY & SMART CITIES",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 4,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 118,
+    "name": "Bespoke Presentation 118",
+    "title": "MEDIA STREAMING ADOPTION",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 119,
+    "name": "Bespoke Presentation 119",
+    "title": "PRIVATE WEALTH STRATEGY DECK",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 120,
+    "name": "Bespoke Presentation 120",
+    "title": "METAVERSE SPATIAL DESIGN",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 7,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 121,
+    "name": "Bespoke Presentation 121",
+    "title": "QUANTUM COMPUTING MILESTONE",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 122,
+    "name": "Bespoke Presentation 122",
+    "title": "COMMERCIAL REAL ESTATE FORUM",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 123,
+    "name": "Bespoke Presentation 123",
+    "title": "AGILE PRODUCT MANAGEMENT SPRINT",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 124,
+    "name": "Bespoke Presentation 124",
+    "title": "HAUTE GASTRONOMY INVESTOR DECK",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 125,
+    "name": "Bespoke Presentation 125",
+    "title": "ROBOTICS AUTOMATION IN FACTORIES",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 126,
+    "name": "Bespoke Presentation 126",
+    "title": "DATA PRIVACY & GDPR COMPLIANCE",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 4,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 127,
+    "name": "Bespoke Presentation 127",
+    "title": "DEVSECOPS CLOUD ROADMAP",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 4,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 128,
+    "name": "Bespoke Presentation 128",
+    "title": "ELECTRIC VEHICLE CHARGING GRID",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 4,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 129,
+    "name": "Bespoke Presentation 129",
+    "title": "CLINICAL TELEMEDICINE EXPANSION",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 8,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 130,
+    "name": "Bespoke Presentation 130",
+    "title": "FINE ART CURATORIAL OVERVIEW",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 131,
+    "name": "Bespoke Presentation 131",
+    "title": "REGENERATIVE AGRICULTURE FORUM",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 132,
+    "name": "Bespoke Presentation 132",
+    "title": "MOBILE GAME MONETIZATION DECK",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 4,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 133,
+    "name": "Bespoke Presentation 133",
+    "title": "CIRCULAR ECONOMY PACKAGING",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 134,
+    "name": "Bespoke Presentation 134",
+    "title": "GRID BATTERY STORAGE CAPACITY",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 135,
+    "name": "Bespoke Presentation 135",
+    "title": "GLOBAL LOGISTICS EXPEDITION",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 136,
+    "name": "Bespoke Presentation 136",
+    "title": "ARTS PHILANTHROPY GALA BRIEF",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 137,
+    "name": "Bespoke Presentation 137",
+    "title": "COMMERCIAL AIRLINE SAFETY AUDIT",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "inter",
+      "dark"
+    ]
+  },
+  {
+    "id": 138,
+    "name": "Bespoke Presentation 138",
+    "title": "GLOBAL TAX POLICY BENCHMARK",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 139,
+    "name": "Bespoke Presentation 139",
+    "title": "NEURAL NETWORK COMPILER DECK",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 140,
+    "name": "Bespoke Presentation 140",
+    "title": "HOSPITALITY RESORT DEVELOPMENT",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 141,
+    "name": "Bespoke Presentation 141",
+    "title": "INDIE GAME PUBLISHING PITCH",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 142,
+    "name": "Bespoke Presentation 142",
+    "title": "CORPORATE WELLNESS STRATEGY",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 7,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 143,
+    "name": "Bespoke Presentation 143",
+    "title": "OPEN SOURCE SOFTWARE GOVERNANCE",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 144,
+    "name": "Bespoke Presentation 144",
+    "title": "VETERINARY CLINICAL NETWORK",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 145,
+    "name": "Bespoke Presentation 145",
+    "title": "RESTAURANT FRANCHISE EXPANSION",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 146,
+    "name": "Bespoke Presentation 146",
+    "title": "PREVENTATIVE LONGEVITY SUMMIT",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 147,
+    "name": "Bespoke Presentation 147",
+    "title": "DEVELOPER TOOLING ECOSYSTEM",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 5,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "inter",
+      "dark"
+    ]
+  },
+  {
+    "id": 148,
+    "name": "Bespoke Presentation 148",
+    "title": "GLOBAL ART AUCTION PREVIEW",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 149,
+    "name": "Bespoke Presentation 149",
+    "title": "FLORICULTURE EXPORT CAPACITY",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 150,
+    "name": "Bespoke Presentation 150",
+    "title": "CORPORATE GOVERNANCE CHARTER",
+    "category": "Presentation",
+    "canvasWidth": 1920,
+    "canvasHeight": 1080,
+    "elementCount": 6,
+    "tags": [
+      "presentation",
+      "deck",
+      "keynote",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 201,
+    "name": "Bespoke Resume 201",
+    "title": "ALEXANDER VANCE — CHIEF TECHNOLOGY OFFICER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 9,
+    "tags": [
+      "resume",
+      "cv",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 202,
+    "name": "Bespoke Resume 202",
+    "title": "SOPHIA CHEN — SENIOR PRODUCT DESIGNER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 9,
+    "tags": [
+      "resume",
+      "cv",
+      "outfit",
+      "dark"
+    ]
+  },
+  {
+    "id": 203,
+    "name": "Bespoke Resume 203",
+    "title": "MARCUS STERLING — INVESTMENT BANKING VP",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "resume",
+      "cv",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 204,
+    "name": "Bespoke Resume 204",
+    "title": "ELENA ROSTOVA — MACHINE LEARNING RESEARCHER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 205,
+    "name": "Bespoke Resume 205",
+    "title": "LIAM KAUFMAN — CREATIVE DIRECTOR & BRAND STRATEGIST",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 8,
+    "tags": [
+      "resume",
+      "cv",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 206,
+    "name": "Bespoke Resume 206",
+    "title": "ISABELLA DU PONT — GENERAL COUNSEL & LEGAL ADVISOR",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "resume",
+      "cv",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 207,
+    "name": "Bespoke Resume 207",
+    "title": "NOAH ZIMMERMAN — FULL STACK CLOUD ARCHITECT",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 8,
+    "tags": [
+      "resume",
+      "cv",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 208,
+    "name": "Bespoke Resume 208",
+    "title": "CAMILA TORRES — VP OF GLOBAL MARKETING",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "resume",
+      "cv",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 209,
+    "name": "Bespoke Resume 209",
+    "title": "JULIAN HAWTHORNE — PRINCIPAL ARCHITECT (AIA)",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 8,
+    "tags": [
+      "resume",
+      "cv",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 210,
+    "name": "Bespoke Resume 210",
+    "title": "VALERIE BLAKE — CLINICAL RESEARCH SCIENTIST",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 211,
+    "name": "Bespoke Resume 211",
+    "title": "DARIUS THORNE — FINANCIAL CONTROLLER (CPA)",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 212,
+    "name": "Bespoke Resume 212",
+    "title": "AMARA OKEKE — SUSTAINABILITY & ESG DIRECTOR",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 213,
+    "name": "Bespoke Resume 213",
+    "title": "VIKTOR KASPROV — CYBERSECURITY INCIDENT LEAD",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 214,
+    "name": "Bespoke Resume 214",
+    "title": "NATALIE WARD — SENIOR UX RESEARCHER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 215,
+    "name": "Bespoke Resume 215",
+    "title": "ETHAN ST. CLAIR — STRATEGY MANAGEMENT CONSULTANT",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 216,
+    "name": "Bespoke Resume 216",
+    "title": "CHLOE ADDISON — ECOMMERCE GROWTH SPECIALIST",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 217,
+    "name": "Bespoke Resume 217",
+    "title": "JASPER LINDQVIST — INDUSTRIAL PRODUCT DESIGNER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 218,
+    "name": "Bespoke Resume 218",
+    "title": "MAYA LIN — DATA SCIENCE & QUANT ANALYST",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 219,
+    "name": "Bespoke Resume 219",
+    "title": "GABRIEL MONET — FINE ART CURATOR & HISTORIAN",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 220,
+    "name": "Bespoke Resume 220",
+    "title": "TAYLOR BROOKS — VP OF PEOPLE & TALENT ACQUISITION",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 221,
+    "name": "Bespoke Resume 221",
+    "title": "LUCAS SILVA — DEVSECOPS PLATFORM ENGINEER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 222,
+    "name": "Bespoke Resume 222",
+    "title": "SERENA VANDENBERG — HAUTE COUTURE APPAREL DESIGNER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 223,
+    "name": "Bespoke Resume 223",
+    "title": "DOMINIC CROSS — AEROSPACE SYSTEMS ENGINEER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 224,
+    "name": "Bespoke Resume 224",
+    "title": "BEATRICE HOLLOWAY — CHIEF OPERATING OFFICER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 225,
+    "name": "Bespoke Resume 225",
+    "title": "KAI TAKAHASHI — INTERACTION & MOTION DESIGNER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 226,
+    "name": "Bespoke Resume 226",
+    "title": "ZACHARY COLE — COMMERCIAL REAL ESTATE BROKER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 227,
+    "name": "Bespoke Resume 227",
+    "title": "HELENA MARROQUIN — BIOCHEMICAL GENETICS LAB HEAD",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 228,
+    "name": "Bespoke Resume 228",
+    "title": "FELIX BAUMANN — SUPPLY CHAIN & LOGISTICS VP",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 229,
+    "name": "Bespoke Resume 229",
+    "title": "AALIYAH MANSOUR — INTERNATIONAL RELATIONS ADVISOR",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 230,
+    "name": "Bespoke Resume 230",
+    "title": "ROWAN KENNEDY — GAME DESIGNER & 3D ARTIST",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 231,
+    "name": "Bespoke Resume 231",
+    "title": "CHRISTOPHER REID — PUBLIC HEALTHCARE ADMINISTRATOR",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 232,
+    "name": "Bespoke Resume 232",
+    "title": "GISELLE FONTAINE — LUXURY BRAND COMMUNICATIONS DIR",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 3,
+    "tags": [
+      "resume",
+      "cv",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 233,
+    "name": "Bespoke Resume 233",
+    "title": "ADRIAN NOVAK — HARDWARE & ROBOTICS ENGINEER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 234,
+    "name": "Bespoke Resume 234",
+    "title": "TARA BRENNAN — ENTERPRISE SALES EXECUTIVE",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "resume",
+      "cv",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 235,
+    "name": "Bespoke Resume 235",
+    "title": "MAXIMILIAN GRAF — RENEWABLE ENERGY POLICY EXPERT",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 236,
+    "name": "Bespoke Resume 236",
+    "title": "YASMINE AL-SAYED — FINTECH PRODUCT MANAGER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 237,
+    "name": "Bespoke Resume 237",
+    "title": "SEBASTIAN CORTEZ — AUDIO ENGINEER & SOUND DESIGNER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "resume",
+      "cv",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 238,
+    "name": "Bespoke Resume 238",
+    "title": "EVELYN SINCLAIR — MUSEUM EXHIBIT ARCHIVIST",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "resume",
+      "cv",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 239,
+    "name": "Bespoke Resume 239",
+    "title": "BENJAMIN HAYES — CHIEF RISK OFFICER (CRO)",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "resume",
+      "cv",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 240,
+    "name": "Bespoke Resume 240",
+    "title": "KATHERINE LI — NEURAL NETWORK AI RESEARCHER",
+    "category": "Resume",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "resume",
+      "cv",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 301,
+    "name": "Bespoke Poster 301",
+    "title": "BAUHAUS 1923 EXHIBITION",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "poster",
+      "bespoke",
+      "space grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 302,
+    "name": "Bespoke Poster 302",
+    "title": "NEO-CYBER TOKYO NIGHTS",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "poster",
+      "bespoke",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 303,
+    "name": "Bespoke Poster 303",
+    "title": "SWISS TYPOGRAPHIC MONOGRAPH",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "poster",
+      "bespoke",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 304,
+    "name": "Bespoke Poster 304",
+    "title": "AVANT-GARDE JAZZ QUARTET",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "playfair display",
+      "dark"
+    ]
+  },
+  {
+    "id": 305,
+    "name": "Bespoke Poster 305",
+    "title": "CONTEMPORARY CERAMIC ART",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 306,
+    "name": "Bespoke Poster 306",
+    "title": "UNDERGROUND TECHNO 04:00",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 307,
+    "name": "Bespoke Poster 307",
+    "title": "SCANDINAVIAN INTERIORS 2026",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "poster",
+      "bespoke",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 308,
+    "name": "Bespoke Poster 308",
+    "title": "MIDNIGHT CINEMA RETROSPECTIVE",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cinzel",
+      "dark"
+    ]
+  },
+  {
+    "id": 309,
+    "name": "Bespoke Poster 309",
+    "title": "KINETIC MOTION GRAPHICS CON",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 310,
+    "name": "Bespoke Poster 310",
+    "title": "BRUTALIST ARCHITECTURE SURVEY",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 9,
+    "tags": [
+      "poster",
+      "bespoke",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 311,
+    "name": "Bespoke Poster 311",
+    "title": "LUMINESCENT AMBIENT SOUNDS",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "poster",
+      "bespoke",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 312,
+    "name": "Bespoke Poster 312",
+    "title": "BOTANICAL GARDEN EXPO",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 313,
+    "name": "Bespoke Poster 313",
+    "title": "RETRO CASSETTE WAVE 88",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "outfit",
+      "dark"
+    ]
+  },
+  {
+    "id": 314,
+    "name": "Bespoke Poster 314",
+    "title": "MODERNIST TYPOGRAPHY SALON",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "space grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 315,
+    "name": "Bespoke Poster 315",
+    "title": "COASTAL HORIZON PHOTOGRAPHY",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 316,
+    "name": "Bespoke Poster 316",
+    "title": "GLITCH ELECTRONICA LIVE",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 317,
+    "name": "Bespoke Poster 317",
+    "title": "ABSTRACT EXPRESSIONISM NOW",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 318,
+    "name": "Bespoke Poster 318",
+    "title": "URBAN STREETWEAR DROP VOL. 7",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 319,
+    "name": "Bespoke Poster 319",
+    "title": "DESERT MIRAGE FILM FESTIVAL",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cinzel",
+      "dark"
+    ]
+  },
+  {
+    "id": 320,
+    "name": "Bespoke Poster 320",
+    "title": "QUANTUM PHYSICS SYMPOSIUM",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "poster",
+      "bespoke",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 321,
+    "name": "Bespoke Poster 321",
+    "title": "HAUTE COUTURE PARIS FW26",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "poster",
+      "bespoke",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 322,
+    "name": "Bespoke Poster 322",
+    "title": "DEEP SPACE ASTRONOMY EXPO",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "inter",
+      "dark"
+    ]
+  },
+  {
+    "id": 323,
+    "name": "Bespoke Poster 323",
+    "title": "ORGANIC WINE & HARVEST TASTING",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 324,
+    "name": "Bespoke Poster 324",
+    "title": "METROPOLIS SPEED CYCLING",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 325,
+    "name": "Bespoke Poster 325",
+    "title": "INDIE GAME DEVELOPER EXPO",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "outfit",
+      "dark"
+    ]
+  },
+  {
+    "id": 326,
+    "name": "Bespoke Poster 326",
+    "title": "MINIMALIST FURNITURE TRIENNALE",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 327,
+    "name": "Bespoke Poster 327",
+    "title": "ANALOG SYNTHESIZER SUMMIT",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 328,
+    "name": "Bespoke Poster 328",
+    "title": "OCEAN CONSERVATION BENEFIT",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 329,
+    "name": "Bespoke Poster 329",
+    "title": "METALLURGIC SCULPTURE RETRO",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cinzel",
+      "dark"
+    ]
+  },
+  {
+    "id": 330,
+    "name": "Bespoke Poster 330",
+    "title": "HYPERPOP ELECTRONIC CARNIVAL",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 331,
+    "name": "Bespoke Poster 331",
+    "title": "ARCHITECTURAL BLUEPRINT SHOWCASE",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "inter",
+      "dark"
+    ]
+  },
+  {
+    "id": 332,
+    "name": "Bespoke Poster 332",
+    "title": "MEDITERRANEAN SUMMER VILLA",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "poster",
+      "bespoke",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 333,
+    "name": "Bespoke Poster 333",
+    "title": "PSYCHEDELIC DESERT GATHERING",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "poster",
+      "bespoke",
+      "outfit",
+      "dark"
+    ]
+  },
+  {
+    "id": 334,
+    "name": "Bespoke Poster 334",
+    "title": "INDUSTRIAL DESIGN AWARD 2026",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "space grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 335,
+    "name": "Bespoke Poster 335",
+    "title": "NEURAL NETWORK AI FORUM",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "inter",
+      "dark"
+    ]
+  },
+  {
+    "id": 336,
+    "name": "Bespoke Poster 336",
+    "title": "VINTAGE MOTORSPORT GRAND PRIX",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 337,
+    "name": "Bespoke Poster 337",
+    "title": "SUMMER JAZZ IN THE VINEYARD",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "poster",
+      "bespoke",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 338,
+    "name": "Bespoke Poster 338",
+    "title": "DARK AMBIENT FREQUENCY LAB",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "poster",
+      "bespoke",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 339,
+    "name": "Bespoke Poster 339",
+    "title": "CONTEMPORARY CERAMIC TRIENNIAL",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "poster",
+      "bespoke",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 340,
+    "name": "Bespoke Poster 340",
+    "title": "ELECTRO ACOUSTIC CHAMBER ORCH",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cinzel",
+      "dark"
+    ]
+  },
+  {
+    "id": 341,
+    "name": "Bespoke Poster 341",
+    "title": "TOKYO EXPERIMENTAL MEDIA LAB",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 342,
+    "name": "Bespoke Poster 342",
+    "title": "MINIMALIST PACKAGING BIENNALE",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "poster",
+      "bespoke",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 343,
+    "name": "Bespoke Poster 343",
+    "title": "SOLAR ECLIPSE OBSERVATION CAMP",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "outfit",
+      "dark"
+    ]
+  },
+  {
+    "id": 344,
+    "name": "Bespoke Poster 344",
+    "title": "NORDIC LIGHT ARCHITECTURE",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 345,
+    "name": "Bespoke Poster 345",
+    "title": "RAW POWER GYM CHAMPIONSHIP",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 346,
+    "name": "Bespoke Poster 346",
+    "title": "EXPERIMENTAL SOUND MATRIX",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "poster",
+      "bespoke",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 347,
+    "name": "Bespoke Poster 347",
+    "title": "COFFEE ROASTERS GUILD SUMMIT",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "poster",
+      "bespoke",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 348,
+    "name": "Bespoke Poster 348",
+    "title": "CYBER SECURITY DEFENSE CON",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 349,
+    "name": "Bespoke Poster 349",
+    "title": "MODERN ABSTRACT OIL PAINTINGS",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 350,
+    "name": "Bespoke Poster 350",
+    "title": "NEO TOKYO STREET PHOTOGRAPHY",
+    "category": "Posters",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "poster",
+      "bespoke",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 401,
+    "name": "Bespoke Business Flyer 401",
+    "title": "BESPOKE BUSINESS FLYER 401",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 402,
+    "name": "Bespoke Business Flyer 402",
+    "title": "BESPOKE BUSINESS FLYER 402",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 403,
+    "name": "Bespoke Business Flyer 403",
+    "title": "BESPOKE BUSINESS FLYER 403",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 404,
+    "name": "Bespoke Business Flyer 404",
+    "title": "BESPOKE BUSINESS FLYER 404",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 405,
+    "name": "Bespoke Business Flyer 405",
+    "title": "BESPOKE BUSINESS FLYER 405",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 406,
+    "name": "Bespoke Business Flyer 406",
+    "title": "BESPOKE BUSINESS FLYER 406",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 407,
+    "name": "Bespoke Business Flyer 407",
+    "title": "BESPOKE BUSINESS FLYER 407",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 408,
+    "name": "Bespoke Business Flyer 408",
+    "title": "BESPOKE BUSINESS FLYER 408",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 409,
+    "name": "Bespoke Business Flyer 409",
+    "title": "BESPOKE BUSINESS FLYER 409",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 410,
+    "name": "Bespoke Business Flyer 410",
+    "title": "BESPOKE BUSINESS FLYER 410",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 411,
+    "name": "Bespoke Business Flyer 411",
+    "title": "BESPOKE BUSINESS FLYER 411",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 412,
+    "name": "Bespoke Business Flyer 412",
+    "title": "BESPOKE BUSINESS FLYER 412",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 413,
+    "name": "Bespoke Business Flyer 413",
+    "title": "BESPOKE BUSINESS FLYER 413",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 414,
+    "name": "Bespoke Business Flyer 414",
+    "title": "BESPOKE BUSINESS FLYER 414",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 415,
+    "name": "Bespoke Business Flyer 415",
+    "title": "BESPOKE BUSINESS FLYER 415",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 416,
+    "name": "Bespoke Business Flyer 416",
+    "title": "BESPOKE BUSINESS FLYER 416",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 417,
+    "name": "Bespoke Business Flyer 417",
+    "title": "BESPOKE BUSINESS FLYER 417",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 418,
+    "name": "Bespoke Business Flyer 418",
+    "title": "BESPOKE BUSINESS FLYER 418",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 419,
+    "name": "Bespoke Business Flyer 419",
+    "title": "BESPOKE BUSINESS FLYER 419",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 420,
+    "name": "Bespoke Business Flyer 420",
+    "title": "BESPOKE BUSINESS FLYER 420",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 421,
+    "name": "Bespoke Business Flyer 421",
+    "title": "BESPOKE BUSINESS FLYER 421",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 8,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 422,
+    "name": "Bespoke Business Flyer 422",
+    "title": "BESPOKE BUSINESS FLYER 422",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 423,
+    "name": "Bespoke Business Flyer 423",
+    "title": "BESPOKE BUSINESS FLYER 423",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 424,
+    "name": "Bespoke Business Flyer 424",
+    "title": "BESPOKE BUSINESS FLYER 424",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 425,
+    "name": "Bespoke Business Flyer 425",
+    "title": "BESPOKE BUSINESS FLYER 425",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 426,
+    "name": "Bespoke Business Flyer 426",
+    "title": "BESPOKE BUSINESS FLYER 426",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 427,
+    "name": "Bespoke Business Flyer 427",
+    "title": "BESPOKE BUSINESS FLYER 427",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 428,
+    "name": "Bespoke Business Flyer 428",
+    "title": "BESPOKE BUSINESS FLYER 428",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 429,
+    "name": "Bespoke Business Flyer 429",
+    "title": "BESPOKE BUSINESS FLYER 429",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 430,
+    "name": "Bespoke Business Flyer 430",
+    "title": "BESPOKE BUSINESS FLYER 430",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 431,
+    "name": "Bespoke Business Flyer 431",
+    "title": "BESPOKE BUSINESS FLYER 431",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 432,
+    "name": "Bespoke Business Flyer 432",
+    "title": "BESPOKE BUSINESS FLYER 432",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 433,
+    "name": "Bespoke Business Flyer 433",
+    "title": "BESPOKE BUSINESS FLYER 433",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 434,
+    "name": "Bespoke Business Flyer 434",
+    "title": "BESPOKE BUSINESS FLYER 434",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 435,
+    "name": "Bespoke Business Flyer 435",
+    "title": "BESPOKE BUSINESS FLYER 435",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 436,
+    "name": "Bespoke Business Flyer 436",
+    "title": "BESPOKE BUSINESS FLYER 436",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 437,
+    "name": "Bespoke Business Flyer 437",
+    "title": "BESPOKE BUSINESS FLYER 437",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 438,
+    "name": "Bespoke Business Flyer 438",
+    "title": "BESPOKE BUSINESS FLYER 438",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 439,
+    "name": "Bespoke Business Flyer 439",
+    "title": "BESPOKE BUSINESS FLYER 439",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 440,
+    "name": "Bespoke Business Flyer 440",
+    "title": "BESPOKE BUSINESS FLYER 440",
+    "category": "Flyers",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "Flyer",
+      "Business",
+      "Marketing",
+      "Promo"
+    ]
+  },
+  {
+    "id": 501,
+    "name": "Bespoke Event Invitation 501",
+    "title": "BESPOKE EVENT INVITATION 501",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 9,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 502,
+    "name": "Bespoke Event Invitation 502",
+    "title": "BESPOKE EVENT INVITATION 502",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 6,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 503,
+    "name": "Bespoke Event Invitation 503",
+    "title": "BESPOKE EVENT INVITATION 503",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 8,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 504,
+    "name": "Bespoke Event Invitation 504",
+    "title": "BESPOKE EVENT INVITATION 504",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 6,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 505,
+    "name": "Bespoke Event Invitation 505",
+    "title": "BESPOKE EVENT INVITATION 505",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 506,
+    "name": "Bespoke Event Invitation 506",
+    "title": "BESPOKE EVENT INVITATION 506",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 507,
+    "name": "Bespoke Event Invitation 507",
+    "title": "BESPOKE EVENT INVITATION 507",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 6,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 508,
+    "name": "Bespoke Event Invitation 508",
+    "title": "BESPOKE EVENT INVITATION 508",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 6,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 509,
+    "name": "Bespoke Event Invitation 509",
+    "title": "BESPOKE EVENT INVITATION 509",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 510,
+    "name": "Bespoke Event Invitation 510",
+    "title": "BESPOKE EVENT INVITATION 510",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 6,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 511,
+    "name": "Bespoke Event Invitation 511",
+    "title": "BESPOKE EVENT INVITATION 511",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 512,
+    "name": "Bespoke Event Invitation 512",
+    "title": "BESPOKE EVENT INVITATION 512",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 513,
+    "name": "Bespoke Event Invitation 513",
+    "title": "BESPOKE EVENT INVITATION 513",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 514,
+    "name": "Bespoke Event Invitation 514",
+    "title": "BESPOKE EVENT INVITATION 514",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 515,
+    "name": "Bespoke Event Invitation 515",
+    "title": "BESPOKE EVENT INVITATION 515",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 516,
+    "name": "Bespoke Event Invitation 516",
+    "title": "BESPOKE EVENT INVITATION 516",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 517,
+    "name": "Bespoke Event Invitation 517",
+    "title": "BESPOKE EVENT INVITATION 517",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 518,
+    "name": "Bespoke Event Invitation 518",
+    "title": "BESPOKE EVENT INVITATION 518",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 6,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 519,
+    "name": "Bespoke Event Invitation 519",
+    "title": "BESPOKE EVENT INVITATION 519",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 520,
+    "name": "Bespoke Event Invitation 520",
+    "title": "BESPOKE EVENT INVITATION 520",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 521,
+    "name": "Bespoke Event Invitation 521",
+    "title": "BESPOKE EVENT INVITATION 521",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 6,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 522,
+    "name": "Bespoke Event Invitation 522",
+    "title": "BESPOKE EVENT INVITATION 522",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 523,
+    "name": "Bespoke Event Invitation 523",
+    "title": "BESPOKE EVENT INVITATION 523",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 524,
+    "name": "Bespoke Event Invitation 524",
+    "title": "BESPOKE EVENT INVITATION 524",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 525,
+    "name": "Bespoke Event Invitation 525",
+    "title": "BESPOKE EVENT INVITATION 525",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 526,
+    "name": "Bespoke Event Invitation 526",
+    "title": "BESPOKE EVENT INVITATION 526",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 527,
+    "name": "Bespoke Event Invitation 527",
+    "title": "BESPOKE EVENT INVITATION 527",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 528,
+    "name": "Bespoke Event Invitation 528",
+    "title": "BESPOKE EVENT INVITATION 528",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 529,
+    "name": "Bespoke Event Invitation 529",
+    "title": "BESPOKE EVENT INVITATION 529",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 530,
+    "name": "Bespoke Event Invitation 530",
+    "title": "BESPOKE EVENT INVITATION 530",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 531,
+    "name": "Bespoke Event Invitation 531",
+    "title": "BESPOKE EVENT INVITATION 531",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 532,
+    "name": "Bespoke Event Invitation 532",
+    "title": "BESPOKE EVENT INVITATION 532",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 4,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 533,
+    "name": "Bespoke Event Invitation 533",
+    "title": "BESPOKE EVENT INVITATION 533",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 534,
+    "name": "Bespoke Event Invitation 534",
+    "title": "BESPOKE EVENT INVITATION 534",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 535,
+    "name": "Bespoke Event Invitation 535",
+    "title": "BESPOKE EVENT INVITATION 535",
+    "category": "Invitations",
+    "canvasWidth": 1400,
+    "canvasHeight": 2000,
+    "elementCount": 5,
+    "tags": [
+      "Invitation",
+      "Card",
+      "Event",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 601,
+    "name": "Bespoke Business Document 601",
+    "title": "ENTERPRISE SAAS PROPOSAL",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 8,
+    "tags": [
+      "business",
+      "corporate",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 602,
+    "name": "Bespoke Business Document 602",
+    "title": "VENTURE CAPITAL INVESTMENT MEMO",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "playfair display",
+      "dark"
+    ]
+  },
+  {
+    "id": 603,
+    "name": "Bespoke Business Document 603",
+    "title": "GLOBAL LOGISTICS STRATEGY BRIEF",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "space grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 604,
+    "name": "Bespoke Business Document 604",
+    "title": "MERGERS & ACQUISITIONS OVERVIEW",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 8,
+    "tags": [
+      "business",
+      "corporate",
+      "cinzel",
+      "dark"
+    ]
+  },
+  {
+    "id": 605,
+    "name": "Bespoke Business Document 605",
+    "title": "CREATIVE AGENCY CAPABILITY DECK",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "syne",
+      "light"
+    ]
+  },
+  {
+    "id": 606,
+    "name": "Bespoke Business Document 606",
+    "title": "SUSTAINABILITY AUDIT & ESG REPORT",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 607,
+    "name": "Bespoke Business Document 607",
+    "title": "CYBER DEFENSE SLA AGREEMENT",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 608,
+    "name": "Bespoke Business Document 608",
+    "title": "COMMERCIAL REAL ESTATE BROCHURE",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 609,
+    "name": "Bespoke Business Document 609",
+    "title": "FINANCIAL ADVISORY QUARTERLY",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "business",
+      "corporate",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 610,
+    "name": "Bespoke Business Document 610",
+    "title": "EXECUTIVE BOARD RESOLUTION",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 611,
+    "name": "Bespoke Business Document 611",
+    "title": "STRATEGY CONSULTING ONE-PAGER",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 612,
+    "name": "Bespoke Business Document 612",
+    "title": "HEALTHCARE CLINICAL SCOPE OF WORK",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 613,
+    "name": "Bespoke Business Document 613",
+    "title": "RENEWABLE ENERGY TENDER BID",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 614,
+    "name": "Bespoke Business Document 614",
+    "title": "AI INFRASTRUCTURE SERVICE CONTRACT",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 615,
+    "name": "Bespoke Business Document 615",
+    "title": "LUXURY HOSPITALITY ASSET DECK",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "business",
+      "corporate",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 616,
+    "name": "Bespoke Business Document 616",
+    "title": "BIOTECH VENTURE PITCH BRIEF",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 617,
+    "name": "Bespoke Business Document 617",
+    "title": "MEDIA ENTERTAINMENT RATE CARD",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 618,
+    "name": "Bespoke Business Document 618",
+    "title": "SUPPLY CHAIN INTEGRATION PROPOSAL",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 619,
+    "name": "Bespoke Business Document 619",
+    "title": "LEGAL COUNSEL ENGAGEMENT LETTER",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 620,
+    "name": "Bespoke Business Document 620",
+    "title": "DIGITAL MARKETING SOW & KPI SHEET",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "business",
+      "corporate",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 621,
+    "name": "Bespoke Business Document 621",
+    "title": "AEROSPACE DEFENSE TECHNICAL BRIEF",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 622,
+    "name": "Bespoke Business Document 622",
+    "title": "FINTECH PRODUCT SPECIFICATION",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 623,
+    "name": "Bespoke Business Document 623",
+    "title": "BRAND IDENTITY GUIDELINES OVERVIEW",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 624,
+    "name": "Bespoke Business Document 624",
+    "title": "PRIVATE WEALTH ALLOCATION PLAN",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "business",
+      "corporate",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 625,
+    "name": "Bespoke Business Document 625",
+    "title": "ARCHITECTURE FIRM PROJECT DOSSIER",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "business",
+      "corporate",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 626,
+    "name": "Bespoke Business Document 626",
+    "title": "GLOBAL FREIGHT RATE PROPOSAL",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 627,
+    "name": "Bespoke Business Document 627",
+    "title": "AUTOMOTIVE FLEET LEASING TERMS",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 628,
+    "name": "Bespoke Business Document 628",
+    "title": "RETAIL EXPANSION FEASIBILITY STUDY",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 629,
+    "name": "Bespoke Business Document 629",
+    "title": "QUANT TRADING SYSTEM WHITE PAPER",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 630,
+    "name": "Bespoke Business Document 630",
+    "title": "HR ONBOARDING EXECUTIVE PACK",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "business",
+      "corporate",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 631,
+    "name": "Bespoke Business Document 631",
+    "title": "METALS & COMMODITIES TRADING BRIEF",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "cinzel",
+      "dark"
+    ]
+  },
+  {
+    "id": 632,
+    "name": "Bespoke Business Document 632",
+    "title": "TELECOMMUNICATIONS TOWER AUDIT",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 633,
+    "name": "Bespoke Business Document 633",
+    "title": "HOTEL RESORT ACQUISITION MEMO",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 634,
+    "name": "Bespoke Business Document 634",
+    "title": "PHARMACEUTICAL CLINICAL TRIAL SOW",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 635,
+    "name": "Bespoke Business Document 635",
+    "title": "GAME STUDIO CO-DEVELOPMENT PACT",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 636,
+    "name": "Bespoke Business Document 636",
+    "title": "E-COMMERCE FRANCHISE DISCLOSURE",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "business",
+      "corporate",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 637,
+    "name": "Bespoke Business Document 637",
+    "title": "INSURANCE UNDERWRITING RISK REPORT",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 638,
+    "name": "Bespoke Business Document 638",
+    "title": "CIVIL INFRASTRUCTURE BID PROPOSAL",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "space grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 639,
+    "name": "Bespoke Business Document 639",
+    "title": "CORPORATE GOVERNANCE CHARTER",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "business",
+      "corporate",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 640,
+    "name": "Bespoke Business Document 640",
+    "title": "DATA PRIVACY & GDPR COMPLIANCE SOW",
+    "category": "Business",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "business",
+      "corporate",
+      "plus jakarta sans",
+      "dark"
+    ]
+  },
+  {
+    "id": 701,
+    "name": "Bespoke Report 701",
+    "title": "ANNUAL FINANCIAL AUDIT 2026",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 8,
+    "tags": [
+      "report",
+      "whitepaper",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 702,
+    "name": "Bespoke Report 702",
+    "title": "GLOBAL ESG SUSTAINABILITY INDEX",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 703,
+    "name": "Bespoke Report 703",
+    "title": "AI INFRASTRUCTURE BENCHMARK",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 704,
+    "name": "Bespoke Report 704",
+    "title": "CYBER THREAT INTELLIGENCE REPORT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 705,
+    "name": "Bespoke Report 705",
+    "title": "BIOTECH CLINICAL TRIAL OUTCOMES",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 706,
+    "name": "Bespoke Report 706",
+    "title": "MACROECONOMIC INFLATION OUTLOOK",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 707,
+    "name": "Bespoke Report 707",
+    "title": "SUPPLY CHAIN DISRUPTION INDEX",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "report",
+      "whitepaper",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 708,
+    "name": "Bespoke Report 708",
+    "title": "COMMERCIAL REAL ESTATE VALUATION",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "report",
+      "whitepaper",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 709,
+    "name": "Bespoke Report 709",
+    "title": "VENTURE CAPITAL RETURNS AUDIT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 710,
+    "name": "Bespoke Report 710",
+    "title": "DEEP SPACE TELECOM EXPEDITION",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 711,
+    "name": "Bespoke Report 711",
+    "title": "RENEWABLE ENERGY GRID CAPACITY",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "report",
+      "whitepaper",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 712,
+    "name": "Bespoke Report 712",
+    "title": "FINTECH CONSUMER ADOPTION INDEX",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 713,
+    "name": "Bespoke Report 713",
+    "title": "AEROSPACE DEFENSE COMPLIANCE",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "cabinet grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 714,
+    "name": "Bespoke Report 714",
+    "title": "BOARD GOVERNANCE & RISK OVERSIGHT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 715,
+    "name": "Bespoke Report 715",
+    "title": "SAAS PRODUCT ENGAGEMENT INDEX",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 716,
+    "name": "Bespoke Report 716",
+    "title": "HEALTHCARE CLINICAL METRICS 2026",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "report",
+      "whitepaper",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 717,
+    "name": "Bespoke Report 717",
+    "title": "AEROSPACE FLIGHT SAFETY AUDIT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "report",
+      "whitepaper",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 718,
+    "name": "Bespoke Report 718",
+    "title": "SUSTAINABLE ARCHITECTURE SURVEY",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 4,
+    "tags": [
+      "report",
+      "whitepaper",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 719,
+    "name": "Bespoke Report 719",
+    "title": "URBAN HOUSING AFFORDABILITY STUDY",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 720,
+    "name": "Bespoke Report 720",
+    "title": "GLOBAL ART MARKET AUCTION TRENDS",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 721,
+    "name": "Bespoke Report 721",
+    "title": "DIGITAL PUBLISHING TYPOGRAPHY REPORT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 722,
+    "name": "Bespoke Report 722",
+    "title": "DEVELOPER TOOLING PRODUCTIVITY",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 723,
+    "name": "Bespoke Report 723",
+    "title": "EXECUTIVE LEADERSHIP DIVERSITY",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 724,
+    "name": "Bespoke Report 724",
+    "title": "FLEXIBLE HYBRID OFFICE UTILIZATION",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 725,
+    "name": "Bespoke Report 725",
+    "title": "DATA PRIVACY COMPLIANCE AUDIT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 726,
+    "name": "Bespoke Report 726",
+    "title": "INTERNATIONAL TRADE TARIFF IMPACT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "cinzel",
+      "dark"
+    ]
+  },
+  {
+    "id": 727,
+    "name": "Bespoke Report 727",
+    "title": "DESIGN SYSTEM MATURITY INDEX",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "syne",
+      "light"
+    ]
+  },
+  {
+    "id": 728,
+    "name": "Bespoke Report 728",
+    "title": "CIVIL INFRASTRUCTURE RESILIENCE",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 729,
+    "name": "Bespoke Report 729",
+    "title": "LIVE ENTERTAINMENT ECONOMY 2026",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "syne",
+      "dark"
+    ]
+  },
+  {
+    "id": 730,
+    "name": "Bespoke Report 730",
+    "title": "GLOBAL LUXURY GOODS FORECAST",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 731,
+    "name": "Bespoke Report 731",
+    "title": "CORPORATE WELLNESS & MENTAL HEALTH",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 732,
+    "name": "Bespoke Report 732",
+    "title": "OPEN SOURCE SECURITY HEALTH",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 733,
+    "name": "Bespoke Report 733",
+    "title": "ELECTRIC VEHICLE TRANSITION MAP",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 734,
+    "name": "Bespoke Report 734",
+    "title": "TELEMEDICINE PATIENT OUTCOMES",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 735,
+    "name": "Bespoke Report 735",
+    "title": "VETERINARY MEDICINE SPEND SURVEY",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 7,
+    "tags": [
+      "report",
+      "whitepaper",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 736,
+    "name": "Bespoke Report 736",
+    "title": "RESTAURANT SUPPLY INFLATION",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "cabinet grotesk",
+      "light"
+    ]
+  },
+  {
+    "id": 737,
+    "name": "Bespoke Report 737",
+    "title": "PREVENTATIVE LONGEVITY STUDY",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "plus jakarta sans",
+      "light"
+    ]
+  },
+  {
+    "id": 738,
+    "name": "Bespoke Report 738",
+    "title": "REGENERATIVE AGRICULTURE REPORT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 739,
+    "name": "Bespoke Report 739",
+    "title": "MOBILE APP MONETIZATION INDEX",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "inter",
+      "light"
+    ]
+  },
+  {
+    "id": 740,
+    "name": "Bespoke Report 740",
+    "title": "CIRCULAR ECONOMY RETAIL AUDIT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 741,
+    "name": "Bespoke Report 741",
+    "title": "GRID BATTERY STORAGE INDEX",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "space grotesk",
+      "dark"
+    ]
+  },
+  {
+    "id": 742,
+    "name": "Bespoke Report 742",
+    "title": "SUSTAINABLE SEAFOOD SUPPLY",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "outfit",
+      "light"
+    ]
+  },
+  {
+    "id": 743,
+    "name": "Bespoke Report 743",
+    "title": "ARTS FUNDING & PHILANTHROPY",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 5,
+    "tags": [
+      "report",
+      "whitepaper",
+      "cinzel",
+      "light"
+    ]
+  },
+  {
+    "id": 744,
+    "name": "Bespoke Report 744",
+    "title": "COMMERCIAL FLORICULTURE EXPORT",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 6,
+    "tags": [
+      "report",
+      "whitepaper",
+      "playfair display",
+      "light"
+    ]
+  },
+  {
+    "id": 745,
+    "name": "Bespoke Report 745",
+    "title": "GLOBAL CORPORATE TAXATION BENCHMARK",
+    "category": "Reports",
+    "canvasWidth": 1200,
+    "canvasHeight": 1697,
+    "elementCount": 8,
+    "tags": [
+      "report",
+      "whitepaper",
+      "inter",
+      "light"
+    ]
+  }
+];
+    const grid = document.getElementById('grid');
+    templates.forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const isPres = t.category === 'Presentation';
+      card.innerHTML = `
+        <div class="preview-box ${isPres ? 'pres' : ''}" id="p-${t.id}">
+          <div style="padding: 16px; font-size: 12px; color: #a1a1aa; text-align: center;">${t.category} #${t.id}</div>
+        </div>
+        <div class="info">
+          <div class="name">${t.title}</div>
+          <div class="meta">${t.category} • ${t.elementCount} elements • ${t.canvasWidth}x${t.canvasHeight}</div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>

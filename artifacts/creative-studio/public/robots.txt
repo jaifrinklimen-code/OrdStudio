@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+
+Sitemap: https://ordstudio.com/sitemap.xml
