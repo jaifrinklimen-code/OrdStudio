@@ -138,67 +138,75 @@ export default function PublicHome() {
                   <div className="absolute inset-0 bg-[#0f0f15] border border-white/[0.08] rounded-3xl transform -rotate-3 scale-[0.98] translate-y-2 opacity-80 shadow-2xl"></div>
                   
                   {/* Main Front Card */}
-                  <div className="absolute inset-0 bg-[#0a0a0f] border border-white/[0.12] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col p-6 sm:p-8 justify-between z-10 group hover:border-purple-500/50 transition-colors duration-500">
+                  <div className="absolute inset-0 bg-[#0d0d12] border border-white/[0.12] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex p-6 sm:p-8 z-10 group hover:border-purple-500/50 transition-colors duration-500 overflow-hidden">
                     
-                    {/* Top Badge */}
-                    <div className="inline-flex items-center gap-2 border border-purple-500/30 bg-purple-500/10 rounded-full px-4 py-1.5 w-fit shadow-[0_0_15px_rgba(139,92,246,0.2)]">
-                      <Sparkles size={14} className="text-purple-400" />
-                      <span className="text-xs font-semibold text-purple-200 tracking-wide">Design Studio</span>
-                    </div>
+                    {/* Left Content - Typography */}
+                    <div className="flex flex-col justify-between w-[55%] relative z-20 pr-4">
+                      <div>
+                        {/* Top Badge */}
+                        <div className="inline-flex items-center gap-1.5 border border-purple-500/30 bg-purple-500/10 rounded-full px-3 py-1 w-fit shadow-[0_0_15px_rgba(139,92,246,0.2)] mb-4 sm:mb-6">
+                          <Sparkles size={12} className="text-purple-400" />
+                          <span className="text-[10px] font-bold text-purple-200 tracking-wide uppercase">Design Studio</span>
+                        </div>
 
-                    {/* Main Title & Subtitle */}
-                    <div className="space-y-2 mt-6 relative z-20 w-2/3">
-                      <h2 className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black leading-[1.1] tracking-tight" style={{ fontFamily: 'Syne, sans-serif' }}>
-                        <span className="text-white block">Architectural</span>
-                        <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent block">Horizon</span>
-                        <span className="text-white block">Monograph</span>
-                      </h2>
-                      <p className="text-white/50 text-xs sm:text-sm font-medium pt-2">
-                        Minimal Spaces. Maximum Stories.
-                      </p>
-                    </div>
-
-                    {/* Bottom CTA */}
-                    <div className="flex items-center gap-3 mt-8 relative z-20">
-                      <div className="w-8 h-8 rounded-full border border-purple-500/40 flex items-center justify-center text-purple-400 bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
-                        <ArrowRight size={14} className="-rotate-45" />
+                        {/* Main Title & Subtitle */}
+                        <div className="space-y-3">
+                          <h2 className="text-2xl sm:text-3xl lg:text-[2rem] font-black leading-[1.1] tracking-tight" style={{ fontFamily: 'Syne, sans-serif' }}>
+                            <span className="text-white block">Architectural</span>
+                            <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent block">Horizon</span>
+                            <span className="text-white block">Monograph</span>
+                          </h2>
+                          <p className="text-white/50 text-xs sm:text-sm font-medium leading-snug">
+                            Minimal Spaces.<br/>Maximum Stories.
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-sm font-medium text-white/70 group-hover:text-white transition-colors cursor-pointer">
-                        Create with AI
-                      </span>
+
+                      {/* Bottom CTA */}
+                      <div className="flex items-center gap-2 mt-6">
+                        <div className="w-6 h-6 rounded-full border border-purple-500/40 flex items-center justify-center text-purple-400 bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors shrink-0">
+                          <ArrowRight size={10} className="-rotate-45" />
+                        </div>
+                        <span className="text-xs font-semibold text-white/70 group-hover:text-white transition-colors cursor-pointer">
+                          Create with AI
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Architectural Sticker Cutout (Right Side) */}
-                    <div className="absolute -right-4 sm:-right-8 top-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] transform rotate-6 group-hover:rotate-3 group-hover:scale-105 transition-all duration-500 z-10">
-                      <div className="relative w-full h-full">
-                        {/* Glow behind sticker */}
-                        <div className="absolute inset-0 bg-indigo-500/30 blur-2xl rounded-full scale-110"></div>
+                    {/* Right Content - Architectural Sticker */}
+                    <div className="w-[45%] relative flex items-center justify-center pl-2 sm:pl-4">
+                      {/* Glow backdrop for sticker */}
+                      <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full scale-150"></div>
+                      
+                      {/* Sticker Container */}
+                      <div className="relative w-full aspect-square max-w-[180px] sm:max-w-[220px] transform rotate-3 group-hover:rotate-0 group-hover:scale-105 transition-all duration-500 z-10">
                         
-                        {/* Main architectural photo as sticker */}
-                        <div className="relative w-full h-full border-[6px] sm:border-[8px] border-white rounded-2xl overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.5)] transform -rotate-3 bg-white">
+                        {/* Main architectural photo */}
+                        <div className="relative w-full h-full border-[6px] sm:border-[8px] border-white rounded-2xl overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.5)] bg-white">
                           <img 
-                            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop" 
-                            alt="Architecture" 
+                            src="https://images.unsplash.com/photo-1511818966892-d7d671e672a2?q=80&w=800&auto=format&fit=crop" 
+                            alt="Architecture Layout" 
                             className="w-full h-full object-cover"
                           />
                         </div>
 
-                        {/* Hand-written style small sticker overlapping */}
-                        <div className="absolute -bottom-2 -left-4 sm:-left-6 bg-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl border-[3px] border-white shadow-xl transform -rotate-12">
-                          <span className="text-black font-bold text-sm sm:text-lg leading-none block text-center" style={{ fontFamily: 'Caveat, cursive, sans-serif' }}>
+                        {/* Hand-written sticker label */}
+                        <div className="absolute -bottom-3 -left-4 sm:-bottom-4 sm:-left-6 bg-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl border-[3px] border-white shadow-xl transform -rotate-12 z-20">
+                          <span className="text-black font-bold text-xs sm:text-sm leading-none block text-center" style={{ fontFamily: 'Caveat, cursive, sans-serif' }}>
                             Design<br/>Studio
                           </span>
                         </div>
 
-                        {/* Accent strokes */}
-                        <div className="absolute -top-4 right-0 text-purple-400 transform rotate-12 drop-shadow-md">
-                          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                        {/* Subtle accent strokes */}
+                        <div className="absolute -top-6 -right-2 sm:-top-8 sm:-right-4 text-purple-400 transform rotate-12 drop-shadow-md z-0 opacity-80">
+                          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="w-8 h-8 sm:w-10 sm:h-10">
                             <path d="M10 20 L15 15 M20 8 L25 12 M30 15 L25 20" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
+                        
                       </div>
                     </div>
-
+                    
                   </div>
                 </div>
               </div>
