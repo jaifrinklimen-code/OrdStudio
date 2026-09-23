@@ -2,9 +2,16 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   Upload, FileImage, FileText, Sparkles, Trash2, Play, Check, 
   RotateCcw, Download, LayoutGrid, Eye, ArrowRight, RefreshCw, FileQuestion,
-  Presentation, FileCode, ChevronDown
+  Presentation, FileCode, ChevronDown, Loader2
 } from "lucide-react";
 import { exportToPptx, exportToPdf } from '../lib/exportServices';
+import {
+  saveUserAsset,
+  loadUserAssets,
+  deleteUserAsset,
+  getCurrentUserId,
+  uploadToSupabaseStorageIfConfigured
+} from '../lib/assetStorage';
 
 interface Asset {
   id: string;
@@ -16,6 +23,8 @@ interface Asset {
   pdfPages?: string[];
   uploadedAt: string;
   isDemo?: boolean;
+  fileBlob?: Blob;
+  storagePath?: string;
 }
 
 interface AssetUploaderProps {
@@ -38,81 +47,84 @@ const loadPdfJS = async () => {
   });
 };
 
-const extractPdfPages = async (file: File): Promise<string[]> => {
-  const pdfjsLib = await loadPdfJS();
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  const numPages = pdf.numPages;
-  const pagesText: string[] = [];
-  
-  for (let i = 1; i <= numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const items = textContent.items as any[];
+const extractPdfPages = async (file: File | Blob): Promise<string[]> => {
+  try {
+    const pdfjsLib = await loadPdfJS();
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const numPages = pdf.numPages;
+    const pagesText: string[] = [];
     
-    // Group items into lines based on Y coordinate (within a small threshold, e.g. 5 units)
-    const linesMap: { y: number; items: any[] }[] = [];
-    
-    items.forEach(item => {
-      if (!item.str || item.str.trim() === '') return;
+    for (let i = 1; i <= numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const items = textContent.items as any[];
       
-      const y = item.transform[5];
-      const x = item.transform[4];
+      // Group items into lines based on Y coordinate (within a small threshold, e.g. 5 units)
+      const linesMap: { y: number; items: any[] }[] = [];
       
-      // Find an existing line that has a Y coordinate within 5 units of this item
-      let line = linesMap.find(l => Math.abs(l.y - y) < 5);
-      if (!line) {
-        line = { y, items: [] };
-        linesMap.push(line);
-      }
-      line.items.push({ x, str: item.str });
-    });
-    
-    // Sort lines by Y descending (top of page first)
-    linesMap.sort((a, b) => b.y - a.y);
-    
-    const pageLines: string[] = [];
-    for (let idx = 0; idx < linesMap.length; idx++) {
-      const line = linesMap[idx];
-      line.items.sort((a, b) => a.x - b.x);
-      
-      // Join items in the same line with a space
-      let lineText = '';
-      line.items.forEach(item => {
-        if (lineText !== '') {
-          if (!lineText.endsWith(' ') && !item.str.startsWith(' ')) {
-            lineText += ' ';
-          }
+      items.forEach(item => {
+        if (!item.str || item.str.trim() === '') return;
+        
+        const y = item.transform[5];
+        const x = item.transform[4];
+        
+        let line = linesMap.find(l => Math.abs(l.y - y) < 5);
+        if (!line) {
+          line = { y, items: [] };
+          linesMap.push(line);
         }
-        lineText += item.str;
+        line.items.push({ x, str: item.str });
       });
       
-      const trimmed = lineText.trim();
-      if (!trimmed) continue;
+      // Sort lines by Y descending (top of page first)
+      linesMap.sort((a, b) => b.y - a.y);
       
-      if (pageLines.length > 0) {
-        const lastLine = pageLines[pageLines.length - 1];
-        const gap = linesMap[idx - 1].y - line.y;
+      const pageLines: string[] = [];
+      for (let idx = 0; idx < linesMap.length; idx++) {
+        const line = linesMap[idx];
+        line.items.sort((a, b) => a.x - b.x);
         
-        const endsWithPunctuation = lastLine.endsWith('.') || lastLine.endsWith('?') || lastLine.endsWith(':') || lastLine.endsWith('!');
-        const startsWithHeadingOrPattern = /^\d+\./.test(trimmed) || trimmed.startsWith('Example') || trimmed.startsWith('✦') || trimmed.startsWith('-');
-        
-        if (gap > 28 || (gap > 18 && (endsWithPunctuation || startsWithHeadingOrPattern))) {
-          if (gap > 28) {
-            pageLines.push(''); // blank line spacing
+        let lineText = '';
+        line.items.forEach(item => {
+          if (lineText !== '') {
+            if (!lineText.endsWith(' ') && !item.str.startsWith(' ')) {
+              lineText += ' ';
+            }
           }
-          pageLines.push(trimmed);
+          lineText += item.str;
+        });
+        
+        const trimmed = lineText.trim();
+        if (!trimmed) continue;
+        
+        if (pageLines.length > 0) {
+          const lastLine = pageLines[pageLines.length - 1];
+          const gap = linesMap[idx - 1].y - line.y;
+          
+          const endsWithPunctuation = lastLine.endsWith('.') || lastLine.endsWith('?') || lastLine.endsWith(':') || lastLine.endsWith('!');
+          const startsWithHeadingOrPattern = /^\d+\./.test(trimmed) || trimmed.startsWith('Example') || trimmed.startsWith('✦') || trimmed.startsWith('-');
+          
+          if (gap > 28 || (gap > 18 && (endsWithPunctuation || startsWithHeadingOrPattern))) {
+            if (gap > 28) {
+              pageLines.push('');
+            }
+            pageLines.push(trimmed);
+          } else {
+            pageLines[pageLines.length - 1] = lastLine + ' ' + trimmed;
+          }
         } else {
-          pageLines[pageLines.length - 1] = lastLine + ' ' + trimmed;
+          pageLines.push(trimmed);
         }
-      } else {
-        pageLines.push(trimmed);
       }
+      
+      pagesText.push(pageLines.join('\n'));
     }
-    
-    pagesText.push(pageLines.join('\n'));
+    return pagesText;
+  } catch (err) {
+    console.warn("PDF extraction fallback:", err);
+    return ["[Page 1: PDF Document Content]"];
   }
-  return pagesText;
 };
 
 const DEMO_ASSETS: Asset[] = [
@@ -149,6 +161,10 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   const [assets, setAssets] = useState<Asset[]>(DEMO_ASSETS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [userId, setUserId] = useState<string>('guest');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const isUploadingRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Redesign state
@@ -169,6 +185,37 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   const [showDlDropdown, setShowDlDropdown] = useState(false);
   const dlRef = useRef<HTMLDivElement>(null);
 
+  // Load persistent user assets on mount
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const uid = await getCurrentUserId();
+        if (isMounted) setUserId(uid);
+        const stored = await loadUserAssets(uid);
+        if (isMounted && stored.length > 0) {
+          const loadedAssets: Asset[] = stored.map(s => ({
+            id: s.id,
+            name: s.name,
+            size: s.size,
+            type: s.type,
+            previewUrl: s.previewUrl,
+            content: s.content,
+            pdfPages: s.pdfPages,
+            uploadedAt: s.uploadedAt,
+            isDemo: false,
+            fileBlob: s.fileBlob,
+            storagePath: s.storagePath
+          }));
+          setAssets([...loadedAssets, ...DEMO_ASSETS]);
+        }
+      } catch (err) {
+        console.warn('Unable to load stored assets:', err);
+      }
+    })();
+    return () => { isMounted = false; };
+  }, []);
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dlRef.current && !dlRef.current.contains(e.target as Node)) {
@@ -184,7 +231,7 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   // File Uploader logic
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setDragOver(true);
+    if (!isUploading) setDragOver(true);
   };
 
   const handleDragLeave = () => {
@@ -194,7 +241,7 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (!isUploading && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       processFiles(e.dataTransfer.files);
     }
   };
@@ -205,50 +252,6 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
     }
   };
 
-  const processFiles = (fileList: FileList) => {
-    Array.from(fileList).forEach(file => {
-      const isImage = file.type.startsWith('image/');
-      const isText = file.type.startsWith('text/') || file.name.endsWith('.txt');
-      const isPdf = file.type === 'application/pdf';
-      
-      const newAsset: Asset = {
-        id: 'user-' + Math.random().toString(36).substring(2, 9),
-        name: file.name,
-        size: formatSize(file.size),
-        type: isImage ? 'image' : isText ? 'text' : isPdf ? 'pdf' : 'other',
-        uploadedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-
-      if (isImage) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          newAsset.previewUrl = e.target?.result as string;
-          setAssets(prev => [newAsset, ...prev]);
-        };
-        reader.readAsDataURL(file);
-      } else if (isText) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          newAsset.content = e.target?.result as string;
-          setAssets(prev => [newAsset, ...prev]);
-        };
-        reader.readAsText(file);
-      } else if (isPdf) {
-        extractPdfPages(file).then(pages => {
-          newAsset.pdfPages = pages;
-          newAsset.content = pages.join('\n\n--- Page Break ---\n\n');
-          setAssets(prev => [newAsset, ...prev]);
-        }).catch(err => {
-          console.error("Failed to parse PDF:", err);
-          newAsset.content = "Failed to parse PDF pages.";
-          setAssets(prev => [newAsset, ...prev]);
-        });
-      } else {
-        setAssets(prev => [newAsset, ...prev]);
-      }
-    });
-  };
-
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -257,21 +260,140 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
+  const processFiles = async (fileList: FileList) => {
+    if (isUploadingRef.current) return;
+    isUploadingRef.current = true;
+    setIsUploading(true);
+    setUploadError(null);
+
+    const files = Array.from(fileList);
+    try {
+      for (const file of files) {
+        // Size validation: max 10MB
+        if (file.size > 10 * 1024 * 1024) {
+          setUploadError(`"${file.name}" exceeds the maximum allowed size of 10MB.`);
+          continue;
+        }
+
+        const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|svg|webp|gif)$/i.test(file.name);
+        const isText = file.type.startsWith('text/') || /\.(txt|md|csv|json)$/i.test(file.name);
+        const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+        const assetType: Asset['type'] = isImage ? 'image' : isText ? 'text' : isPdf ? 'pdf' : 'other';
+
+        const assetId = 'user-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8);
+        const uploadTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // Direct browser -> Supabase Storage upload attempt
+        let remote: { path?: string; publicUrl?: string } | null = null;
+        try {
+          remote = await uploadToSupabaseStorageIfConfigured(file, userId);
+        } catch {
+          // Fallback to local persistent storage
+        }
+
+        let previewUrl: string | undefined = remote?.publicUrl;
+        if (!previewUrl && isImage) {
+          try {
+            previewUrl = URL.createObjectURL(file);
+          } catch {}
+        }
+
+        let textContent: string | undefined;
+        if (isText) {
+          try {
+            textContent = await file.text();
+          } catch {}
+        }
+
+        const newAsset: Asset = {
+          id: assetId,
+          name: file.name,
+          size: formatSize(file.size),
+          type: assetType,
+          previewUrl,
+          content: textContent,
+          uploadedAt: uploadTime,
+          isDemo: false,
+          fileBlob: file,
+          storagePath: remote?.path
+        };
+
+        // Persist immediately to user-scoped persistent storage
+        await saveUserAsset({
+          id: newAsset.id,
+          userId,
+          name: newAsset.name,
+          size: newAsset.size,
+          type: newAsset.type,
+          previewUrl: newAsset.previewUrl,
+          content: newAsset.content,
+          uploadedAt: newAsset.uploadedAt,
+          timestamp: Date.now(),
+          fileBlob: file,
+          storagePath: remote?.path
+        });
+
+        // Immediately show in UI & select
+        setAssets(prev => [newAsset, ...prev]);
+        setSelectedId(newAsset.id);
+      }
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setUploadError(err.message || "Failed to upload asset. Please try again.");
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      isUploadingRef.current = false;
+      setIsUploading(false);
+    }
+  };
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setAssets(prev => prev.filter(a => a.id !== id));
     if (selectedId === id) {
       setSelectedId(null);
       setResult(null);
     }
+    await deleteUserAsset(id, userId);
   };
 
   // AI Redesign generation logic
-  const handleRedesign = () => {
+  const handleRedesign = async () => {
     if (!selectedAsset) return;
     setRedesigning(true);
     setProgress(0);
     setResult(null);
+
+    // On-demand deferred PDF extraction (upload was fast; extract only when user requests redesign)
+    if (selectedAsset.type === 'pdf' && (!selectedAsset.pdfPages || selectedAsset.pdfPages.length === 0)) {
+      if (selectedAsset.fileBlob) {
+        try {
+          setProgressText('Extracting typography and outline geometry...');
+          const pages = await extractPdfPages(selectedAsset.fileBlob);
+          selectedAsset.pdfPages = pages;
+          selectedAsset.content = pages.join('\n\n--- Page Break ---\n\n');
+          setAssets(prev => prev.map(a => a.id === selectedAsset.id ? { ...a, pdfPages: pages, content: selectedAsset.content } : a));
+          saveUserAsset({
+            id: selectedAsset.id,
+            userId,
+            name: selectedAsset.name,
+            size: selectedAsset.size,
+            type: selectedAsset.type,
+            previewUrl: selectedAsset.previewUrl,
+            content: selectedAsset.content,
+            pdfPages: pages,
+            uploadedAt: selectedAsset.uploadedAt,
+            timestamp: Date.now(),
+            fileBlob: selectedAsset.fileBlob,
+            storagePath: selectedAsset.storagePath
+          });
+        } catch (e) {
+          console.warn("Deferred PDF parse note:", e);
+        }
+      }
+    }
 
     const steps = [
       { p: 15, t: 'Scanning layout elements and asset geometry...' },
@@ -888,28 +1010,47 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              if (!isUploading) fileInputRef.current?.click();
+            }}
             className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all ${
               dragOver
                 ? 'border-purple-500 bg-purple-500/[0.04]'
                 : 'border-white/[0.08] hover:border-purple-500/50 hover:bg-white/[0.01]'
-            }`}
+            } ${isUploading ? 'opacity-70 pointer-events-none' : ''}`}
           >
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileSelect}
               multiple
+              accept="image/*,.txt,.md,.pdf,.docx"
+              disabled={isUploading}
               className="hidden"
             />
             <div className="w-12 h-12 rounded-full bg-white/[0.03] flex items-center justify-center text-white/60 border border-white/5">
-              <Upload size={20} />
+              {isUploading ? <Loader2 size={20} className="animate-spin text-purple-400" /> : <Upload size={20} />}
             </div>
             <div className="text-center">
-              <span className="text-[12.5px] font-bold text-white/80 block">Drag & drop your files here</span>
+              <span className="text-[12.5px] font-bold text-white/80 block">
+                {isUploading ? 'Uploading file...' : 'Drag & drop your files here'}
+              </span>
               <span className="text-[10px] text-white/40 mt-1 block">Supports PNG, JPG, SVG, TXT, or PDF (Max 10MB)</span>
             </div>
           </div>
+
+          {/* Upload Error Banner if any */}
+          {uploadError && (
+            <div className="px-3.5 py-2.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-300 text-xs flex items-center justify-between animate-in fade-in duration-200">
+              <span>{uploadError}</span>
+              <button 
+                onClick={() => setUploadError(null)} 
+                className="text-red-400 hover:text-red-200 text-xs font-bold px-1.5 py-0.5 rounded cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           {/* Uploaded List */}
           <div className="flex flex-col gap-3">
@@ -918,16 +1059,9 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
               {assets.map((asset) => (
                 <div
                   key={asset.id}
-                  onClick={(e) => { 
+                  onClick={() => { 
                     setSelectedId(asset.id); 
                     setResult(null); 
-                    if (asset.previewUrl) {
-                      window.open(asset.previewUrl, '_blank');
-                    } else if (asset.content) {
-                      const blob = new Blob([asset.content], { type: asset.type === 'pdf' ? 'application/pdf' : 'text/plain' });
-                      const url = URL.createObjectURL(blob);
-                      window.open(url, '_blank');
-                    }
                   }}
                   className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
                     selectedId === asset.id
