@@ -24,7 +24,7 @@ const formatStarters: Record<string, string> = {
 
 router.post("/content/generate", authMiddleware, async (req, res) => {
   try {
-    const { topic, format, tone, minWords, maxWords } = req.body;
+    const { topic, format, tone, minWords, maxWords, targetWords } = req.body;
     if (
       typeof topic !== "string" ||
       (format && typeof format !== "string") ||
@@ -42,15 +42,17 @@ router.post("/content/generate", authMiddleware, async (req, res) => {
 
     const selectedTone = (tone || "Professional").trim().replace(/<[^>]*>/g, '').slice(0, 50);
     const selectedFormat = (format || "Blog Article").trim().replace(/<[^>]*>/g, '').slice(0, 50);
-    const minW = Math.max(1, Math.min(2000, Number(minWords) || 100));
-    const maxW = Math.max(minW, Math.min(4000, Number(maxWords) || 500));
+    const targetW = Math.max(100, Math.min(2000, Number(targetWords) || Number(maxWords) || 500));
+    const minW = Math.max(1, Math.min(2000, Number(minWords) || Math.round(targetW * 0.90)));
+    const maxW = Math.max(minW, Math.min(4000, Number(maxWords) || Math.round(targetW * 1.10)));
 
     const text = await generateContentWithAI(
       sanitizedTopic,
       selectedFormat,
       selectedTone,
       minW,
-      maxW
+      maxW,
+      targetW
     );
 
     // Save generated content draft to user projects (Recent files on dashboard)

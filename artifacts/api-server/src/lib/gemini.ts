@@ -540,16 +540,42 @@ function cleanJsonText(text: string): string {
   return trimmed;
 }
 
+function countWords(text: string): number {
+  if (!text || typeof text !== 'string') return 0;
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function trimToSentenceBoundary(text: string, maxWords: number, minWords: number): string {
+  const currentWords = countWords(text);
+  if (currentWords <= maxWords) return text;
+  const sentences = text.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g) || [text];
+  let accumulated = '';
+  let words = 0;
+  for (const s of sentences) {
+    const sWords = countWords(s);
+    if (words + sWords <= maxWords || words < minWords) {
+      accumulated += s;
+      words += sWords;
+    } else {
+      break;
+    }
+  }
+  const trimmed = accumulated.trim();
+  return (countWords(trimmed) >= minWords) ? trimmed : text;
+}
+
 export async function generateContentWithAI(
   topic: string,
   format: string,
   tone: string,
   minWords: number,
-  maxWords: number
+  maxWords: number,
+  targetWords?: number
 ): Promise<string> {
   const sanitizedTopic = sanitizePromptInput(topic);
   const sanitizedFormat = sanitizePromptInput(format);
   const sanitizedTone = sanitizePromptInput(tone);
+  const targetW = targetWords || Math.round((minWords + maxWords) / 2);
 
   const geminiKeys = getRotatedGeminiKeys();
   const nvidiaKeys = getRotatedNvidiaKeys();
@@ -570,14 +596,16 @@ export async function generateContentWithAI(
 You are an expert copywriter and AI content generator. The user needs a high-quality document of format: "${sanitizedFormat}" on the topic: "${sanitizedTopic}".
 The tone of the document should be: "${sanitizedTone}" (${selectedToneGuide}).
 
-Target word count range: ${minWords} to ${maxWords} words.
+CRITICAL WORD COUNT INSTRUCTION:
+Write approximately ${targetW} words of substantive content (acceptable range: ${minWords} to ${maxWords} words).
+Do not stop early. Continue developing the topic until you reach the requested word count.
 
 Your response MUST be written in beautiful, valid Markdown. Ensure that:
 1. It has a clear title (using a single H1, e.g. # Title).
 2. It uses appropriate heading hierarchy (H2, H3) for sections.
 3. It has well-developed paragraphs, lists, or comparison tables as appropriate.
 4. It is comprehensive, high-quality, clear, and highly relevant.
-Do not include any explanations, preambles, or markdown block wrappers (like \`\`\`markdown) outside of the text itself. Start directly with the H1 heading.
+Do not include any explanations, preambles, or markdown block wrappers outside of the text itself. Start directly with the H1 heading.
 `;
 
   const attempts: Array<() => Promise<string>> = [];
@@ -595,20 +623,23 @@ Do not include any explanations, preambles, or markdown block wrappers (like \`\
         response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(8000),
+          signal: AbortSignal.timeout(15000),
           body: JSON.stringify({
             contents: [{ parts: [{ text: promptText }] }],
             generationConfig: {
-              maxOutputTokens: Math.min(2048, Math.max(500, maxWords * 2)),
+              maxOutputTokens: Math.max(2048, Math.min(8192, Math.round(targetW * 2.5))),
               temperature: 0.7,
+              thinkingConfig: {
+                thinkingBudget: 0,
+              },
             },
           }),
         });
       } catch (fetchErr: any) {
         if (fetchErr.name === 'TimeoutError' || fetchErr.name === 'AbortError') {
           geminiKeyCooldowns.set(currentKey, Date.now() + 60000);
-          logger.warn(`Gemini key index ${idx + 1} timed out after 8s — failing over to next key immediately`);
-          throw new AIServiceError("GEMINI_TIMEOUT", `Gemini API key index ${idx + 1} timed out after 8s`);
+          logger.warn(`Gemini key index ${idx + 1} timed out after 15s — failing over to next key immediately`);
+          throw new AIServiceError("GEMINI_TIMEOUT", `Gemini API key index ${idx + 1} timed out after 15s`);
         }
         throw fetchErr;
       }
@@ -756,6 +787,61 @@ This document covers key perspectives on **${formattedTopic}**, formatted as a *
           processed = processed.substring(0, processed.length - 3);
         }
       }
+      let words = countWords(processed);
+
+      // If below tolerance, make 1 controlled continuation call
+      if (words < minWords && processed.length > 0) {
+        const remainingWords = targetW - words;
+        const prompt2 = `
+You are continuing the following article on the topic "${sanitizedTopic}" (Tone: ${sanitizedTone}, Format: ${sanitizedFormat}).
+Existing content:
+---
+${processed}
+---
+INSTRUCTIONS:
+1. Continue the article seamlessly from where it left off.
+2. Add approximately ${remainingWords} additional substantive words.
+3. Do not repeat existing content or introduction.
+4. Conclude the piece naturally once the requested length is achieved.
+Do not include any preambles or code fences. Provide only the continuation text.
+`;
+        try {
+          const contTokens = Math.max(1024, Math.round(remainingWords * 2.5));
+          for (let cIdx = 0; cIdx < geminiKeys.length; cIdx++) {
+            const cKey = geminiKeys[cIdx];
+            const cUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cKey}`;
+            const cRes = await fetch(cUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              signal: AbortSignal.timeout(15000),
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt2 }] }],
+                generationConfig: {
+                  maxOutputTokens: contTokens,
+                  temperature: 0.7,
+                  thinkingConfig: { thinkingBudget: 0 },
+                },
+              }),
+            });
+            if (cRes.ok) {
+              const cData: any = await cRes.json();
+              const cText = cData.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (cText && cText.trim()) {
+                processed = processed.trim() + "\n\n" + cText.trim();
+                words = countWords(processed);
+                break;
+              }
+            }
+          }
+        } catch (cErr) {
+          // Proceed with initial text
+        }
+      }
+
+      if (words > maxWords) {
+        processed = trimToSentenceBoundary(processed, maxWords, minWords);
+      }
+
       return processed.trim();
     } catch (err) {
       lastError = err;

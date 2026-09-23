@@ -53,8 +53,9 @@ export function ContentGenerator() {
         topic,
         format: mappedFormat,
         tone,
-        minWords: 100,
-        maxWords: Number(wordCount)
+        targetWords: Number(wordCount) || 500,
+        minWords: Math.round((Number(wordCount) || 500) * 0.90),
+        maxWords: Math.round((Number(wordCount) || 500) * 1.10)
       })
     })
     .then(async r => {
