@@ -545,23 +545,75 @@ function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function trimToSentenceBoundary(text: string, maxWords: number, minWords: number): string {
-  const currentWords = countWords(text);
-  if (currentWords <= maxWords) return text;
-  const sentences = text.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g) || [text];
-  let accumulated = '';
-  let words = 0;
-  for (const s of sentences) {
-    const sWords = countWords(s);
-    if (words + sWords <= maxWords || words < minWords) {
-      accumulated += s;
-      words += sWords;
-    } else {
+function cleanTrailingMarkdown(text: string): string {
+  let cleaned = text.trim();
+  cleaned = cleaned.replace(/\n\s*#{1,6}\s+[^\n]*$/g, '').trim();
+  cleaned = cleaned.replace(/\n\s*[-*+]\s*$/g, '').trim();
+  return cleaned;
+}
+
+function trimToSentenceBoundary(text: string, maxWords: number): string {
+  if (!text || typeof text !== 'string') return '';
+  const initialWordCount = countWords(text);
+  if (initialWordCount <= maxWords) {
+    return text.trim();
+  }
+
+  const blocks = text.split(/\n\n+/);
+  const accumulatedBlocks: string[] = [];
+  let currentWords = 0;
+
+  for (const block of blocks) {
+    const isHeading = /^\s*#{1,6}\s+/.test(block);
+    const blockWords = countWords(block);
+
+    if (currentWords + blockWords <= maxWords) {
+      accumulatedBlocks.push(block);
+      currentWords += blockWords;
+      continue;
+    }
+
+    if (isHeading) {
       break;
     }
+
+    const sentenceRegex = /[^.!?]+(?:[.!?]+(?:["'”’)]*)?(?=\s+|$))/g;
+    const sentences = block.match(sentenceRegex) || [];
+
+    const paraSentences: string[] = [];
+    for (const sent of sentences) {
+      const sentWords = countWords(sent);
+      if (currentWords + sentWords <= maxWords) {
+        paraSentences.push(sent.trim());
+        currentWords += sentWords;
+      } else {
+        break;
+      }
+    }
+
+    if (paraSentences.length > 0) {
+      accumulatedBlocks.push(paraSentences.join(' '));
+    }
+    break;
   }
-  const trimmed = accumulated.trim();
-  return (countWords(trimmed) >= minWords) ? trimmed : text;
+
+  let result = accumulatedBlocks.join('\n\n').trim();
+  result = cleanTrailingMarkdown(result);
+
+  let finalCount = countWords(result);
+  if (finalCount > maxWords) {
+    const wordsArr = result.split(/\s+/).slice(0, maxWords);
+    const sliceText = wordsArr.join(' ');
+    const lastPunct = sliceText.search(/[,;:](?=[^,;:]*$)/);
+    if (lastPunct > 50) {
+      result = sliceText.substring(0, lastPunct) + '.';
+    } else {
+      result = sliceText + '.';
+    }
+    result = cleanTrailingMarkdown(result);
+  }
+
+  return result;
 }
 
 export async function generateContentWithAI(
@@ -791,7 +843,7 @@ This document covers key perspectives on **${formattedTopic}**, formatted as a *
 
       // If below tolerance, make 1 controlled continuation call
       if (words < minWords && processed.length > 0) {
-        const remainingWords = targetW - words;
+        const remainingWords = minWords - words;
         const prompt2 = `
 You are continuing the following article on the topic "${sanitizedTopic}" (Tone: ${sanitizedTone}, Format: ${sanitizedFormat}).
 Existing content:
@@ -839,7 +891,7 @@ Do not include any preambles or code fences. Provide only the continuation text.
       }
 
       if (words > maxWords) {
-        processed = trimToSentenceBoundary(processed, maxWords, minWords);
+        processed = trimToSentenceBoundary(processed, maxWords);
       }
 
       return processed.trim();

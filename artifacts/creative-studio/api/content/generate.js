@@ -16,23 +16,82 @@ function countWords(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function trimToSentenceBoundary(text, maxWords, minWords) {
-  const currentWords = countWords(text);
-  if (currentWords <= maxWords) return text;
-  const sentences = text.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g) || [text];
-  let accumulated = '';
-  let words = 0;
-  for (const s of sentences) {
-    const sWords = countWords(s);
-    if (words + sWords <= maxWords || words < minWords) {
-      accumulated += s;
-      words += sWords;
-    } else {
+function cleanTrailingMarkdown(text) {
+  let cleaned = text.trim();
+  // Strip trailing headings if no content follows them (e.g. ## Heading)
+  cleaned = cleaned.replace(/\n\s*#{1,6}\s+[^\n]*$/g, '').trim();
+  // Strip trailing unclosed bullet points or list markers
+  cleaned = cleaned.replace(/\n\s*[-*+]\s*$/g, '').trim();
+  return cleaned;
+}
+
+function trimToSentenceBoundary(text, maxWords) {
+  if (!text || typeof text !== 'string') return '';
+  const initialWordCount = countWords(text);
+  if (initialWordCount <= maxWords) {
+    return text.trim();
+  }
+
+  const blocks = text.split(/\n\n+/);
+  const accumulatedBlocks = [];
+  let currentWords = 0;
+
+  for (const block of blocks) {
+    const isHeading = /^\s*#{1,6}\s+/.test(block);
+    const blockWords = countWords(block);
+
+    // If entire block fits within maxWords, add it
+    if (currentWords + blockWords <= maxWords) {
+      accumulatedBlocks.push(block);
+      currentWords += blockWords;
+      continue;
+    }
+
+    // If it's a heading and adding it would leave no room for sentences, stop
+    if (isHeading) {
       break;
     }
+
+    // Split paragraph into complete sentences
+    const sentenceRegex = /[^.!?]+(?:[.!?]+(?:["'”’)]*)?(?=\s+|$))/g;
+    const sentences = block.match(sentenceRegex) || [];
+
+    const paraSentences = [];
+    for (const sent of sentences) {
+      const sentWords = countWords(sent);
+      if (currentWords + sentWords <= maxWords) {
+        paraSentences.push(sent.trim());
+        currentWords += sentWords;
+      } else {
+        // Adding next sentence would exceed maxWords — stop here
+        break;
+      }
+    }
+
+    if (paraSentences.length > 0) {
+      accumulatedBlocks.push(paraSentences.join(' '));
+    }
+    break;
   }
-  const trimmed = accumulated.trim();
-  return (countWords(trimmed) >= minWords) ? trimmed : text;
+
+  let result = accumulatedBlocks.join('\n\n').trim();
+  result = cleanTrailingMarkdown(result);
+
+  // Hard safety boundary: ensure result NEVER exceeds maxWords under any circumstances
+  let finalCount = countWords(result);
+  if (finalCount > maxWords) {
+    const wordsArr = result.split(/\s+/).slice(0, maxWords);
+    const sliceText = wordsArr.join(' ');
+    const lastPunct = sliceText.search(/[,;:](?=[^,;:]*$)/);
+    if (lastPunct > 50) {
+      result = sliceText.substring(0, lastPunct) + '.';
+    } else {
+      result = sliceText + '.';
+    }
+    result = cleanTrailingMarkdown(result);
+  }
+
+  return result;
 }
 
 function getRotatedGeminiKeys() {
@@ -184,10 +243,10 @@ export default async function handler(req, res) {
     const sanitizedFormat = sanitizePromptInput(format || 'Blog Article');
     const sanitizedTone = sanitizePromptInput(tone || 'Professional');
 
-    // Determine target words dynamically
+    // ── Dynamic Word Count Rules ───────────────────────────────────────────
     const targetWords = Math.max(100, Math.min(2000, Number(rawTargetWords) || Number(maxWords) || 500));
-    const lowerTolerance = Math.round(targetWords * 0.90);
-    const upperTolerance = Math.round(targetWords * 1.10);
+    const minimumAllowed = Math.round(targetWords * 0.90);
+    const maximumAllowed = Math.round(targetWords * 1.10);
 
     const toneGuidelines = {
       Professional: 'Objective, authoritative, precise, structure-driven formatting.',
@@ -200,12 +259,13 @@ export default async function handler(req, res) {
 
     const selectedToneGuide = toneGuidelines[sanitizedTone] || toneGuidelines['Professional'];
 
+    // ── Step 1: Initial Prompt Construction ────────────────────────────────
     const prompt1 = `
 You are an expert copywriter and AI content generator. The user needs a high-quality document of format: "${sanitizedFormat}" on the topic: "${sanitizedTopic}".
 The tone of the document should be: "${sanitizedTone}" (${selectedToneGuide}).
 
 CRITICAL WORD COUNT INSTRUCTION:
-Write approximately ${targetWords} words of substantive content (acceptable range: ${lowerTolerance} to ${upperTolerance} words).
+Write approximately ${targetWords} words of substantive content (acceptable range: ${minimumAllowed} to ${maximumAllowed} words).
 Do not stop early. Continue developing the topic until you reach the requested word count.
 
 Your response MUST be written in beautiful, valid Markdown. Ensure that:
@@ -218,11 +278,16 @@ Do not include any explanations, preambles, or markdown block wrappers outside o
 
     const initialTokens = Math.max(2048, Math.min(8192, Math.round(targetWords * 2.5)));
     let generatedText = await executeGeminiRequest(prompt1, initialTokens);
-    let words = countWords(generatedText);
+    
+    // ── Step 2: Count Initial Words ────────────────────────────────────────
+    let initialWordCount = countWords(generatedText);
+    let continuationUsed = false;
+    let combinedWordCount = initialWordCount;
 
-    // If below minimum tolerance, perform at most ONE controlled continuation call
-    if (words < lowerTolerance && generatedText.length > 0) {
-      const remainingWords = targetWords - words;
+    // ── Step 3: Continuation (at most ONE request if below minimum) ────────
+    if (initialWordCount < minimumAllowed && generatedText.length > 0) {
+      continuationUsed = true;
+      const remaining = minimumAllowed - initialWordCount;
       const prompt2 = `
 You are continuing the following article on the topic "${sanitizedTopic}" (Tone: ${sanitizedTone}, Format: ${sanitizedFormat}).
 Existing content:
@@ -231,28 +296,31 @@ ${generatedText}
 ---
 INSTRUCTIONS:
 1. Continue the article seamlessly from where it left off.
-2. Add approximately ${remainingWords} additional substantive words.
+2. Add approximately ${remaining} additional substantive words.
 3. Do not repeat existing content or introduction.
 4. Conclude the piece naturally once the requested length is achieved.
 Do not include any preambles or code fences. Provide only the continuation text.
 `;
       try {
-        const contTokens = Math.max(1024, Math.round(remainingWords * 2.5));
+        const contTokens = Math.max(1024, Math.round(remaining * 2.5));
         const continuationText = await executeGeminiRequest(prompt2, contTokens);
         if (continuationText && continuationText.trim()) {
+          // ── Step 4: Combine original + continuation ──────────────────────
           generatedText = generatedText.trim() + '\n\n' + continuationText.trim();
-          words = countWords(generatedText);
+          combinedWordCount = countWords(generatedText);
         }
       } catch (contErr) {
         // If continuation fails, proceed with the initial text
       }
     }
 
-    // If above upper tolerance, trim only excess content to sentence boundary
-    if (words > upperTolerance) {
-      generatedText = trimToSentenceBoundary(generatedText, upperTolerance, lowerTolerance);
-      words = countWords(generatedText);
+    // ── Step 5 & 6: Sentence-aware Maximum Enforcement (HARD LIMIT) ─────────
+    if (combinedWordCount > maximumAllowed) {
+      generatedText = trimToSentenceBoundary(generatedText, maximumAllowed);
     }
+
+    // ── Step 8: Recount Final Result ───────────────────────────────────────
+    const finalWordCount = countWords(generatedText);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
@@ -260,10 +328,13 @@ Do not include any preambles or code fences. Provide only the continuation text.
       success: true,
       text: generatedText,
       stats: {
-        words,
+        words: finalWordCount,
         characters: generatedText.length,
-        readingTimeMin: Math.max(1, Math.ceil(words / 200)),
+        readingTimeMin: Math.max(1, Math.ceil(finalWordCount / 200)),
         targetWords,
+        minimumAllowed,
+        maximumAllowed,
+        continuationUsed,
       }
     }));
   } catch (err) {
