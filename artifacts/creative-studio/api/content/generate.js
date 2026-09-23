@@ -1,9 +1,8 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
-
 let geminiKeyIndex = 0;
-const geminiKeyCooldowns = new Map<string, number>();
+const geminiKeyCooldowns = new Map();
 
-function sanitizePromptInput(input: string): string {
+function sanitizePromptInput(input) {
+  if (typeof input !== 'string') return '';
   return input
     .replace(/[\r\n]+/g, ' ')
     .replace(/["'`]/g, '')
@@ -12,8 +11,8 @@ function sanitizePromptInput(input: string): string {
     .trim();
 }
 
-function getRotatedGeminiKeys(): string[] {
-  const keys: string[] = [];
+function getRotatedGeminiKeys() {
+  const keys = [];
   if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim()) {
     keys.push(process.env.GEMINI_API_KEY.trim());
   }
@@ -34,7 +33,7 @@ function getRotatedGeminiKeys(): string[] {
   const cooling = keys.filter(k => geminiKeyCooldowns.has(k));
   const prioritized = healthy.length > 0 ? [...healthy, ...cooling] : keys;
 
-  const rotated: string[] = [];
+  const rotated = [];
   for (let i = 0; i < prioritized.length; i++) {
     rotated.push(prioritized[(geminiKeyIndex + i) % prioritized.length]);
   }
@@ -42,8 +41,7 @@ function getRotatedGeminiKeys(): string[] {
   return rotated;
 }
 
-export default async function handler(req: any, res: any) {
-  // CORS & Preflight
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
@@ -62,7 +60,6 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // Parse body if needed (Vercel automatically parses JSON bodies, but handle stream/string just in case)
     let body = req.body;
     if (typeof body === 'string') {
       try {
@@ -74,7 +71,7 @@ export default async function handler(req: any, res: any) {
         return;
       }
     } else if (!body && typeof req.on === 'function') {
-      const buffers: any[] = [];
+      const buffers = [];
       for await (const chunk of req) {
         buffers.push(chunk);
       }
@@ -113,7 +110,7 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const toneGuidelines: Record<string, string> = {
+    const toneGuidelines = {
       Professional: 'Objective, authoritative, precise, structure-driven formatting.',
       Creative: 'Vibrant, engaging, storytelling, rich in metaphor and analogy.',
       Casual: 'Conversational, friendly, accessible, using contractions and analogies.',
@@ -139,7 +136,7 @@ Do not include any explanations, preambles, or markdown block wrappers (like \`\
 `;
 
     let generatedText = '';
-    let lastError: any = null;
+    let lastError = null;
 
     for (let idx = 0; idx < geminiKeys.length; idx++) {
       const currentKey = geminiKeys[idx];
@@ -165,14 +162,14 @@ Do not include any explanations, preambles, or markdown block wrappers (like \`\
             geminiKeyCooldowns.set(currentKey, Date.now() + 60000);
           }
           const errText = await response.text();
-          let parsedErr: any = null;
+          let parsedErr = null;
           try { parsedErr = JSON.parse(errText); } catch (e) {}
           const msg = parsedErr?.error?.message || errText.slice(0, 300);
           lastError = new Error(`Gemini API status ${response.status}: ${msg}`);
-          continue; // Try next key
+          continue;
         }
 
-        const data: any = await response.json();
+        const data = await response.json();
         const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!textResult) {
           lastError = new Error('Empty response from Gemini API');
@@ -180,8 +177,8 @@ Do not include any explanations, preambles, or markdown block wrappers (like \`\
         }
 
         generatedText = textResult;
-        break; // Success!
-      } catch (fetchErr: any) {
+        break;
+      } catch (fetchErr) {
         if (fetchErr.name === 'TimeoutError' || fetchErr.name === 'AbortError') {
           geminiKeyCooldowns.set(currentKey, Date.now() + 60000);
           lastError = new Error(`Gemini key index ${idx + 1} timed out after 8s`);
@@ -213,7 +210,7 @@ Do not include any explanations, preambles, or markdown block wrappers (like \`\
         readingTimeMin: Math.max(1, Math.ceil(words / 200)),
       }
     }));
-  } catch (err: any) {
+  } catch (err) {
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
