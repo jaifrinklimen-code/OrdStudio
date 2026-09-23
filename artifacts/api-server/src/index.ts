@@ -1,24 +1,22 @@
 import path from "path";
 
-// Clear existing system/terminal environment keys to prevent interference
-delete process.env.GEMINI_API_KEY;
-delete process.env.ANTHROPIC_API_KEY;
-
-try {
-  // @ts-ignore
-  if (typeof process.loadEnvFile === 'function') {
+// Load environment variables from local .env files if present (without overwriting platform env vars)
+const envCandidates = [
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(process.cwd(), "..", "..", ".env"),
+  path.resolve(__dirname, "..", "..", ".env"),
+  path.resolve(__dirname, "..", "..", "..", ".env"),
+];
+for (const envPath of envCandidates) {
+  try {
     // @ts-ignore
-    process.loadEnvFile();
-  }
-} catch (e) {}
+    if (typeof process.loadEnvFile === 'function') {
+      // @ts-ignore
+      process.loadEnvFile(envPath);
+    }
+  } catch (e) {}
+}
 
-try {
-  // @ts-ignore
-  if (typeof process.loadEnvFile === 'function') {
-    // @ts-ignore
-    process.loadEnvFile(path.resolve(process.cwd(), "..", "..", ".env"));
-  }
-} catch (e) {}
 
 import app from "./app";
 import { logger } from "./lib/logger";

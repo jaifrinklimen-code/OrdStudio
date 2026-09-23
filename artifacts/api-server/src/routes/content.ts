@@ -80,15 +80,15 @@ router.post("/content/generate", authMiddleware, async (req, res) => {
         readingTimeMin: Math.max(1, Math.ceil(text.split(/\s+/).length / 200)),
       }
     });
-  } catch (error) {
-    if (error instanceof AIServiceError) {
-      res.status(400).json({
-        error: error.message,
-        code: error.code
-      });
-    } else {
-      res.status(500).json({ error: "AI Generation failed" });
-    }
+  } catch (error: any) {
+    const errorMsg = error?.message || "AI Generation failed";
+    const errorCode = error?.code || (error instanceof AIServiceError ? error.code : "AI_GENERATION_FAILED");
+    logger.error({ err: errorMsg, code: errorCode }, "AI Content generation endpoint caught error");
+    const statusCode = error instanceof AIServiceError ? 400 : (error?.status && error.status >= 400 && error.status < 600 ? error.status : 500);
+    res.status(statusCode).json({
+      error: errorMsg,
+      code: errorCode
+    });
   }
 });
 

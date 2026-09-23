@@ -28,6 +28,7 @@ function sanitizePromptInput(input: string): string {
 }
 
 let geminiKeyIndex = 0;
+const geminiKeyCooldowns = new Map<string, number>();
 
 function getGeminiApiKeys(): string[] {
   const keys: string[] = [];
@@ -61,12 +62,22 @@ function getRotatedGeminiKeys(): string[] {
   const keys = getGeminiApiKeys();
   if (keys.length === 0) return [];
   
+  const now = Date.now();
+  for (const [k, expires] of geminiKeyCooldowns.entries()) {
+    if (now >= expires) geminiKeyCooldowns.delete(k);
+  }
+
+  // Prioritize keys not currently in cooldown (e.g. not experiencing 503/429)
+  const healthy = keys.filter(k => !geminiKeyCooldowns.has(k));
+  const cooling = keys.filter(k => geminiKeyCooldowns.has(k));
+  const prioritized = healthy.length > 0 ? [...healthy, ...cooling] : keys;
+  
   const rotated: string[] = [];
-  for (let i = 0; i < keys.length; i++) {
-    rotated.push(keys[(geminiKeyIndex + i) % keys.length]);
+  for (let i = 0; i < prioritized.length; i++) {
+    rotated.push(prioritized[(geminiKeyIndex + i) % prioritized.length]);
   }
   
-  geminiKeyIndex = (geminiKeyIndex + 1) % keys.length;
+  geminiKeyIndex = (geminiKeyIndex + 1) % prioritized.length;
   return rotated;
 }
 
@@ -578,30 +589,49 @@ Do not include any explanations, preambles, or markdown block wrappers (like \`\
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${currentKey}`;
 
       logger.info(`Attempting Gemini content generation using key index ${idx + 1}/${geminiKeys.length}`);
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-        }),
-      });
+      
+      let response: Response;
+      try {
+        response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(8000),
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: {
+              maxOutputTokens: Math.min(2048, Math.max(500, maxWords * 2)),
+              temperature: 0.7,
+            },
+          }),
+        });
+      } catch (fetchErr: any) {
+        if (fetchErr.name === 'TimeoutError' || fetchErr.name === 'AbortError') {
+          geminiKeyCooldowns.set(currentKey, Date.now() + 60000);
+          logger.warn(`Gemini key index ${idx + 1} timed out after 8s — failing over to next key immediately`);
+          throw new AIServiceError("GEMINI_TIMEOUT", `Gemini API key index ${idx + 1} timed out after 8s`);
+        }
+        throw fetchErr;
+      }
 
       if (!response.ok) {
+        if (response.status === 503 || response.status === 429) {
+          geminiKeyCooldowns.set(currentKey, Date.now() + 60000);
+        }
         const errText = await response.text();
-        logger.error({ status: response.status, error: errText }, "Gemini API content generation error response");
-        let parsedErr;
+        let parsedErr: any = null;
         try { parsedErr = JSON.parse(errText); } catch (e) {}
-        const msg = parsedErr?.error?.message || "";
+        const msg = parsedErr?.error?.message || errText.slice(0, 300);
+        logger.error({ provider: 'gemini', status: response.status, error: msg }, "Gemini API content generation error response");
         if (msg.includes("API key not valid")) {
           throw new AIServiceError("INVALID_API_KEY", "The configured Gemini API key is invalid.");
         }
-        throw new Error(`Gemini API failed with status ${response.status}: ${msg}`);
+        throw new AIServiceError(`GEMINI_${response.status}`, `Gemini API error (${response.status}): ${msg}`);
       }
 
       const data: any = await response.json();
       const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!textResult) {
-        throw new Error("Empty response from Gemini API");
+        throw new AIServiceError("EMPTY_RESPONSE", "Empty response from Gemini API");
       }
       return textResult;
     });
@@ -628,14 +658,14 @@ Do not include any explanations, preambles, or markdown block wrappers (like \`\
 
       if (!response.ok) {
         const errText = await response.text();
-        logger.error({ status: response.status, error: errText }, "Nvidia API content generation error response");
-        let parsedErr;
+        let parsedErr: any = null;
         try { parsedErr = JSON.parse(errText); } catch (e) {}
-        const msg = parsedErr?.detail || parsedErr?.message || "";
+        const msg = parsedErr?.detail || parsedErr?.message || errText.slice(0, 300);
+        logger.error({ provider: 'nvidia', status: response.status, error: msg }, "Nvidia API content generation error response");
         if (response.status === 401 || msg.includes("Unauthorized")) {
           throw new AIServiceError("INVALID_API_KEY", "The configured Nvidia API key is invalid.");
         }
-        throw new Error(`Nvidia API failed with status ${response.status}: ${msg}`);
+        throw new AIServiceError(`NVIDIA_${response.status}`, `Nvidia API error (${response.status}): ${msg}`);
       }
 
       const data = await response.json() as any;
@@ -704,16 +734,9 @@ This document covers key perspectives on **${formattedTopic}**, formatted as a *
 `;
   }
 
-  // Always include the local fallback as the last attempt so content copywriting works
-  // even if all external keys fail or are not configured.
-  attempts.push(async () => {
-    logger.info("Using local fallback generator for copywriting (no external API used)");
-    return generateLocalContent(sanitizedTopic, sanitizedFormat, sanitizedTone);
-  });
-
   if (attempts.length === 0) {
     logger.warn("No API keys (Gemini, Nvidia, Anthropic) are configured for content generation.");
-    throw new AIServiceError("NO_KEYS_CONFIGURED", "No API keys are configured. Please set GEMINI_API_KEY or NVIDIA_API_KEY in your environment.");
+    throw new AIServiceError("NO_KEYS_CONFIGURED", "No API keys are configured. Please set GEMINI_API_KEY in your environment.");
   }
 
   let lastError: any = null;
