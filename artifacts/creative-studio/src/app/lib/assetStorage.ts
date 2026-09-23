@@ -64,7 +64,14 @@ export async function loadUserAssets(userId: string): Promise<StoredAsset[]> {
   try {
     const meta = localStorage.getItem(cacheKey);
     if (meta) {
-      cached = JSON.parse(meta);
+      // Strip stale blob: URLs for non-image types from cache — they are revoked between sessions
+      const parsed: StoredAsset[] = JSON.parse(meta);
+      cached = parsed.map(a => {
+        if (a.type !== 'image' && a.previewUrl && a.previewUrl.startsWith('blob:')) {
+          return { ...a, previewUrl: undefined };
+        }
+        return a;
+      });
     }
   } catch {}
 
@@ -80,12 +87,31 @@ export async function loadUserAssets(userId: string): Promise<StoredAsset[]> {
         const records: StoredAsset[] = request.result || [];
         records.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-        // Create transient object URLs for images with stored blobs
+        // Recreate transient object URLs from stored binary blobs
+        // For images AND pdfs — both need fresh blob URLs each session
         records.forEach(asset => {
-          if (asset.type === 'image' && asset.fileBlob && !asset.previewUrl) {
-            try {
-              asset.previewUrl = URL.createObjectURL(asset.fileBlob);
-            } catch {}
+          if (asset.fileBlob) {
+            // Always clear stale blob: previewUrls (they are revoked between sessions)
+            if (asset.previewUrl && asset.previewUrl.startsWith('blob:')) {
+              asset.previewUrl = undefined;
+            }
+            // Recreate from stored binary for images
+            if (asset.type === 'image' && !asset.previewUrl) {
+              try {
+                asset.previewUrl = URL.createObjectURL(asset.fileBlob);
+              } catch {}
+            }
+            // For PDFs: create blob URL from actual binary so PDF viewer gets real bytes
+            if (asset.type === 'pdf' && !asset.previewUrl) {
+              try {
+                const pdfBlob = asset.fileBlob instanceof Blob
+                  ? new Blob([asset.fileBlob], { type: 'application/pdf' })
+                  : null;
+                if (pdfBlob) {
+                  asset.previewUrl = URL.createObjectURL(pdfBlob);
+                }
+              } catch {}
+            }
           }
         });
 
@@ -112,7 +138,10 @@ export async function saveUserAsset(asset: StoredAsset): Promise<void> {
     const existing: StoredAsset[] = existingStr ? JSON.parse(existingStr) : [];
     const metaItem: StoredAsset = {
       ...asset,
-      fileBlob: undefined // do not store raw blob in localStorage
+      fileBlob: undefined, // do not store raw blob in localStorage
+      // Strip blob: URLs — they are session-scoped and become invalid after reload.
+      // fileBlob in IndexedDB is the persistent source; blob URLs are recreated on load.
+      previewUrl: asset.previewUrl && asset.previewUrl.startsWith('blob:') ? undefined : asset.previewUrl
     };
     const updated = [metaItem, ...existing.filter(a => a.id !== asset.id)];
     localStorage.setItem(cacheKey, JSON.stringify(updated.slice(0, 50)));

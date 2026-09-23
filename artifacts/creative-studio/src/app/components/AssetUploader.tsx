@@ -297,6 +297,14 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
             previewUrl = URL.createObjectURL(file);
           } catch {}
         }
+        // For PDFs: create a blob URL from the ACTUAL binary bytes (not extracted text)
+        // This is used for direct preview so PDF viewer receives real PDF data
+        if (!previewUrl && isPdf) {
+          try {
+            const pdfBinaryBlob = new Blob([file], { type: 'application/pdf' });
+            previewUrl = URL.createObjectURL(pdfBinaryBlob);
+          } catch {}
+        }
 
         let textContent: string | undefined;
         if (isText) {
@@ -1061,7 +1069,12 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
                   key={asset.id}
                   onClick={() => { 
                     setSelectedId(asset.id); 
-                    setResult(null); 
+                    setResult(null);
+                    // Open preview in new tab: images and PDFs
+                    // For PDFs: use previewUrl which points to actual binary blob, not text content
+                    if ((asset.type === 'image' || asset.type === 'pdf') && asset.previewUrl) {
+                      window.open(asset.previewUrl, '_blank', 'noopener,noreferrer');
+                    }
                   }}
                   className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
                     selectedId === asset.id
