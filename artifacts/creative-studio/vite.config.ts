@@ -14,31 +14,11 @@ if (Number.isNaN(port) || port <= 0) {
 
 const basePath = process.env.BASE_PATH || "/";
 
-function nonBlockingCssPlugin() {
-  return {
-    name: "vite-plugin-non-blocking-css",
-    enforce: "post" as const,
-    transformIndexHtml(html: string) {
-      return html.replace(
-        /<link\s+([^>]*?)rel=["']stylesheet["']([^>]*?)href=["']([^"']+\.css)["']([^>]*)>/gi,
-        (match, p1, p2, href, p3) => {
-          // If already async or font preloaded, ignore
-          if (match.includes("onload=") || match.includes("rel=\"preload\"") || match.includes("fonts.googleapis")) {
-            return match;
-          }
-          return `<link rel="preload" href="${href}" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="${href}"></noscript>`;
-        }
-      );
-    },
-  };
-}
-
 export default defineConfig({
   base: basePath,
   plugins: [
     react(),
     tailwindcss(),
-    nonBlockingCssPlugin(),
     ...(process.env.NODE_ENV !== "production" ? [runtimeErrorOverlay()] : []),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
