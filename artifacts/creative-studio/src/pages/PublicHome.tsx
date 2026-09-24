@@ -132,12 +132,20 @@ export default function PublicHome() {
                 
                 <div className="relative w-[125%] sm:w-[135%] max-w-[850px] right-[-15%] sm:right-[-20%] lg:right-[-25%] xl:right-[-15%] z-10 transform hover:scale-[1.02] transition-transform duration-700 lg:-mt-8 xl:-mt-12">
                   {/* Subtle fade mask so the image's dark purple edges blend perfectly with the #09090c page background */}
-                  <img 
-                    src="/design-studio-hero.jpg" 
-                    alt="Design Studio Showcase" 
-                    className="w-full h-auto object-contain"
-                    style={{ WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%, black 70%, transparent 100%)', maskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%, black 70%, transparent 100%)' }}
-                  />
+                  <picture>
+                    <source srcSet="/design-studio-hero.avif" type="image/avif" />
+                    <source srcSet="/design-studio-hero.webp" type="image/webp" />
+                    <img 
+                      src="/design-studio-hero.webp" 
+                      alt="OrdStudio Design Studio Showcase" 
+                      width={1024}
+                      height={698}
+                      fetchPriority="high"
+                      decoding="async"
+                      className="w-full h-auto object-contain"
+                      style={{ WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%, black 70%, transparent 100%)', maskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%, black 70%, transparent 100%)' }}
+                    />
+                  </picture>
                 </div>
 
               </div>

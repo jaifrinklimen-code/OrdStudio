@@ -1142,14 +1142,14 @@ body {
 
 /* 1. Animated floating background orbs */
 @keyframes floating-orb-1 {
-  0%, 100% { transform: translate(0px, 0px) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
+  0%, 100% { transform: translate3d(0px, 0px, 0) scale(1); }
+  33% { transform: translate3d(30px, -50px, 0) scale(1.1); }
+  66% { transform: translate3d(-20px, 20px, 0) scale(0.9); }
 }
 
 @keyframes floating-orb-2 {
-  0%, 100% { transform: translate(0px, 0px) scale(1); }
-  50% { transform: translate(-40px, 60px) scale(1.2); }
+  0%, 100% { transform: translate3d(0px, 0px, 0) scale(1); }
+  50% { transform: translate3d(-40px, 60px, 0) scale(1.2); }
 }
 
 .depth-orb {
@@ -1159,7 +1159,8 @@ body {
   opacity: 0.12;
   pointer-events: none;
   z-index: 0;
-  transition: all 1s ease;
+  contain: layout paint;
+  will-change: transform;
 }
 
 .depth-orb-violet {
