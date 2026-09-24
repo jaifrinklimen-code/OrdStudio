@@ -58,7 +58,6 @@ const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ defau
 import { getAppUrl } from "../lib/getAppUrl";
 import type { Session } from "@supabase/supabase-js";
 import { toast } from 'sonner';
-import { secureFetch } from '../lib/secureFetch';
 
 const RouteSuspenseFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center bg-[#0d0d14] text-white">
@@ -309,11 +308,13 @@ export default function App() {
               } catch {}
             }
 
-            secureFetch('/api/projects', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(updated)
-            }).catch(() => {});
+            import('../lib/secureFetch').then(({ secureFetch }) => {
+              secureFetch('/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updated)
+              }).catch(() => {});
+            });
 
             toast.success("Design saved successfully!");
           }}
