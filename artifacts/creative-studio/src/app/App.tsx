@@ -5,8 +5,10 @@ import React, { useState, useCallback, useRef, useEffect, Suspense, lazy } from 
 // Public Layout
 import { PublicLayout } from "../components/layout/Layout";
 
+// Core Public Home (Eagerly loaded for zero-delay first paint)
+import PublicHome from "../pages/PublicHome";
+
 // Lazy-loaded Public Pages
-const PublicHome = lazy(() => import("../pages/PublicHome"));
 const About = lazy(() => import("../pages/About"));
 const Contact = lazy(() => import("../pages/Contact"));
 const Blog = lazy(() => import("../pages/blog/Blog"));
