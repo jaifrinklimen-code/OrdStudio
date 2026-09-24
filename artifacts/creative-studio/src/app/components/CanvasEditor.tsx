@@ -14,7 +14,6 @@ import { renderCanonicalSlideToContext } from '../lib/renderEngine';
 import { loadTemplateFonts, FONT_REGISTRY } from '../lib/fontRegistry';
 import { preloadTemplateAssets } from '../lib/templateRegistry';
 import { VerticalCanvasNavigator } from './VerticalCanvasNavigator';
-import { exportToPptx, exportToPdf, exportToJson } from '../lib/exportServices';
 
 /* ── Types ──────────────────────────────────────────────────── */
 type ElementType = 'text' | 'rect' | 'circle' | 'line' | 'arrow' | 'star' | 'triangle' | 'image' | 'heart' | 'hexagon' | 'messageSquare';
@@ -1475,6 +1474,7 @@ if (editingText && selectedId !== editingText) {
     setShowDlMenu(false);
     const toastId = toast.loading('Preparing multi-page PDF document...');
     try {
+      const { exportToPdf } = await import('../lib/exportServices');
       const slidesToExport = (slides && slides.length > 0) ? slides : [elements];
       await exportToPdf({
         slides: slidesToExport,
@@ -1498,6 +1498,7 @@ if (editingText && selectedId !== editingText) {
     setShowDlMenu(false);
     const toastId = toast.loading('Preparing PPTX export with embedded images...');
     try {
+      const { exportToPptx } = await import('../lib/exportServices');
       const slidesToExport = (slides && slides.length > 0) ? slides : [elements];
       await exportToPptx({
         slides: slidesToExport,
