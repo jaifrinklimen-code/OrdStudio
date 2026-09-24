@@ -53,9 +53,8 @@ import { PageTransition } from './components/PageTransition';
 import { LoadingBar } from './components/LoadingBar';
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
 
-import { checkSupabaseConnection, supabase } from "../lib/supabase";
 import { getAppUrl } from "../lib/getAppUrl";
-import { Session } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 import { toast } from 'sonner';
 import { secureFetch } from '../lib/secureFetch';
 
@@ -130,29 +129,44 @@ export default function App() {
 
   useEffect(() => {
     let mounted = true;
+    let subscription: any = null;
 
-    supabase.auth.getSession().then(({ data: { session: existingSession }, error }) => {
-      if (!mounted) return;
-      if (error) {
-        console.error("Unable to restore authentication session:", error);
+    const initAuth = async () => {
+      try {
+        const { supabase } = await import('../lib/supabase');
+        if (!mounted) return;
+        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        if (!mounted) return;
+        if (error) console.error("Unable to restore authentication session:", error);
+        setSession(existingSession || null);
+        setAuthLoading(false);
+
+        const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
+          if (!mounted) return;
+          setSession(newSession || null);
+          setAuthLoading(false);
+        });
+        subscription = data.subscription;
+      } catch (err) {
+        if (mounted) setAuthLoading(false);
       }
-      setSession(existingSession || null);
-      setAuthLoading(false);
-    });
+    };
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (!mounted) return;
-      setSession(newSession || null);
-      setAuthLoading(false);
-    });
+    if (isPublicRoute) {
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => initAuth(), { timeout: 2000 });
+      } else {
+        setTimeout(initAuth, 500);
+      }
+    } else {
+      initAuth();
+    }
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (subscription) subscription.unsubscribe();
     };
-  }, []);
+  }, [isPublicRoute]);
 
   // When user signs in, check if there was a pending template/design or tab clicked while unauthenticated
   useEffect(() => {
@@ -202,6 +216,7 @@ export default function App() {
   }, [session, navigate]);
 
   const handleGoogleLogin = async () => {
+    const { checkSupabaseConnection, supabase } = await import('../lib/supabase');
     const isSupabaseAvailable = await checkSupabaseConnection();
     if (!isSupabaseAvailable) {
       alert("Google sign-in is unavailable because the Supabase project URL is invalid or unreachable. Update VITE_SUPABASE_URL and restart the app.");
@@ -222,6 +237,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    const { supabase } = await import('../lib/supabase');
     await supabase.auth.signOut();
     setSession(null);
     setCustomDesign(null);
