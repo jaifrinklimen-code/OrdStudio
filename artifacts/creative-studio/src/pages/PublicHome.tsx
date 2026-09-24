@@ -37,19 +37,29 @@ export default function PublicHome() {
   const [toastMsg, setToastMsg] = useState<string>('');
 
   useEffect(() => {
-    secureFetch('/api/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data && data.success) {
-          setStats({
-            templatesCount: data.templatesCount,
-            projectsCount: data.projectsCount,
-            stickersCount: data.stickersCount,
-            status: data.status
-          });
-        }
+    const fetchStats = () => {
+      fetch('/api/stats', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
       })
-      .catch(() => {});
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && data.success) {
+            setStats({
+              templatesCount: data.templatesCount,
+              projectsCount: data.projectsCount,
+              stickersCount: data.stickersCount,
+              status: data.status
+            });
+          }
+        })
+        .catch(() => {});
+    };
+
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(fetchStats, { timeout: 3000 });
+    } else {
+      setTimeout(fetchStats, 1000);
+    }
   }, []);
 
   const triggerToast = (msg: string) => {

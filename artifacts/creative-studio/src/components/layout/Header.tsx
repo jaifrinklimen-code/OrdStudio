@@ -29,22 +29,36 @@ export function Header() {
 
   useEffect(() => {
     let active = true;
-    import('@/lib/supabase').then(({ supabase }) => {
-      if (!active) return;
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (active) setIsLoggedIn(!!session);
-      });
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (active) setIsLoggedIn(!!session);
-      });
-      return () => {
-        subscription.unsubscribe();
-      };
-    }).catch(() => {});
+    let subscription: any = null;
+
+    const checkAuth = () => {
+      import('@/lib/supabase').then(({ supabase }) => {
+        if (!active) return;
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (active) setIsLoggedIn(!!session);
+        });
+        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (active) setIsLoggedIn(!!session);
+        });
+        subscription = data.subscription;
+      }).catch(() => {});
+    };
+
+    if (location.pathname === '/' || location.pathname.startsWith('/blog') || location.pathname.startsWith('/features')) {
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => checkAuth(), { timeout: 3000 });
+      } else {
+        setTimeout(checkAuth, 1000);
+      }
+    } else {
+      checkAuth();
+    }
+
     return () => {
       active = false;
+      if (subscription) subscription.unsubscribe();
     };
-  }, []);
+  }, [location.pathname]);
 
   const isActive = (href: string) => location.pathname === href;
 
