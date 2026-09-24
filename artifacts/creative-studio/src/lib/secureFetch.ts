@@ -1,16 +1,7 @@
-import { supabase } from './supabase';
-
 let cachedAuthToken = '';
 let tokenCachedAt = 0;
 const TOKEN_CACHE_TTL = 5000; // 5 seconds
-
-// Subscribe to auth changes to update cached token immediately
-try {
-  supabase.auth.onAuthStateChange((_event, session) => {
-    cachedAuthToken = session?.access_token || '';
-    tokenCachedAt = Date.now();
-  });
-} catch {}
+let authSubscribed = false;
 
 async function getCachedAuthToken(): Promise<string> {
   const now = Date.now();
@@ -18,6 +9,16 @@ async function getCachedAuthToken(): Promise<string> {
     return cachedAuthToken;
   }
   try {
+    const { supabase } = await import('./supabase');
+    if (!authSubscribed) {
+      authSubscribed = true;
+      try {
+        supabase.auth.onAuthStateChange((_event, session) => {
+          cachedAuthToken = session?.access_token || '';
+          tokenCachedAt = Date.now();
+        });
+      } catch {}
+    }
     const { data } = await supabase.auth.getSession();
     cachedAuthToken = data?.session?.access_token || '';
     tokenCachedAt = now;
