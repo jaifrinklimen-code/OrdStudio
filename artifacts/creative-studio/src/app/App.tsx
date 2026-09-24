@@ -51,7 +51,7 @@ import {
 } from "lucide-react";
 import { PageTransition } from './components/PageTransition';
 import { LoadingBar } from './components/LoadingBar';
-import { Dashboard } from './components/Dashboard';
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
 
 import { checkSupabaseConnection, supabase } from "../lib/supabase";
 import { getAppUrl } from "../lib/getAppUrl";
@@ -67,6 +67,10 @@ const RouteSuspenseFallback = () => (
 
 export default function App() {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isPublicRoute = location.pathname === '/' || location.pathname.startsWith('/blog') || location.pathname.startsWith('/features') || location.pathname === '/about' || location.pathname === '/contact' || location.pathname === '/privacy-policy' || location.pathname === '/terms-of-service' || location.pathname === '/cookie-policy' || location.pathname === '/disclaimer';
+
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('activeTab') || 'home';
   });
@@ -81,7 +85,7 @@ export default function App() {
   const [showNotif, setShowNotif] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(() => !isPublicRoute);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -123,9 +127,6 @@ export default function App() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
-
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     let mounted = true;

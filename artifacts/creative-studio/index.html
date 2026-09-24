@@ -32,8 +32,9 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
 
-    <!-- ─── LCP Hero Image Preload ──────────────────────────── -->
-    <link rel="preload" as="image" href="/design-studio-hero.webp" type="image/webp" fetchpriority="high" />
+    <!-- ─── Responsive LCP Hero Image Preload ───────────────── -->
+    <link rel="preload" as="image" href="/design-studio-hero-mobile.webp" type="image/webp" fetchpriority="high" media="(max-width: 640px)" />
+    <link rel="preload" as="image" href="/design-studio-hero.webp" type="image/webp" fetchpriority="high" media="(min-width: 641px)" />
 
     <!-- ─── Fonts Preconnect & Asynchronous Core UI Font Suite ─ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

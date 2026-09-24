@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -29,14 +28,21 @@ export function Header() {
   const location = useLocation();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
-    });
+    let active = true;
+    import('@/lib/supabase').then(({ supabase }) => {
+      if (!active) return;
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (active) setIsLoggedIn(!!session);
+      });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (active) setIsLoggedIn(!!session);
+      });
+      return () => {
+        subscription.unsubscribe();
+      };
+    }).catch(() => {});
     return () => {
-      subscription.unsubscribe();
+      active = false;
     };
   }, []);
 
