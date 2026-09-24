@@ -277,9 +277,37 @@ export function detectDuplicatesInLibrary(templates: CanonicalTemplate[], thresh
   return groups;
 }
 
+// In-memory cache for normalized canonical templates to prevent redundant fingerprint and cloning operations
+const normalizedTemplateCache = new Map<string | number, CanonicalTemplate>();
+
+let cachedCanonicalTemplates: CanonicalTemplate[] | null = null;
+let canonicalTemplatesPromise: Promise<CanonicalTemplate[]> | null = null;
+
+/**
+ * Asynchronously loads the 300-template canonical library on demand.
+ * Prevents bundling the entire 10.6MB canonicalTemplates dataset into the initial bundle.
+ */
+export async function loadAllCanonicalTemplates(): Promise<CanonicalTemplate[]> {
+  if (cachedCanonicalTemplates) return cachedCanonicalTemplates;
+  if (!canonicalTemplatesPromise) {
+    canonicalTemplatesPromise = import('./canonicalTemplates').then((mod) => {
+      const raw = (mod as any).CANONICAL_FALLBACK_TEMPLATES || (mod as any).CANONICAL_TEMPLATES || [];
+      const normalized = raw.map((t: any) => normalizeCanonicalTemplate(t));
+      cachedCanonicalTemplates = normalized;
+      return normalized;
+    });
+  }
+  return canonicalTemplatesPromise;
+}
+
 // Single Source of Truth Normalizer
 export function normalizeCanonicalTemplate(t: any): CanonicalTemplate {
   if (!t) throw new Error('Cannot normalize null template');
+
+  const cacheKey = t.id !== undefined ? t.id : (t.name || null);
+  if (cacheKey && normalizedTemplateCache.has(cacheKey)) {
+    return normalizedTemplateCache.get(cacheKey)!;
+  }
 
   // 1. Resolve canonical dimensions
   let cW = t.canvasWidth || t.dimensions?.width;
@@ -356,7 +384,7 @@ export function normalizeCanonicalTemplate(t: any): CanonicalTemplate {
   const fingerprint = computeTemplateFingerprint(cW, cH, page1Elements, gradient);
   const contentHash = computeTemplateHash({ ...t, slides: normalizedSlides });
 
-  return {
+  const result: CanonicalTemplate = {
     id: t.id,
     name: t.name || t.title || 'Untitled Template',
     title: t.title || t.name || 'Untitled Template',
@@ -378,6 +406,12 @@ export function normalizeCanonicalTemplate(t: any): CanonicalTemplate {
     contentHash,
     fingerprint
   };
+
+  if (cacheKey) {
+    normalizedTemplateCache.set(cacheKey, result);
+  }
+
+  return result;
 }
 
 /**

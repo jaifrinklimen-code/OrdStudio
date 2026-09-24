@@ -268,8 +268,24 @@ export function resolveFont(
   };
 }
 
-// Track loaded font cache to prevent redundant browser load requests
+// Track loaded font families and specs to prevent redundant browser load requests
+const loadedFontFamilies = new Set<string>(['Inter', 'Plus Jakarta Sans']);
 const loadedFontsCache = new Set<string>();
+
+/**
+ * Dynamically injects Google Font stylesheet for a family on demand if not already loaded
+ */
+export function ensureFontFamilyLoaded(family: string): void {
+  if (typeof document === 'undefined' || !family || loadedFontFamilies.has(family)) return;
+  loadedFontFamilies.add(family);
+  try {
+    const clean = family.replace(/\s+/g, '+');
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${clean}:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap`;
+    document.head.appendChild(link);
+  } catch {}
+}
 
 /**
  * Preloads all fonts required by a set of canvas elements.
@@ -286,6 +302,7 @@ export async function loadTemplateFonts(elements: any[], context?: FontResolutio
       ...context,
       elementId: el.id
     });
+    ensureFontFamilyLoaded(resolved.family);
     fontSpecs.add(`${resolved.style} ${resolved.weight} 20px "${resolved.family}"`);
   }
 

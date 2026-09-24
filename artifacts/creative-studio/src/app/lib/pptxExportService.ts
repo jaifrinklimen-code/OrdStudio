@@ -1,4 +1,3 @@
-import pptxgen from 'pptxgenjs';
 import { resolveElementImageSrc, getPreloadedImage } from './templateRegistry';
 
 export interface PptxExportOptions {
@@ -234,7 +233,9 @@ export async function exportToPptx({
   backgroundGradient = '',
   onProgress
 }: PptxExportOptions): Promise<void> {
-  const pptx = new pptxgen();
+  const pptxgenModule = await import('pptxgenjs');
+  const PptxGen = (pptxgenModule as any).default || pptxgenModule;
+  const pptx = new PptxGen();
 
   const cW = canvasWidth || 1920;
   const cH = canvasHeight || 1080;

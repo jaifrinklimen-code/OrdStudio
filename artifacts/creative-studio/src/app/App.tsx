@@ -1,56 +1,69 @@
-import AuthPage from "./AuthPage";
 import { useIsMobile } from '@/hooks/use-mobile';
-import SignupPage from "./SignUp page";
-import ForgotPasswordPage from "./ForgotPasswordPage";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, Suspense, lazy } from 'react';
 
-// Public Layout & Pages
+// Public Layout
 import { PublicLayout } from "../components/layout/Layout";
-import PublicHome from "../pages/PublicHome";
-import About from "../pages/About";
-import Contact from "../pages/Contact";
-import Blog from "../pages/blog/Blog";
-import BlogPost from "../pages/blog/BlogPost";
 
-// Features
-import AIPresentationMaker from "../pages/features/AIPresentationMaker";
-import AICopywritingAssistant from "../pages/features/AICopywritingAssistant";
-import AIStickerGenerator from "../pages/features/AIStickerGenerator";
-import VectorEditor from "../pages/features/VectorEditor";
-import PPTXExport from "../pages/features/PPTXExport";
-import SVGExport from "../pages/features/SVGExport";
-import PDFExport from "../pages/features/PDFExport";
+// Lazy-loaded Public Pages
+const PublicHome = lazy(() => import("../pages/PublicHome"));
+const About = lazy(() => import("../pages/About"));
+const Contact = lazy(() => import("../pages/Contact"));
+const Blog = lazy(() => import("../pages/blog/Blog"));
+const BlogPost = lazy(() => import("../pages/blog/BlogPost"));
 
-// Legal
-import PrivacyPolicy from "../pages/legal/PrivacyPolicy";
-import TermsOfService from "../pages/legal/TermsOfService";
-import CookiePolicy from "../pages/legal/CookiePolicy";
-import Disclaimer from "../pages/legal/Disclaimer";
+// Lazy-loaded Features
+const AIPresentationMaker = lazy(() => import("../pages/features/AIPresentationMaker"));
+const AICopywritingAssistant = lazy(() => import("../pages/features/AICopywritingAssistant"));
+const AIStickerGenerator = lazy(() => import("../pages/features/AIStickerGenerator"));
+const VectorEditor = lazy(() => import("../pages/features/VectorEditor"));
+const PPTXExport = lazy(() => import("../pages/features/PPTXExport"));
+const SVGExport = lazy(() => import("../pages/features/SVGExport"));
+const PDFExport = lazy(() => import("../pages/features/PDFExport"));
+
+// Lazy-loaded Legal Policies
+const PrivacyPolicy = lazy(() => import("../pages/legal/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("../pages/legal/TermsOfService"));
+const CookiePolicy = lazy(() => import("../pages/legal/CookiePolicy"));
+const Disclaimer = lazy(() => import("../pages/legal/Disclaimer"));
+
+// Lazy-loaded Auth Pages
+const AuthPage = lazy(() => import("./AuthPage"));
+const SignupPage = lazy(() => import("./SignUp page"));
+const ForgotPasswordPage = lazy(() => import("./ForgotPasswordPage"));
+
+// Lazy-loaded Studio Views & Tools
+const DesignStudio = lazy(() => import('./components/DesignStudio').then(m => ({ default: m.DesignStudio })));
+const AIAssistant = lazy(() => import('./components/AIAssistant').then(m => ({ default: m.AIAssistant })));
+const ContentGenerator = lazy(() => import('./components/ContentGenerator').then(m => ({ default: m.ContentGenerator })));
+const SmartSearch = lazy(() => import('./components/SmartSearch').then(m => ({ default: m.SmartSearch })));
+const StickerLab = lazy(() => import('./components/StickerLab').then(m => ({ default: m.StickerLab })));
+const CanvasEditor = lazy(() => import('./components/CanvasEditor').then(m => ({ default: m.CanvasEditor })));
+const AssetUploader = lazy(() => import('./components/AssetUploader').then(m => ({ default: m.AssetUploader })));
+const SettingsPage = lazy(() => import('./components/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const TemplateAuditPage = lazy(() => import('./components/TemplateAuditPage').then(m => ({ default: m.TemplateAuditPage })));
+
 import {
   Search as SearchIcon, Home as HomeIcon, Palette, Plus, StickyNote,
   Layout, Image as ImageIcon, Video, Globe, Upload, ChevronDown,
   Bell, User, ArrowRight, Settings, Menu, ChevronLeft, ChevronRight, HelpCircle,
   CreditCard, LogOut
 } from "lucide-react";
-import { DesignStudio } from './components/DesignStudio';
-import { AIAssistant } from './components/AIAssistant';
-import { ContentGenerator } from './components/ContentGenerator';
-import { SmartSearch } from './components/SmartSearch';
-import { StickerLab } from './components/StickerLab';
 import { PageTransition } from './components/PageTransition';
 import { LoadingBar } from './components/LoadingBar';
 import { Dashboard } from './components/Dashboard';
-import { CanvasEditor } from './components/CanvasEditor';
-import { AssetUploader } from './components/AssetUploader';
 
-import { SettingsPage } from './components/SettingsPage';
-import { TemplateAuditPage } from './components/TemplateAuditPage';
 import { checkSupabaseConnection, supabase } from "../lib/supabase";
 import { getAppUrl } from "../lib/getAppUrl";
 import { Session } from "@supabase/supabase-js";
 import { toast } from 'sonner';
 import { secureFetch } from '../lib/secureFetch';
+
+const RouteSuspenseFallback = () => (
+  <div className="min-h-[60vh] flex items-center justify-center bg-[#0d0d14] text-white">
+    <div className="w-7 h-7 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 export default function App() {
   const isMobile = useIsMobile();
@@ -216,6 +229,7 @@ export default function App() {
   };
 
   const renderSection = () => {
+    let content: React.ReactNode = null;
     if (customDesign) {
       if (!session) {
         try {
@@ -225,7 +239,7 @@ export default function App() {
         navigate('/login');
         return null;
       }
-      return (
+      content = (
         <CanvasEditor
           templateName={customDesign.name}
           templateCategory={customDesign.category || customDesign.type}
@@ -286,17 +300,24 @@ export default function App() {
           }}
         />
       );
+    } else {
+      switch (activeTab) {
+        case 'design':    content = <DesignStudio onOpenTemplate={handleOpenTemplateWithAuth} />; break;
+        case 'assistant': content = <AIAssistant />; break;
+        case 'generator': content = <ContentGenerator />; break;
+        case 'search':    content = <SmartSearch query={globalSearchQuery} setQuery={setGlobalSearchQuery} onNavigate={handleNavigate} onOpenTemplate={handleOpenTemplateWithAuth} />; break;
+        case 'stickers':  content = <StickerLab />; break;
+        case 'upload':    content = <AssetUploader onOpenInEditor={handleOpenTemplateWithAuth} />; break;
+        case 'settings':  content = <SettingsPage />; break;
+        default:          content = <Dashboard onNavigate={handleNavigate} onOpenTemplate={handleOpenTemplateWithAuth} />; break;
+      }
     }
-    switch (activeTab) {
-      case 'design':    return <DesignStudio onOpenTemplate={handleOpenTemplateWithAuth} />;
-      case 'assistant': return <AIAssistant />;
-      case 'generator': return <ContentGenerator />;
-      case 'search':    return <SmartSearch query={globalSearchQuery} setQuery={setGlobalSearchQuery} onNavigate={handleNavigate} onOpenTemplate={handleOpenTemplateWithAuth} />;
-      case 'stickers':  return <StickerLab />;
-      case 'upload':    return <AssetUploader onOpenInEditor={handleOpenTemplateWithAuth} />;
-      case 'settings':  return <SettingsPage />;
-      default:          return <Dashboard onNavigate={handleNavigate} onOpenTemplate={handleOpenTemplateWithAuth} />;
-    }
+
+    return (
+      <Suspense fallback={<RouteSuspenseFallback />}>
+        {content}
+      </Suspense>
+    );
   };
 
   const navItems = [
@@ -305,8 +326,8 @@ export default function App() {
     { id: 'generator', label: 'AI Writer', icon: Plus },
     { id: 'stickers', label: 'Sticker Lab', icon: StickyNote },
     { id: 'search', label: 'Smart Search', icon: SearchIcon },
-
   ];
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0d0d14] text-white">
@@ -316,72 +337,74 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      {/* Public Pages */}
-      <Route path="/" element={<PublicLayout><PublicHome /></PublicLayout>} />
-      <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
-      <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
-      <Route path="/blog" element={<PublicLayout><Blog /></PublicLayout>} />
-      <Route path="/blog/:slug" element={<PublicLayout><BlogPost /></PublicLayout>} />
-      
-      {/* Features */}
-      <Route path="/features/ai-presentation-maker" element={<PublicLayout><AIPresentationMaker /></PublicLayout>} />
-      <Route path="/features/ai-copywriting-assistant" element={<PublicLayout><AICopywritingAssistant /></PublicLayout>} />
-      <Route path="/features/ai-sticker-generator" element={<PublicLayout><AIStickerGenerator /></PublicLayout>} />
-      <Route path="/features/vector-editor" element={<PublicLayout><VectorEditor /></PublicLayout>} />
-      <Route path="/features/pptx-export" element={<PublicLayout><PPTXExport /></PublicLayout>} />
-      <Route path="/features/svg-export" element={<PublicLayout><SVGExport /></PublicLayout>} />
-      <Route path="/features/pdf-export" element={<PublicLayout><PDFExport /></PublicLayout>} />
+    <Suspense fallback={<RouteSuspenseFallback />}>
+      <Routes>
+        {/* Public Pages */}
+        <Route path="/" element={<PublicLayout><PublicHome /></PublicLayout>} />
+        <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+        <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+        <Route path="/blog" element={<PublicLayout><Blog /></PublicLayout>} />
+        <Route path="/blog/:slug" element={<PublicLayout><BlogPost /></PublicLayout>} />
+        
+        {/* Features */}
+        <Route path="/features/ai-presentation-maker" element={<PublicLayout><AIPresentationMaker /></PublicLayout>} />
+        <Route path="/features/ai-copywriting-assistant" element={<PublicLayout><AICopywritingAssistant /></PublicLayout>} />
+        <Route path="/features/ai-sticker-generator" element={<PublicLayout><AIStickerGenerator /></PublicLayout>} />
+        <Route path="/features/vector-editor" element={<PublicLayout><VectorEditor /></PublicLayout>} />
+        <Route path="/features/pptx-export" element={<PublicLayout><PPTXExport /></PublicLayout>} />
+        <Route path="/features/svg-export" element={<PublicLayout><SVGExport /></PublicLayout>} />
+        <Route path="/features/pdf-export" element={<PublicLayout><PDFExport /></PublicLayout>} />
 
-      {/* Legal Policies */}
-      <Route path="/privacy-policy" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
-      <Route path="/terms-of-service" element={<PublicLayout><TermsOfService /></PublicLayout>} />
-      <Route path="/cookie-policy" element={<PublicLayout><CookiePolicy /></PublicLayout>} />
-      <Route path="/disclaimer" element={<PublicLayout><Disclaimer /></PublicLayout>} />
+        {/* Legal Policies */}
+        <Route path="/privacy-policy" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
+        <Route path="/terms-of-service" element={<PublicLayout><TermsOfService /></PublicLayout>} />
+        <Route path="/cookie-policy" element={<PublicLayout><CookiePolicy /></PublicLayout>} />
+        <Route path="/disclaimer" element={<PublicLayout><Disclaimer /></PublicLayout>} />
 
-      {/* Authentication */}
-      <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <AuthPage onGoogleLogin={handleGoogleLogin} />} />
-      <Route path="/signup" element={session ? <Navigate to="/dashboard" replace /> : <SignupPage />} />
-      <Route path="/forgot-password" element={session ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />} />
+        {/* Authentication */}
+        <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <AuthPage onGoogleLogin={handleGoogleLogin} />} />
+        <Route path="/signup" element={session ? <Navigate to="/dashboard" replace /> : <SignupPage />} />
+        <Route path="/forgot-password" element={session ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />} />
 
-      {/* Developer / Internal Template Diversity Audit Tool */}
-      <Route path="/template-audit" element={<TemplateAuditPage />} />
-      <Route path="/admin/template-audit" element={<TemplateAuditPage />} />
+        {/* Developer / Internal Template Diversity Audit Tool */}
+        <Route path="/template-audit" element={<TemplateAuditPage />} />
+        <Route path="/admin/template-audit" element={<TemplateAuditPage />} />
 
-      {/* Dashboard Route - Allows Guest Template Library Discovery & Gated Editing */}
-      <Route 
-        path="/dashboard" 
-        element={
-          <DashboardLayout
-            isMobile={isMobile}
-            activeTab={activeTab}
-            handleNavigate={handleNavigate}
-            isCollapsed={isCollapsed}
-            setIsCollapsed={setIsCollapsed}
-            customDesign={customDesign}
-            setCustomDesign={setCustomDesign}
-            globalSearchQuery={globalSearchQuery}
-            setGlobalSearchQuery={setGlobalSearchQuery}
-            topSearchRef={topSearchRef}
-            showNotif={showNotif}
-            setShowNotif={setShowNotif}
-            showProfile={showProfile}
-            setShowProfile={setShowProfile}
-            handleGoogleLogin={handleGoogleLogin}
-            handleLogout={handleLogout}
-            notifRef={notifRef}
-            profileRef={profileRef}
-            loading={loading}
-            loadingKey={loadingKey}
-            session={session}
-            renderSection={renderSection}
-          />
-        } 
-      />
+        {/* Dashboard Route - Allows Guest Template Library Discovery & Gated Editing */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <DashboardLayout
+              isMobile={isMobile}
+              activeTab={activeTab}
+              handleNavigate={handleNavigate}
+              isCollapsed={isCollapsed}
+              setIsCollapsed={setIsCollapsed}
+              customDesign={customDesign}
+              setCustomDesign={setCustomDesign}
+              globalSearchQuery={globalSearchQuery}
+              setGlobalSearchQuery={setGlobalSearchQuery}
+              topSearchRef={topSearchRef}
+              showNotif={showNotif}
+              setShowNotif={setShowNotif}
+              showProfile={showProfile}
+              setShowProfile={setShowProfile}
+              handleGoogleLogin={handleGoogleLogin}
+              handleLogout={handleLogout}
+              notifRef={notifRef}
+              profileRef={profileRef}
+              loading={loading}
+              loadingKey={loadingKey}
+              session={session}
+              renderSection={renderSection}
+            />
+          } 
+        />
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 

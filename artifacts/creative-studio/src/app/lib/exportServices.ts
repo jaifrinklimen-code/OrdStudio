@@ -120,7 +120,7 @@ export function generatePdfBlob(pages: Array<{ width: number; height: number; jp
   writeChunk(`trailer\n<< /Size ${totalObjs} /Root 1 0 R >>\n`);
   writeChunk(`startxref\n${startXrefOffset}\n%%EOF\n`);
 
-  return new Blob(parts, { type: 'application/pdf' });
+  return new Blob(parts as any[], { type: 'application/pdf' });
 }
 
 // Convert data URL to binary Uint8Array

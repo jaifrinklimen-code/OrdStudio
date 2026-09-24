@@ -157,7 +157,16 @@ export function resolveTemplateFolderFromCategory(category: string): string {
   return normalized.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').toLowerCase() || 'presentations';
 }
 
-export async function discoverTemplateCatalog(): Promise<TemplateCatalogEntry[]> {
+let cachedCatalog: TemplateCatalogEntry[] | null = null;
+let lastCatalogScan = 0;
+const CATALOG_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+export async function discoverTemplateCatalog(forceRefresh = false): Promise<TemplateCatalogEntry[]> {
+  const now = Date.now();
+  if (!forceRefresh && cachedCatalog && (now - lastCatalogScan < CATALOG_CACHE_TTL)) {
+    return cachedCatalog;
+  }
+
   const root = getTemplateRoot();
   if (!root) return [];
 
@@ -185,8 +194,9 @@ export async function discoverTemplateCatalog(): Promise<TemplateCatalogEntry[]>
       for (const file of files) {
         const fileExtension = path.extname(file.name).toLowerCase();
         const safeName = file.name.replace(/\.[^/.]+$/, '');
+        const deterministicSlug = safeName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const catalogEntry: TemplateCatalogEntry = {
-          id: `${categoryName.toLowerCase()}-${safeName}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+          id: `catalog-${categoryName.toLowerCase()}-${deterministicSlug}`,
           name: safeName
             .replace(/[-_]+/g, ' ')
             .replace(/\s+/g, ' ')
@@ -213,5 +223,7 @@ export async function discoverTemplateCatalog(): Promise<TemplateCatalogEntry[]>
     }
   }
 
-  return catalog.sort((a, b) => a.name.localeCompare(b.name));
+  cachedCatalog = catalog.sort((a, b) => a.name.localeCompare(b.name));
+  lastCatalogScan = now;
+  return cachedCatalog;
 }

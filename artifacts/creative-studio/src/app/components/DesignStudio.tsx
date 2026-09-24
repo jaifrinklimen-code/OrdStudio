@@ -16,7 +16,8 @@ import { TemplatePreviewModal } from './TemplatePreviewModal';
 import { toast } from 'sonner';
 
 import { createProfessionalSlides } from "./presentationBuilder";
-import { CANONICAL_FALLBACK_TEMPLATES } from '../lib/canonicalTemplates';
+import { loadAllCanonicalTemplates } from '../lib/templateRegistry';
+import { fetchCachedTemplates, fetchCachedProjects } from '../lib/templateApiClient';
 
 const CUSTOM_TEMPLATES_STORAGE_KEY = 'ds_custom_templates';
 
@@ -118,8 +119,8 @@ function TemplateSkeleton() {
   );
 }
 
-export const templates: any[] = CANONICAL_FALLBACK_TEMPLATES;
-export const templatesWithSlides: any[] = CANONICAL_FALLBACK_TEMPLATES;
+export let templates: any[] = [];
+export let templatesWithSlides: any[] = [];
 
 /* ── Main component ────────────────────────────────────────── */
 export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any) => void } = {}) {
@@ -139,6 +140,10 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
   const [sortOrder, setSortOrder] = useState<string>('popular');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
   const [previewModalTemplate, setPreviewModalTemplate] = useState<any | null>(null);
+
+  // Progressive rendering for the 300-template library
+  const [visibleCount, setVisibleCount] = useState(24);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Listen for saved project updates from editor across tabs or components
   useEffect(() => {
@@ -406,14 +411,19 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
 
 
   useEffect(() => {
+    let mounted = true;
+
     Promise.all([
-      secureFetch('/api/templates').then(r => r.ok ? r.json() : null),
-      secureFetch('/api/projects').then(r => r.ok ? r.json() : null)
-    ]).then(async ([templatesData, projectsData]) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUser = session?.user;
+      fetchCachedTemplates(),
+      loadAllCanonicalTemplates(),
+      supabase.auth.getSession()
+    ]).then(async ([templatesData, canonicalTmpls, sessionData]) => {
+      if (!mounted) return;
+      templatesWithSlides = canonicalTmpls;
+      templates = canonicalTmpls;
+      const currentUser = sessionData?.data?.session?.user;
       const storedCustomTemplates = getStoredCustomTemplates().map(normalizeCustomTemplate);
-      const mapped = Array.isArray(templatesData)
+      const mapped = Array.isArray(templatesData) && templatesData.length > 0
         ? templatesData.map((t: any) => {
             const pages = Array.isArray(t.pages) ? t.pages : [];
             const rawSlides = Array.isArray(t.slides) && t.slides.length > 0
@@ -448,7 +458,7 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
 
       const allCombined = mapped.length > 0
         ? [...storedCustomTemplates, ...mapped]
-        : [...storedCustomTemplates, ...templatesWithSlides];
+        : [...storedCustomTemplates, ...canonicalTmpls];
       const seen = new Set();
       const mergedTemplates = [];
       for (const item of allCombined) {
@@ -460,79 +470,82 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
       }
       setApiTemplates(mergedTemplates);
 
-      if (currentUser && projectsData && projectsData.length > 0) {
-        const filteredProjects = projectsData.filter((p: any) => 
-          p && 
-          p.user_id &&
-          String(p.user_id) === String(currentUser.id) &&
-          p.name !== 'Brand Kit v2' && 
-          p.name !== 'Product Launch' && 
-          p.name !== 'Q4 Presentation'
-        );
-        if (filteredProjects.length > 0) {
-          setApiProjects(prev => {
-            const normalizedBack = filteredProjects.map((p: any) => ({
-              ...p,
-              slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
-              elements: p.elements || (Array.isArray(p.slides?.[0]) ? p.slides[0] : (p.pages?.[0] || [])),
-              canvasWidth: p.canvasWidth || p.dimensions?.width,
-              canvasHeight: p.canvasHeight || p.dimensions?.height,
-              thumbnailUrl: p.thumbnailUrl || p.thumbnail,
-              updatedAt: p.updatedAt || new Date().toISOString(),
-              isSavedProject: true
-            }));
+      if (currentUser) {
+        fetchCachedProjects(currentUser.id).then(userProjects => {
+          if (!mounted || !userProjects || userProjects.length === 0) return;
+          const filteredProjects = userProjects.filter((p: any) => 
+            p && 
+            p.name !== 'Brand Kit v2' && 
+            p.name !== 'Product Launch' && 
+            p.name !== 'Q4 Presentation'
+          );
+          if (filteredProjects.length > 0) {
+            setApiProjects(prev => {
+              const normalizedBack = filteredProjects.map((p: any) => ({
+                ...p,
+                slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
+                elements: p.elements || (Array.isArray(p.slides?.[0]) ? p.slides[0] : (p.pages?.[0] || [])),
+                canvasWidth: p.canvasWidth || p.dimensions?.width,
+                canvasHeight: p.canvasHeight || p.dimensions?.height,
+                thumbnailUrl: p.thumbnailUrl || p.thumbnail,
+                updatedAt: p.updatedAt || new Date().toISOString(),
+                isSavedProject: true
+              }));
 
-            const map = new Map<string, any>();
-            // Add existing local projects first
-            for (const item of prev) {
-              const key = String(item.id || item.name);
-              map.set(key, item);
-            }
-            // Merge with backend projects, respecting latest timestamp
-            for (const item of normalizedBack) {
-              const key = String(item.id || item.name);
-              if (!map.has(key)) {
-                map.set(key, item);
-              } else {
-                const existing = map.get(key);
-                const itemTime = new Date(item.updatedAt || 0).getTime();
-                const existingTime = new Date(existing.updatedAt || 0).getTime();
-                if (itemTime > existingTime) {
+              const map = new Map<string, any>();
+              for (const item of prev) {
+                map.set(String(item.id || item.name), item);
+              }
+              for (const item of normalizedBack) {
+                const key = String(item.id || item.name);
+                if (!map.has(key)) {
                   map.set(key, item);
+                } else {
+                  const existing = map.get(key);
+                  const itemTime = new Date(item.updatedAt || 0).getTime();
+                  const existingTime = new Date(existing.updatedAt || 0).getTime();
+                  if (itemTime > existingTime) {
+                    map.set(key, item);
+                  }
                 }
               }
-            }
-            const mergedList = Array.from(map.values())
-              .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
-              .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
-              .slice(0, 10);
+              const mergedList = Array.from(map.values())
+                .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
+                .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
+                .slice(0, 10);
 
-            try {
-              const storageKey = `ds_recent_projects_${currentUser.id}`;
-              localStorage.setItem(storageKey, JSON.stringify(mergedList));
-            } catch(e) {}
+              try {
+                const storageKey = `ds_recent_projects_${currentUser.id}`;
+                localStorage.setItem(storageKey, JSON.stringify(mergedList));
+              } catch(e) {}
 
-            return mergedList;
-          });
-        }
+              return mergedList;
+            });
+          }
+        });
       }
       setLoading(false);
     }).catch(err => {
       console.warn("Using fallback static datasets due to fetch error:", err);
-      const storedCustomTemplates = getStoredCustomTemplates().map(normalizeCustomTemplate);
-      const allCombined = [...storedCustomTemplates, ...templatesWithSlides];
-      const seen = new Set();
-      const mergedTemplates = [];
-      for (const item of allCombined) {
-        const key = String(item.id || item.name).toLowerCase();
-        if (!seen.has(key)) {
-          seen.add(key);
-          mergedTemplates.push(item);
+      loadAllCanonicalTemplates().then(canonicalTmpls => {
+        if (!mounted) return;
+        const storedCustomTemplates = getStoredCustomTemplates().map(normalizeCustomTemplate);
+        const allCombined = [...storedCustomTemplates, ...canonicalTmpls];
+        const seen = new Set();
+        const mergedTemplates = [];
+        for (const item of allCombined) {
+          const key = String(item.id || item.name).toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            mergedTemplates.push(item);
+          }
         }
-      }
-      setApiTemplates(mergedTemplates);
-      setLoading(false);
+        setApiTemplates(mergedTemplates);
+        setLoading(false);
+      });
     });
+
+    return () => { mounted = false; };
   }, []);
 
   const toggleFavorite = useCallback((e: React.MouseEvent, id: number) => {
@@ -624,6 +637,32 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
 
     return list;
   }, [apiTemplates, filter, searchQuery, selectedStyle, selectedOrientation, showFavoritesOnly, sortOrder, favorites]);
+
+  // Reset pagination when search or filters change
+  useEffect(() => {
+    setVisibleCount(24);
+  }, [filter, searchQuery, selectedStyle, selectedOrientation, showFavoritesOnly, sortOrder]);
+
+  // Progressive template windowing: only render visible batch
+  const visibleTemplates = useMemo(() => {
+    return filtered.slice(0, visibleCount);
+  }, [filtered, visibleCount]);
+
+  // Infinite scroll sentinel observer for seamless discovery
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount(prev => Math.min(prev + 24, filtered.length));
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [filtered.length, visibleCount]);
 
   const cats = ['All', 'Presentation', 'Resume', 'Business', 'Invitation', 'Posters', 'Flyers', 'Reports'];
   const catCounts = cats.map(c => {
@@ -1059,7 +1098,7 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
                 </button>
               </div>
             ) : (
-              filtered.map((t, i) => {
+              visibleTemplates.map((t, i) => {
                 const numSlides = Array.isArray(t.slides) && t.slides.length > 0 ? t.slides.length : 1;
                 const canvasW = t.canvasWidth || (t.size ? parseInt(t.size.split(/×|x/)[0], 10) : 0) || (t.category === 'Presentation' ? 1920 : t.category === 'Resume' || t.category === 'Reports' ? 1200 : t.category === 'Posters' ? 1080 : 1080);
                 const canvasH = t.canvasHeight || (t.size ? parseInt(t.size.split(/×|x/)[1], 10) : 0) || (t.category === 'Presentation' ? 1080 : t.category === 'Resume' || t.category === 'Reports' ? 1697 : t.category === 'Posters' ? 1528 : 1080);
@@ -1176,6 +1215,19 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
                   </div>
                 );
               })
+            )}
+            {visibleCount < filtered.length && (
+              <div ref={sentinelRef} className="col-span-full py-8 flex flex-col items-center justify-center gap-3">
+                <button
+                  onClick={() => setVisibleCount(prev => Math.min(prev + 24, filtered.length))}
+                  className="px-6 py-2.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/35 text-xs font-semibold cursor-pointer transition-all duration-200 shadow-lg hover:shadow-purple-500/10"
+                >
+                  Load More Templates ({filtered.length - visibleCount} remaining)
+                </button>
+                <span className="text-[11px] text-white/40">
+                  Showing {Math.min(visibleCount, filtered.length)} of {filtered.length} templates
+                </span>
+              </div>
             )}
           </div>
         </div>

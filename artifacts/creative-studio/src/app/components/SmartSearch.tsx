@@ -6,7 +6,7 @@ import {
   Globe, ExternalLink, HelpCircle
 } from 'lucide-react';
 import { FadeIn } from './FadeIn';
-import { templatesWithSlides } from './DesignStudio';
+import { loadAllCanonicalTemplates } from '../lib/templateRegistry';
 
 const popular = [
   { text: 'Instagram post templates', cat: 'Social' },
@@ -157,12 +157,13 @@ export function SmartSearch({ onNavigate, onOpenTemplate, query: queryProp, setQ
 
   const hits = query.trim() ? searchResults : [];
 
-  const handleResultClick = (item: any) => {
+  const handleResultClick = async (item: any) => {
     if (item.type === 'Template') {
       const match = item.id.match(/template-(\d+)/);
       if (match) {
         const templateId = parseInt(match[1]);
-        const fullT = templatesWithSlides.find((t: any) => t.id === templateId) as any;
+        const allT = await loadAllCanonicalTemplates();
+        const fullT = allT.find((t: any) => t.id === templateId) as any;
         if (fullT && onOpenTemplate) {
           const cloneId = 'design_' + Date.now();
           onOpenTemplate({

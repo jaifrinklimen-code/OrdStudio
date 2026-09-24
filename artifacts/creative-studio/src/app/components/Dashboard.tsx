@@ -7,14 +7,14 @@ import {
 } from "lucide-react";
 import { TemplateMiniRenderer } from "./TemplateMiniRenderer";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
-import { templatesWithSlides } from "./DesignStudio";
-import { secureFetch } from "../../lib/secureFetch";
 import { supabase } from "../../lib/supabase";
 import {
   normalizeCanonicalTemplate,
   curateDiverseRail,
-  CanonicalTemplate
+  CanonicalTemplate,
+  loadAllCanonicalTemplates
 } from "../lib/templateRegistry";
+import { fetchCachedTemplates, fetchCachedProjects } from "../lib/templateApiClient";
 
 interface DashboardProps {
   onNavigate: (tab: string) => void;
@@ -159,11 +159,19 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
     };
   }, []);
 
-  // Fetch API templates (merges with structured local templates for 100% real previews)
+  const [canonicalTemplates, setCanonicalTemplates] = useState<CanonicalTemplate[]>([]);
+
+  // Fetch templates & saved projects with caching
   useEffect(() => {
     let mounted = true;
-    secureFetch('/api/templates')
-      .then(res => res.json())
+
+    loadAllCanonicalTemplates().then(templates => {
+      if (mounted && Array.isArray(templates) && templates.length > 0) {
+        setCanonicalTemplates(templates);
+      }
+    }).catch(() => {});
+
+    fetchCachedTemplates()
       .then(data => {
         if (mounted && Array.isArray(data) && data.length > 0) {
           setApiTemplates(data);
@@ -172,54 +180,50 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
       .catch(() => {});
 
     // Refresh saved projects from API if user is authenticated
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user;
       if (!mounted || !user) return;
-      secureFetch('/api/projects')
-        .then(res => res.json())
-        .then(projects => {
-          if (mounted && Array.isArray(projects) && projects.length > 0) {
-            // Strictly require project to match this authenticated user's ID
-            const userProjects = projects.filter((p: any) => p && p.user_id && String(p.user_id) === String(user.id));
-            if (userProjects.length > 0) {
-              setSavedProjects(prev => {
-                const normalizedBack = userProjects.map(p => ({
-                  ...p,
-                  slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
-                  elements: p.elements || (Array.isArray(p.slides?.[0]) ? p.slides[0] : (p.pages?.[0] || [])),
-                  canvasWidth: p.canvasWidth || p.dimensions?.width,
-                  canvasHeight: p.canvasHeight || p.dimensions?.height,
-                  thumbnailUrl: p.thumbnailUrl || p.thumbnail,
-                  updatedAt: p.updatedAt || new Date().toISOString(),
-                  isSavedProject: true
-                }));
+      fetchCachedProjects(user.id)
+        .then(userProjects => {
+          if (mounted && Array.isArray(userProjects) && userProjects.length > 0) {
+            setSavedProjects(prev => {
+              const normalizedBack = userProjects.map(p => ({
+                ...p,
+                slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
+                elements: p.elements || (Array.isArray(p.slides?.[0]) ? p.slides[0] : (p.pages?.[0] || [])),
+                canvasWidth: p.canvasWidth || p.dimensions?.width,
+                canvasHeight: p.canvasHeight || p.dimensions?.height,
+                thumbnailUrl: p.thumbnailUrl || p.thumbnail,
+                updatedAt: p.updatedAt || new Date().toISOString(),
+                isSavedProject: true
+              }));
 
-                const map = new Map<string, any>();
-                for (const item of [...prev, ...normalizedBack]) {
-                  const key = String(item.id || item.name);
-                  if (!map.has(key)) {
+              const map = new Map<string, any>();
+              for (const item of [...prev, ...normalizedBack]) {
+                const key = String(item.id || item.name);
+                if (!map.has(key)) {
+                  map.set(key, item);
+                } else {
+                  const existing = map.get(key);
+                  const itemTime = new Date(item.updatedAt || 0).getTime();
+                  const existingTime = new Date(existing.updatedAt || 0).getTime();
+                  if (itemTime >= existingTime) {
                     map.set(key, item);
-                  } else {
-                    const existing = map.get(key);
-                    const itemTime = new Date(item.updatedAt || 0).getTime();
-                    const existingTime = new Date(existing.updatedAt || 0).getTime();
-                    if (itemTime >= existingTime) {
-                      map.set(key, item);
-                    }
                   }
                 }
-                const mergedList = Array.from(map.values())
-                  .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
-                  .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
-                  .slice(0, 10);
+              }
+              const mergedList = Array.from(map.values())
+                .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
+                .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
+                .slice(0, 10);
 
-                try {
-                  const storageKey = `ds_recent_projects_${user.id}`;
-                  localStorage.setItem(storageKey, JSON.stringify(mergedList));
-                } catch {}
+              try {
+                const storageKey = `ds_recent_projects_${user.id}`;
+                localStorage.setItem(storageKey, JSON.stringify(mergedList));
+              } catch {}
 
-                return mergedList;
-              });
-            }
+              return mergedList;
+            });
           }
         })
         .catch(() => {});
@@ -231,8 +235,8 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
   // All combined templates normalized through Canonical Single Source of Truth
   const allTemplates = useMemo(() => {
     const combined = apiTemplates.length > 0
-      ? [...apiTemplates, ...templatesWithSlides]
-      : templatesWithSlides;
+      ? [...apiTemplates, ...canonicalTemplates]
+      : canonicalTemplates;
     const seen = new Set();
     const result: CanonicalTemplate[] = [];
     for (const raw of combined) {
@@ -245,7 +249,7 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
       } catch {}
     }
     return result;
-  }, [apiTemplates]);
+  }, [apiTemplates, canonicalTemplates]);
 
   // Toggle favorite
   const toggleFavorite = (id: string | number) => {

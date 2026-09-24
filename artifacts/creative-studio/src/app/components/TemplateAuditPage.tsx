@@ -2,9 +2,17 @@ import React from 'react';
 import { ArrowLeft, ShieldCheck, Cpu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { CANONICAL_FALLBACK_TEMPLATES } from '../lib/canonicalTemplates';
+import { loadAllCanonicalTemplates } from '../lib/templateRegistry';
 
 export function TemplateAuditPage() {
+  const [templateCount, setTemplateCount] = React.useState(300);
+
+  React.useEffect(() => {
+    loadAllCanonicalTemplates().then(t => {
+      if (t && t.length) setTemplateCount(t.length);
+    }).catch(() => {});
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#090d16] text-white flex flex-col">
       <div className="h-14 border-b border-white/10 bg-[#111827]/80 backdrop-blur-md px-6 flex items-center justify-between z-10">
@@ -23,7 +31,7 @@ export function TemplateAuditPage() {
         </div>
         <div className="flex items-center gap-2 text-[11px] text-white/50 font-mono">
           <Cpu size={13} className="text-emerald-400" />
-          <span>Single Source of Truth: canonicalTemplates.ts ({CANONICAL_FALLBACK_TEMPLATES.length} templates)</span>
+          <span>Single Source of Truth: canonicalTemplates.ts ({templateCount} templates)</span>
         </div>
       </div>
       <div className="flex-1 w-full bg-[#090d16]">

@@ -1,5 +1,32 @@
 import { supabase } from './supabase';
 
+let cachedAuthToken = '';
+let tokenCachedAt = 0;
+const TOKEN_CACHE_TTL = 5000; // 5 seconds
+
+// Subscribe to auth changes to update cached token immediately
+try {
+  supabase.auth.onAuthStateChange((_event, session) => {
+    cachedAuthToken = session?.access_token || '';
+    tokenCachedAt = Date.now();
+  });
+} catch {}
+
+async function getCachedAuthToken(): Promise<string> {
+  const now = Date.now();
+  if (cachedAuthToken && (now - tokenCachedAt < TOKEN_CACHE_TTL)) {
+    return cachedAuthToken;
+  }
+  try {
+    const { data } = await supabase.auth.getSession();
+    cachedAuthToken = data?.session?.access_token || '';
+    tokenCachedAt = now;
+    return cachedAuthToken;
+  } catch {
+    return '';
+  }
+}
+
 /**
  * Secure fetch wrapper that automatically includes:
  * - X-Requested-With header (CSRF protection)
@@ -13,13 +40,7 @@ export async function secureFetch(
   options: RequestInit = {}
 ): Promise<Response> {
   // Get the current Supabase session token
-  let authToken = '';
-  try {
-    const { data } = await supabase.auth.getSession();
-    authToken = data?.session?.access_token || '';
-  } catch {
-    // No session available — proceed without auth
-  }
+  const authToken = await getCachedAuthToken();
 
   const headers = new Headers(options.headers || {});
 

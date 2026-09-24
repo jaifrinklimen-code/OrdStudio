@@ -1192,7 +1192,12 @@ const deleteSlide = () => {
     }
   }, [elements, selected, cW, cH, bgColor, bgGradient, zoom, templateName, activeSlideIdx]);
 
-  // Preload fonts & assets and re-render canvas
+  // Preload fonts & assets and re-render canvas only when font families, weights or image assets change
+  const fontAndAssetKey = useMemo(() => {
+    if (!elements || elements.length === 0) return '';
+    return elements.map(el => `${el.id}:${el.fontFamily || ''}:${el.fontWeight || ''}:${el.src || ''}`).join('|');
+  }, [elements]);
+
   useEffect(() => {
     let active = true;
     if (elements && elements.length > 0) {
@@ -1204,7 +1209,7 @@ const deleteSlide = () => {
       });
     }
     return () => { active = false; };
-  }, [elements, activeSlideIdx, templateName, renderCanvas]);
+  }, [fontAndAssetKey, activeSlideIdx, templateName, renderCanvas]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 

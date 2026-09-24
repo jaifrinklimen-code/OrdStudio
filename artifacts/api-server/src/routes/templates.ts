@@ -41,10 +41,10 @@ router.get("/templates", async (req, res) => {
     if (search) {
       merged = merged.filter(t => {
         const str = `${t.name || ''} ${t.title || ''} ${t.category || ''} ${t.subcategory || ''} ${t.description || ''} ${(t.tags || []).join(' ')}`.toLowerCase();
-        return str.includes(search);
       });
     }
 
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json(merged);
   } catch (error: any) {
     console.error("Failed to fetch templates:", error);

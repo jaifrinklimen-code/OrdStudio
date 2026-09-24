@@ -359,6 +359,12 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const assetToDelete = assets.find(a => a.id === id);
+    if (assetToDelete?.previewUrl && assetToDelete.previewUrl.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(assetToDelete.previewUrl);
+      } catch {}
+    }
     setAssets(prev => prev.filter(a => a.id !== id));
     if (selectedId === id) {
       setSelectedId(null);

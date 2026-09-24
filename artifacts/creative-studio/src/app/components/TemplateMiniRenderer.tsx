@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { resolveElementImageSrc } from '../lib/templateRegistry';
 
 
@@ -6,6 +6,8 @@ interface TemplateMiniRendererProps {
   template: any;
   className?: string;
 }
+
+const gradientCache = new Map<string, any>();
 
 /**
  * Parses a CSS linear-gradient string into SVG-compatible gradient stops.
@@ -19,6 +21,10 @@ function parseCSSGradient(value: string): {
   if (!value || typeof value !== 'string') return null;
   const trimmed = value.trim();
   if (!trimmed.startsWith('linear-gradient(')) return null;
+
+  if (gradientCache.has(trimmed)) {
+    return gradientCache.get(trimmed);
+  }
 
   // Extract content between parentheses
   const inner = trimmed.slice('linear-gradient('.length, -1).trim();
@@ -118,7 +124,9 @@ function parseCSSGradient(value: string): {
   const hash = value.split('').reduce((acc, ch) => ((acc << 5) - acc + ch.charCodeAt(0)) | 0, 0);
   const id = `grad-${Math.abs(hash).toString(36)}`;
 
-  return { id, x1, y1, x2, y2, stops };
+  const parsed = { id, x1, y1, x2, y2, stops };
+  gradientCache.set(trimmed, parsed);
+  return parsed;
 }
 
 /**
@@ -275,25 +283,58 @@ export const TemplateMiniRenderer = React.memo(function TemplateMiniRenderer({ t
     return bgGradient || '#0f172a';
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || isVisible) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry && (entry.isIntersecting || entry.intersectionRatio > 0)) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px 0px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isVisible]);
+
   return (
-    <div className={`relative w-full h-full flex items-center justify-center select-none ${className}`}>
+    <div ref={containerRef} className={`relative w-full h-full flex items-center justify-center select-none ${className}`}>
       <div
         className="relative max-w-full max-h-full rounded overflow-hidden flex items-center justify-center bg-[#07080c] shadow-md"
         style={{
           aspectRatio: `${canvasW} / ${canvasH}`,
           width: isLandscape ? '100%' : 'auto',
-          height: !isLandscape ? '100%' : 'auto'
+          height: !isLandscape ? '100%' : 'auto',
+          background: isCSSGradient(bgGradient) ? bgGradient : (bgGradient || '#0f172a')
         }}
       >
-        {/* Fallback image if template is uploaded static document with no vector elements */}
-        {!hasElements && (template?.thumbnailUrl || template?.fileUrl) && (
-          <img
-            src={template.thumbnailUrl || template.fileUrl}
-            alt={template.name || 'Template preview'}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        )}
+        {!isVisible ? (
+          <div className="w-full h-full bg-white/[0.02] pointer-events-none" />
+        ) : (
+          <>
+            {/* Fallback image if template is uploaded static document with no vector elements */}
+            {!hasElements && (template?.thumbnailUrl || template?.fileUrl) && (
+              <img
+                src={template.thumbnailUrl || template.fileUrl}
+                alt={template.name || 'Template preview'}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            )}
 
         {/* Real Canonical Vector & Bitmap SVG Rendering */}
         {hasElements && (
@@ -606,6 +647,8 @@ export const TemplateMiniRenderer = React.memo(function TemplateMiniRenderer({ t
               }
             })}
           </svg>
+        )}
+          </>
         )}
       </div>
     </div>
