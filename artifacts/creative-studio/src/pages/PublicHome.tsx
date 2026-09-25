@@ -108,10 +108,10 @@ export default function PublicHome() {
                   OrdStudio combines conversational AI models with an infinite vector editing canvas. Instantly build slide decks, design stickers, write copywriting, and export editable files.
                 </p>
                 
-                <div className="flex flex-wrap gap-4 pt-2">
+                <div className="hero-btn-container flex flex-col sm:flex-row flex-wrap gap-4 pt-2">
                   <Link
                     to="/signup"
-                    className="btn-3d px-8 py-4 rounded-xl text-sm font-bold hover:shadow-[0_8px_30px_rgba(124,58,237,0.4)]"
+                    className="hero-btn-primary btn-3d px-8 py-4 rounded-xl text-sm font-bold hover:shadow-[0_8px_30px_rgba(124,58,237,0.4)]"
                     style={{ fontFamily: 'DM Sans, sans-serif' }}
                   >
                     Start Designing Free
@@ -119,7 +119,7 @@ export default function PublicHome() {
                   </Link>
                   <a
                     href="#features"
-                    className="inline-flex items-center justify-center gap-2 border border-white/10 text-white/80 font-semibold px-8 py-4 rounded-xl hover:bg-white/5 hover:text-white transition-all duration-200 text-sm"
+                    className="hero-btn-secondary inline-flex items-center justify-center gap-2 border border-white/10 text-white/80 font-semibold px-8 py-4 rounded-xl hover:bg-white/5 hover:text-white transition-all duration-200 text-sm"
                     style={{ fontFamily: 'DM Sans, sans-serif' }}
                   >
                     Explore Features
@@ -139,9 +139,9 @@ export default function PublicHome() {
               </div>
               
               {/* Hero Right Column */}
-              <div className="lg:col-span-7 relative mt-12 lg:mt-0 z-20 flex justify-end items-center lg:items-start">
+              <div className="hero-right-col lg:col-span-7 relative mt-12 lg:mt-0 z-20 flex justify-end items-center lg:items-start">
                 
-                <div className="relative w-[125%] sm:w-[135%] max-w-[850px] right-[-15%] sm:right-[-20%] lg:right-[-25%] xl:right-[-15%] z-10 transform hover:scale-[1.02] transition-transform duration-700 lg:-mt-8 xl:-mt-12">
+                <div className="hero-img-wrap relative w-[125%] sm:w-[135%] max-w-[850px] right-[-15%] sm:right-[-20%] lg:right-[-25%] xl:right-[-15%] z-10 transform hover:scale-[1.02] transition-transform duration-700 lg:-mt-8 xl:-mt-12">
                   {/* Subtle fade mask so the image's dark purple edges blend perfectly with the #09090c page background */}
                   <picture>
                     <source media="(max-width: 640px)" srcSet="/design-studio-hero-mobile.avif" type="image/avif" />
