@@ -104,7 +104,7 @@ export default function PublicHome() {
                   <span className="bg-gradient-to-r from-cyan-400 to-teal-300 bg-clip-text text-transparent block mt-1">AI</span>
                 </h1>
                 
-                <p className="hero-p text-base sm:text-lg text-white/55 leading-relaxed max-w-xl">
+                <p className="hero-p min-h-[5.25rem] sm:min-h-[4.5rem] text-base sm:text-lg text-white/55 leading-relaxed max-w-xl">
                   OrdStudio combines conversational AI models with an infinite vector editing canvas. Instantly build slide decks, design stickers, write copywriting, and export editable files.
                 </p>
                 
