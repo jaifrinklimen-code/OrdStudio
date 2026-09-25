@@ -154,11 +154,35 @@ export default function App() {
     };
 
     if (isPublicRoute) {
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(() => initAuth(), { timeout: 2000 });
-      } else {
-        setTimeout(initAuth, 500);
-      }
+      let triggered = false;
+      const triggerAuth = () => {
+        if (triggered) return;
+        triggered = true;
+        cleanupListeners();
+        initAuth();
+      };
+
+      const events = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
+      const cleanupListeners = () => {
+        events.forEach(e => window.removeEventListener(e, triggerAuth));
+      };
+      events.forEach(e => window.addEventListener(e, triggerAuth, { once: true, passive: true }));
+
+      // Fallback timer: only trigger long after initial paint (5 seconds)
+      const timer = setTimeout(() => {
+        if ('requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(triggerAuth, { timeout: 3000 });
+        } else {
+          triggerAuth();
+        }
+      }, 5000);
+
+      return () => {
+        mounted = false;
+        clearTimeout(timer);
+        cleanupListeners();
+        if (subscription) subscription.unsubscribe();
+      };
     } else {
       initAuth();
     }

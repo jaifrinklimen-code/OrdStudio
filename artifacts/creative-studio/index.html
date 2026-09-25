@@ -36,14 +36,56 @@
     <link rel="preload" as="image" href="/design-studio-hero-mobile.webp" type="image/webp" fetchpriority="high" media="(max-width: 640px)" />
     <link rel="preload" as="image" href="/design-studio-hero.webp" type="image/webp" fetchpriority="high" media="(min-width: 641px)" />
 
-    <!-- ─── Fonts Preconnect & Optimized Core UI Font Suite ─────── -->
+    <!-- ─── Fonts Preconnect & Preloads ─────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700&family=Syne:wght@700;800&family=DM+Sans:wght@500;700&display=swap" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Plus+Jakarta+Sans:wght@700&family=Syne:wght@700;800&family=DM+Sans:wght@500;700&display=swap" /></noscript>
+    <link rel="preload" href="https://fonts.gstatic.com/s/syne/v24/8vIS7w4qzmVxsWxjBZRjr0FKM_3fvg6jTY_vCk5Y.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700&family=Inter:wght@400;600&family=Syne:wght@700&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700&family=Inter:wght@400;600&family=Syne:wght@700&display=swap" /></noscript>
 
     <!-- ─── Critical Above-the-Fold Inline Styles ───────────── -->
     <style>
+      @font-face {
+        font-family: 'Syne';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/syne/v24/8vIS7w4qzmVxsWxjBZRjr0FKM_3fvg6jTY_vCk5Y.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'DM Sans';
+        font-style: normal;
+        font-weight: 500;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K6z9mXg.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'DM Sans';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K6z9mXg.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+
       *, ::before, ::after { box-sizing: border-box; }
       html, body {
         background-color: #09090c;
@@ -207,6 +249,19 @@
       @media (min-width: 640px) {
         .hero-p { font-size: 1.125rem; }
       }
+      .hero-trust {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding-top: 1rem;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.3);
+      }
+      .hero-trust-item {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+      }
     </style>
 
     <!-- ─── AEO (Answer Engine Optimization) Schema Markup ───── -->
@@ -281,7 +336,7 @@
     </script>
   </head>
   <body>
-    <div id="root"><div class="depth-orb depth-orb-violet"></div><div class="depth-orb depth-orb-cyan"></div><div class="pub-layout"><header class="pub-header" role="banner"><div class="pub-header-inner"><a href="/" class="pub-logo" aria-label="OrdStudio Home"><div class="pub-logo-icon"><svg width="26" height="26" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hdr-g1-s" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00f2fe" /><stop offset="100%" stopColor="#4facfe" /></linearGradient><linearGradient id="hdr-g2-s" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#f355da" /><stop offset="100%" stopColor="#7000ff" /></linearGradient><linearGradient id="hdr-g3-s" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#ff0844" /><stop offset="100%" stopColor="#ffb199" /></linearGradient></defs><path d="M 50 20 C 33.4 20, 20 33.4, 20 50 C 20 58.3, 23.4 65.8, 28.8 71.2" stroke="url(#hdr-g1-s)" strokeWidth="9.5" strokeLinecap="round" /><path d="M 28.8 71.2 C 34.2 76.6, 41.7 80, 50 80 C 66.6 80, 80 66.6, 80 50 C 80 46.5, 79.4 43.1, 78.2 40.0" stroke="url(#hdr-g2-s)" strokeWidth="9.5" strokeLinecap="round" /><path d="M 78.2 40.0 C 74.8 31.2, 66.6 24.8, 56.8 21.2" stroke="url(#hdr-g3-s)" strokeWidth="9.5" strokeLinecap="round" /><path d="M 50 40 L 53 47 L 60 50 L 53 53 L 50 60 L 47 53 L 40 50 L 47 47 Z" fill="url(#hdr-g3-s)" /></svg></div><span class="pub-logo-text">OrdStudio</span></a><div class="pub-header-actions"><a href="/auth" class="pub-nav-link">Sign In</a><a href="/signup" class="pub-header-cta">Get Started Free</a></div></div></header><main id="main-content" class="pub-main" role="main"><section class="hero-section"><div class="hero-container"><div class="hero-grid"><div class="hero-left"><div style="font-size: 0.75rem; font-family: monospace; letter-spacing: 0.1em; color: rgba(216,180,254,0.8); text-transform: uppercase; margin-bottom: 1.5rem;">IDEAS → VISUALS → IMPACT</div><h1 class="hero-h1"><span style="color: #ffffff; display: block;">Create</span><span style="color: #ffffff; display: block;">Stunning</span><span style="display: block; margin-top: 0.25rem;"><span style="background: linear-gradient(to right, #c084fc, #818cf8); -webkit-background-clip: text; background-clip: text; color: transparent;">3D Visuals</span> <span style="color: #ffffff;">with</span></span><span style="background: linear-gradient(to right, #22d3ee, #5eead4); -webkit-background-clip: text; background-clip: text; color: transparent; display: block; margin-top: 0.25rem;">AI</span></h1><p class="hero-p">OrdStudio combines conversational AI models with an infinite vector editing canvas. Instantly build slide decks, design stickers, write copywriting, and export editable files.</p><div style="display: flex; flex-wrap: wrap; gap: 1rem; padding-top: 0.5rem;"><a href="/signup" class="btn-3d" style="padding: 1rem 2rem; border-radius: 0.75rem; font-size: 0.875rem; font-family: 'DM Sans', sans-serif;">Start Designing Free</a><a href="#features" style="display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-weight: 600; padding: 1rem 2rem; border-radius: 0.75rem; font-size: 0.875rem; font-family: 'DM Sans', sans-serif; text-decoration: none;">Explore Features</a></div></div></div></div></section></main></div></div>
+    <div id="root"><div class="depth-orb depth-orb-violet"></div><div class="depth-orb depth-orb-cyan"></div><div class="pub-layout"><header class="pub-header" role="banner"><div class="pub-header-inner"><a href="/" class="pub-logo" aria-label="OrdStudio Home"><div class="pub-logo-icon"><svg width="26" height="26" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hdr-g1-s" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#00f2fe" /><stop offset="100%" stopColor="#4facfe" /></linearGradient><linearGradient id="hdr-g2-s" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#f355da" /><stop offset="100%" stopColor="#7000ff" /></linearGradient><linearGradient id="hdr-g3-s" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#ff0844" /><stop offset="100%" stopColor="#ffb199" /></linearGradient></defs><path d="M 50 20 C 33.4 20, 20 33.4, 20 50 C 20 58.3, 23.4 65.8, 28.8 71.2" stroke="url(#hdr-g1-s)" strokeWidth="9.5" strokeLinecap="round" /><path d="M 28.8 71.2 C 34.2 76.6, 41.7 80, 50 80 C 66.6 80, 80 66.6, 80 50 C 80 46.5, 79.4 43.1, 78.2 40.0" stroke="url(#hdr-g2-s)" strokeWidth="9.5" strokeLinecap="round" /><path d="M 78.2 40.0 C 74.8 31.2, 66.6 24.8, 56.8 21.2" stroke="url(#hdr-g3-s)" strokeWidth="9.5" strokeLinecap="round" /><path d="M 50 40 L 53 47 L 60 50 L 53 53 L 50 60 L 47 53 L 40 50 L 47 47 Z" fill="url(#hdr-g3-s)" /></svg></div><span class="pub-logo-text">OrdStudio</span></a><div class="pub-header-actions"><a href="/auth" class="pub-nav-link">Sign In</a><a href="/signup" class="pub-header-cta">Get Started Free</a></div><button class="pub-mobile-toggle" aria-label="Open menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button></div></header><main id="main-content" class="pub-main" role="main"><section class="hero-section"><div class="hero-container"><div class="hero-grid"><div class="hero-left"><div style="font-size: 0.75rem; font-family: monospace; letter-spacing: 0.1em; color: rgba(216,180,254,0.8); text-transform: uppercase; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">IDEAS <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(192,132,252,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg> VISUALS <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(192,132,252,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg> IMPACT</div><h1 class="hero-h1"><span style="color: #ffffff; display: block;">Create</span><span style="color: #ffffff; display: block;">Stunning</span><span style="display: block; margin-top: 0.25rem;"><span style="background: linear-gradient(to right, #c084fc, #818cf8); -webkit-background-clip: text; background-clip: text; color: transparent;">3D Visuals</span> <span style="color: #ffffff;">with</span></span><span style="background: linear-gradient(to right, #22d3ee, #5eead4); -webkit-background-clip: text; background-clip: text; color: transparent; display: block; margin-top: 0.25rem;">AI</span></h1><p class="hero-p">OrdStudio combines conversational AI models with an infinite vector editing canvas. Instantly build slide decks, design stickers, write copywriting, and export editable files.</p><div style="display: flex; flex-wrap: wrap; gap: 1rem; padding-top: 0.5rem;"><a href="/signup" class="btn-3d" style="padding: 1rem 2rem; border-radius: 0.75rem; font-size: 0.875rem; font-family: 'DM Sans', sans-serif;">Start Designing Free <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a><a href="#features" style="display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-weight: 600; padding: 1rem 2rem; border-radius: 0.75rem; font-size: 0.875rem; font-family: 'DM Sans', sans-serif; text-decoration: none;">Explore Features</a></div><div class="hero-trust"><div class="hero-trust-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>No credit card required</span></div><div class="hero-trust-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>Commercial-use rights</span></div></div></div><div class="hero-right"><div style="position:relative;width:100%;max-width:850px;"><picture><source media="(max-width: 640px)" srcset="/design-studio-hero-mobile.webp" type="image/webp"><source srcset="/design-studio-hero.webp" type="image/webp"><img src="/design-studio-hero.webp" alt="OrdStudio Design Studio Showcase" width="1024" height="698" fetchpriority="high" decoding="async" style="width:100%;height:auto;object-fit:contain;"></picture></div></div></div></div></section></main></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

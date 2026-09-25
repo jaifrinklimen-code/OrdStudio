@@ -29,8 +29,6 @@ interface DemoItem {
   };
 }
 
-import { secureFetch } from '@/lib/secureFetch';
-
 export default function PublicHome() {
   const [stats, setStats] = useState({ templatesCount: 50, projectsCount: 0, stickersCount: 12, status: 'Operational' });
   const [showToast, setShowToast] = useState<boolean>(false);
@@ -55,11 +53,15 @@ export default function PublicHome() {
         .catch(() => {});
     };
 
-    if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(fetchStats, { timeout: 3000 });
-    } else {
-      setTimeout(fetchStats, 1000);
-    }
+    const timer = setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(fetchStats, { timeout: 4000 });
+      } else {
+        fetchStats();
+      }
+    }, 4000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const triggerToast = (msg: string) => {
@@ -83,17 +85,17 @@ export default function PublicHome() {
       <div className="relative overflow-hidden bg-[#09090c] text-white">
         
         {/* HERO SECTION */}
-        <section className="relative pt-16 pb-12 sm:pt-20 sm:pb-16 lg:pt-24 lg:pb-16 border-b border-white/[0.03]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        <section className="hero-section relative pt-16 pb-12 sm:pt-20 sm:pb-16 lg:pt-24 lg:pb-16 border-b border-white/[0.03]">
+          <div className="hero-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="hero-grid grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
               
               {/* Hero Left Column */}
-              <div className="lg:col-span-5 text-left space-y-6">
+              <div className="hero-left lg:col-span-5 text-left space-y-6">
                 <div className="text-xs font-mono tracking-widest text-purple-300/80 uppercase flex items-center gap-2">
                   IDEAS <ArrowRight size={10} className="text-purple-400/50" /> VISUALS <ArrowRight size={10} className="text-purple-400/50" /> IMPACT
                 </div>
                 
-                <h1 className="text-5xl sm:text-6xl lg:text-[4.5rem] font-bold tracking-tight leading-[1.05]" style={{ fontFamily: 'Syne, sans-serif' }}>
+                <h1 className="hero-h1 text-5xl sm:text-6xl lg:text-[4.5rem] font-bold tracking-tight leading-[1.05]" style={{ fontFamily: 'Syne, sans-serif' }}>
                   <span className="text-white block">Create</span>
                   <span className="text-white block">Stunning</span>
                   <span className="block mt-1">
@@ -102,7 +104,7 @@ export default function PublicHome() {
                   <span className="bg-gradient-to-r from-cyan-400 to-teal-300 bg-clip-text text-transparent block mt-1">AI</span>
                 </h1>
                 
-                <p className="text-base sm:text-lg text-white/55 leading-relaxed max-w-xl">
+                <p className="hero-p text-base sm:text-lg text-white/55 leading-relaxed max-w-xl">
                   OrdStudio combines conversational AI models with an infinite vector editing canvas. Instantly build slide decks, design stickers, write copywriting, and export editable files.
                 </p>
                 

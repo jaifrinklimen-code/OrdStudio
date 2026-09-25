@@ -45,11 +45,34 @@ export function Header() {
     };
 
     if (location.pathname === '/' || location.pathname.startsWith('/blog') || location.pathname.startsWith('/features')) {
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(() => checkAuth(), { timeout: 3000 });
-      } else {
-        setTimeout(checkAuth, 1000);
-      }
+      let triggered = false;
+      const triggerAuth = () => {
+        if (triggered) return;
+        triggered = true;
+        cleanupListeners();
+        checkAuth();
+      };
+
+      const events = ['pointerdown', 'keydown', 'scroll', 'touchstart'];
+      const cleanupListeners = () => {
+        events.forEach(e => window.removeEventListener(e, triggerAuth));
+      };
+      events.forEach(e => window.addEventListener(e, triggerAuth, { once: true, passive: true }));
+
+      const timer = setTimeout(() => {
+        if ('requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(triggerAuth, { timeout: 3000 });
+        } else {
+          triggerAuth();
+        }
+      }, 5000);
+
+      return () => {
+        active = false;
+        clearTimeout(timer);
+        cleanupListeners();
+        if (subscription) subscription.unsubscribe();
+      };
     } else {
       checkAuth();
     }
