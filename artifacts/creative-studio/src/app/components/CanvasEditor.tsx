@@ -14,6 +14,7 @@ import { renderCanonicalSlideToContext } from '../lib/renderEngine';
 import { loadTemplateFonts, FONT_REGISTRY } from '../lib/fontRegistry';
 import { preloadTemplateAssets } from '../lib/templateRegistry';
 import { VerticalCanvasNavigator } from './VerticalCanvasNavigator';
+import { normalizeCanonicalDesign } from '../lib/coordinateNormalizer';
 
 /* ── Types ──────────────────────────────────────────────────── */
 type ElementType = 'text' | 'rect' | 'circle' | 'line' | 'arrow' | 'star' | 'triangle' | 'image' | 'heart' | 'hexagon' | 'messageSquare';
@@ -458,25 +459,22 @@ export function CanvasEditor({
 
   const hasCanvasContent = Boolean((templateElements && templateElements.length > 0) || (templateSlides && templateSlides.length > 0));
 
-  /* Canonical template dimensions */
+  /* Canonical template dimensions and normalized element coordinates */
+  const normalizedDesign = useMemo(() => {
+    return normalizeCanonicalDesign({
+      canvasWidth: templateCanvasWidth,
+      canvasHeight: templateCanvasHeight,
+      size: templateSize || resolvedSize,
+      elements: templateElements,
+      slides: templateSlides,
+      name: templateName || resolvedName,
+      category: templateCategory
+    });
+  }, [templateCanvasWidth, templateCanvasHeight, templateSize, resolvedSize, templateElements, templateSlides, templateName, resolvedName, templateCategory]);
+
   const [cW, cH] = useMemo(() => {
-    if (templateCanvasWidth && templateCanvasHeight && templateCanvasWidth > 0 && templateCanvasHeight > 0) {
-      return [templateCanvasWidth, templateCanvasHeight];
-    }
-
-    // Check elements for background bounds or maximum element extents
-    const allEls = templateElements || (templateSlides && templateSlides[0]) || [];
-    if (allEls.length > 0) {
-      const bgEl = allEls.find((e: any) => (e.id && e.id.includes('bg')) || (e.type === 'rect' && e.x === 0 && e.y === 0 && e.width >= 300));
-      if (bgEl && bgEl.width && bgEl.height) {
-        return [bgEl.width, bgEl.height];
-      }
-    }
-
-    const parts = resolvedSize.replace(/x/gi, '×').split('×').map(Number);
-    let w = parts[0] || (isPresentation ? 1920 : 1080), h = parts[1] || (isPresentation ? 1080 : 1080);
-    return [w, h];
-  }, [templateCanvasWidth, templateCanvasHeight, resolvedSize, templateElements, templateSlides, isPresentation]);
+    return [normalizedDesign.canvasWidth, normalizedDesign.canvasHeight];
+  }, [normalizedDesign]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasWrapRef = useRef<HTMLDivElement>(null);
@@ -976,8 +974,15 @@ const deleteSlide = () => {
     let initialSlides: CanvasElement[][] = [];
     const isUploadedFileTemplate = Boolean(templateFileUrl && templateFileType);
 
-    if (templateSlides && templateSlides.length > 0) {
-      initialSlides = templateSlides.map((slide: any) => {
+    const sourceSlides = normalizedDesign.slides && normalizedDesign.slides.length > 0 && normalizedDesign.slides[0]?.length > 0
+      ? normalizedDesign.slides
+      : (templateSlides && templateSlides.length > 0 ? templateSlides : []);
+    const sourceElements = normalizedDesign.elements && normalizedDesign.elements.length > 0
+      ? normalizedDesign.elements
+      : templateElements;
+
+    if (sourceSlides && sourceSlides.length > 0) {
+      initialSlides = sourceSlides.map((slide: any) => {
         const els = Array.isArray(slide)
           ? slide
           : Array.isArray(slide?.elements)
@@ -987,11 +992,11 @@ const deleteSlide = () => {
       }).filter((s: CanvasElement[]) => s.length > 0);
     } 
     
-    if (initialSlides.length === 0 && templateElements && templateElements.length > 0) {
-      const flatEls = Array.isArray(templateElements)
-        ? templateElements
-        : Array.isArray((templateElements as any)?.elements)
-        ? (templateElements as any).elements
+    if (initialSlides.length === 0 && sourceElements && sourceElements.length > 0) {
+      const flatEls = Array.isArray(sourceElements)
+        ? sourceElements
+        : Array.isArray((sourceElements as any)?.elements)
+        ? (sourceElements as any).elements
         : [];
       if (flatEls.length > 0) {
         initialSlides = [
@@ -1080,7 +1085,7 @@ const deleteSlide = () => {
     if (bgEl && bgEl.fill) {
       setBgColor(bgEl.fill);/* Init template */
     }
-  }, [cW, cH, templateElements, templateSlides, templateFileUrl, templateFileType, templateFileName, resolvedName, isPresentation]);
+  }, [cW, cH, normalizedDesign, templateFileUrl, templateFileType, templateFileName, resolvedName, isPresentation]);
 
   /* Preload image assets so Unsplash photography renders immediately */
   useEffect(() => {

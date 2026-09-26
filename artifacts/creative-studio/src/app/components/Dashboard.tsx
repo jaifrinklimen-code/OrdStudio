@@ -112,9 +112,34 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed)) {
+            let hasMigration = false;
             const valid = parsed
               .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
+              .map((p: any) => {
+                const norm = normalizeCanonicalDesign(p);
+                if (norm.needsScale) {
+                  hasMigration = true;
+                  return {
+                    ...p,
+                    canvasWidth: norm.canvasWidth,
+                    canvasHeight: norm.canvasHeight,
+                    size: `${norm.canvasWidth}×${norm.canvasHeight}`,
+                    elements: norm.elements,
+                    slides: norm.slides,
+                    category: p.category || (norm.isLandscape ? 'Presentation' : 'Document'),
+                    type: p.type || (norm.isLandscape ? 'Presentation' : 'Document')
+                  };
+                }
+                return p;
+              })
               .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+
+            if (hasMigration) {
+              try {
+                localStorage.setItem(storageKey, JSON.stringify(valid));
+              } catch (e) {}
+            }
+
             setSavedProjects(valid);
             return;
           }
@@ -188,16 +213,29 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
         .then(userProjects => {
           if (mounted && Array.isArray(userProjects) && userProjects.length > 0) {
             setSavedProjects(prev => {
-              const normalizedBack = userProjects.map(p => ({
-                ...p,
-                slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
-                elements: p.elements || (Array.isArray(p.slides?.[0]) ? p.slides[0] : (p.pages?.[0] || [])),
-                canvasWidth: p.canvasWidth || p.dimensions?.width,
-                canvasHeight: p.canvasHeight || p.dimensions?.height,
-                thumbnailUrl: p.thumbnailUrl || p.thumbnail,
-                updatedAt: p.updatedAt || new Date().toISOString(),
-                isSavedProject: true
-              }));
+              const normalizedBack = userProjects.map(p => {
+                const norm = normalizeCanonicalDesign({
+                  ...p,
+                  slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
+                  elements: p.elements || (Array.isArray(p.slides?.[0]) ? p.slides[0] : (p.pages?.[0] || [])),
+                  canvasWidth: p.canvasWidth || p.dimensions?.width,
+                  canvasHeight: p.canvasHeight || p.dimensions?.height,
+                  size: p.size
+                });
+                return {
+                  ...p,
+                  slides: norm.slides,
+                  elements: norm.elements,
+                  canvasWidth: norm.canvasWidth,
+                  canvasHeight: norm.canvasHeight,
+                  size: `${norm.canvasWidth}×${norm.canvasHeight}`,
+                  category: p.category || (norm.isLandscape ? 'Presentation' : 'Document'),
+                  type: p.type || (norm.isLandscape ? 'Presentation' : 'Document'),
+                  thumbnailUrl: p.thumbnailUrl || p.thumbnail,
+                  updatedAt: p.updatedAt || new Date().toISOString(),
+                  isSavedProject: true
+                };
+              });
 
               const map = new Map<string, any>();
               for (const item of [...prev, ...normalizedBack]) {
