@@ -124,13 +124,19 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
                     canvasWidth: norm.canvasWidth,
                     canvasHeight: norm.canvasHeight,
                     size: `${norm.canvasWidth}×${norm.canvasHeight}`,
+                    coordinateVersion: 2,
+                    canonicalCoordinateVersion: 2,
                     elements: norm.elements,
                     slides: norm.slides,
                     category: p.category || (norm.isLandscape ? 'Presentation' : 'Document'),
                     type: p.type || (norm.isLandscape ? 'Presentation' : 'Document')
                   };
                 }
-                return p;
+                return {
+                  ...p,
+                  coordinateVersion: p.coordinateVersion || 2,
+                  canonicalCoordinateVersion: p.canonicalCoordinateVersion || 2
+                };
               })
               .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
 
@@ -229,6 +235,8 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
                   canvasWidth: norm.canvasWidth,
                   canvasHeight: norm.canvasHeight,
                   size: `${norm.canvasWidth}×${norm.canvasHeight}`,
+                  coordinateVersion: 2,
+                  canonicalCoordinateVersion: 2,
                   category: p.category || (norm.isLandscape ? 'Presentation' : 'Document'),
                   type: p.type || (norm.isLandscape ? 'Presentation' : 'Document'),
                   thumbnailUrl: p.thumbnailUrl || p.thumbnail,
@@ -376,6 +384,8 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
         size: `${norm.canvasWidth}×${norm.canvasHeight}`,
         canvasWidth: norm.canvasWidth,
         canvasHeight: norm.canvasHeight,
+        coordinateVersion: 2,
+        canonicalCoordinateVersion: 2,
         elements: norm.elements,
         slides: norm.slides,
         thumbnailUrl: proj.thumbnailUrl,

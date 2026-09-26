@@ -54,6 +54,8 @@ export interface GeneratedRedesignResult {
   size: string;
   canvasWidth: number;
   canvasHeight: number;
+  coordinateVersion?: number;
+  canonicalCoordinateVersion?: number;
   elements: any[];
   slides: any[][];
   fingerprint: {
@@ -728,6 +730,8 @@ export function generateContentAwareRedesign(
     size,
     canvasWidth: cW,
     canvasHeight: cH,
+    coordinateVersion: 2,
+    canonicalCoordinateVersion: 2,
     elements,
     slides: [elements],
     fingerprint: {

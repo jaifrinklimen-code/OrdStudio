@@ -802,6 +802,8 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
             size: tmpl?.size || (tmpl?.canvasWidth && tmpl?.canvasHeight ? `${tmpl?.canvasWidth}×${tmpl?.canvasHeight}` : '1920×1080'),
             canvasWidth: tmpl?.canvasWidth || 1920,
             canvasHeight: tmpl?.canvasHeight || 1080,
+            coordinateVersion: 2,
+            canonicalCoordinateVersion: 2,
             thumbnailUrl: thumbnailUrl || tmpl?.thumbnailUrl,
             elements: JSON.parse(JSON.stringify(elements)),
             slides: JSON.parse(JSON.stringify(slides)),

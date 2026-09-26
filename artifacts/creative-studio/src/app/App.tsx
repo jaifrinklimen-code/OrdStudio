@@ -321,6 +321,8 @@ export default function App() {
               size: customDesign.size || (customDesign.canvasWidth && customDesign.canvasHeight ? `${customDesign.canvasWidth}×${customDesign.canvasHeight}` : '1920×1080'),
               canvasWidth: customDesign.canvasWidth || 1920,
               canvasHeight: customDesign.canvasHeight || 1080,
+              coordinateVersion: 2,
+              canonicalCoordinateVersion: 2,
               elements: JSON.parse(JSON.stringify(elements)),
               slides: JSON.parse(JSON.stringify(slides)),
               thumbnailUrl: thumbnailUrl || customDesign.thumbnailUrl,
