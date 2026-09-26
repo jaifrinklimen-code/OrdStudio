@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { createProfessionalSlides } from "./presentationBuilder";
 import { loadAllCanonicalTemplates } from '../lib/templateRegistry';
 import { fetchCachedTemplates, fetchCachedProjects } from '../lib/templateApiClient';
+import { normalizeCanonicalDesign } from '../lib/coordinateNormalizer';
 
 const CUSTOM_TEMPLATES_STORAGE_KEY = 'ds_custom_templates';
 
@@ -160,9 +161,40 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed)) {
+            let hasMigration = false;
             const valid = parsed
               .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
+              .map((p: any) => {
+                const norm = normalizeCanonicalDesign(p);
+                if (norm.needsScale) {
+                  hasMigration = true;
+                  return {
+                    ...p,
+                    canvasWidth: norm.canvasWidth,
+                    canvasHeight: norm.canvasHeight,
+                    size: `${norm.canvasWidth}×${norm.canvasHeight}`,
+                    coordinateVersion: 2,
+                    canonicalCoordinateVersion: 2,
+                    elements: norm.elements,
+                    slides: norm.slides,
+                    category: p.category || (norm.isLandscape ? 'Presentation' : 'Document'),
+                    type: p.type || (norm.isLandscape ? 'Presentation' : 'Document')
+                  };
+                }
+                return {
+                  ...p,
+                  coordinateVersion: p.coordinateVersion || 2,
+                  canonicalCoordinateVersion: p.canonicalCoordinateVersion || 2
+                };
+              })
               .sort((a: any, b: any) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+
+            if (hasMigration) {
+              try {
+                localStorage.setItem(storageKey, JSON.stringify(valid));
+              } catch (e) {}
+            }
+
             setApiProjects(valid);
             return;
           }
@@ -927,18 +959,29 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
                   ? p.elements
                   : (projSlides[0] || []);
 
+                const norm = normalizeCanonicalDesign({
+                  ...p,
+                  elements: projElements,
+                  slides: projSlides,
+                  canvasWidth: p.canvasWidth,
+                  canvasHeight: p.canvasHeight,
+                  size: p.size
+                });
+
                 const savedDesignPayload = {
                   ...p,
                   id: p.id,
                   name: p.name || 'Untitled Design',
-                  category: p.type || p.category || 'Presentation',
-                  type: p.type || p.category || 'Presentation',
+                  category: p.type || p.category || (norm.isLandscape ? 'Presentation' : 'Document'),
+                  type: p.type || p.category || (norm.isLandscape ? 'Presentation' : 'Document'),
                   gradient: p.gradient || '#0b131e',
-                  size: p.size || (p.canvasWidth && p.canvasHeight ? `${p.canvasWidth}×${p.canvasHeight}` : '1920×1080'),
-                  canvasWidth: p.canvasWidth || (p.type === 'Presentation' || p.category === 'Presentation' ? 1920 : 1200),
-                  canvasHeight: p.canvasHeight || (p.type === 'Presentation' || p.category === 'Presentation' ? 1080 : 1697),
-                  elements: projElements,
-                  slides: projSlides,
+                  size: `${norm.canvasWidth}×${norm.canvasHeight}`,
+                  canvasWidth: norm.canvasWidth,
+                  canvasHeight: norm.canvasHeight,
+                  coordinateVersion: 2,
+                  canonicalCoordinateVersion: 2,
+                  elements: norm.elements,
+                  slides: norm.slides,
                   thumbnailUrl: p.thumbnailUrl,
                   isSavedProject: true
                 };
