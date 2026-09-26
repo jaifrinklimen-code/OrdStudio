@@ -570,6 +570,10 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
       let matchesCategory = false;
       if (filter === 'All') {
         matchesCategory = true;
+      } else if (f.includes('card') && (cat.includes('card') || name.includes('card') || tags.includes('card'))) {
+        matchesCategory = true;
+      } else if (f === 'business' && !cat.includes('card') && !name.includes('card') && (cat.includes('biz') || cat.includes('business') || name.includes('proposal') || name.includes('invoice') || name.includes('profile'))) {
+        matchesCategory = true;
       } else if (cat === f || (cat + 's') === f || cat === (f + 's')) {
         matchesCategory = true;
       } else if (f === 'flyers' && (cat.includes('flyer') || name.includes('flyer'))) {
@@ -577,8 +581,6 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
       } else if (f === 'reports' && (cat.includes('report') || name.includes('report'))) {
         matchesCategory = true;
       } else if (f === 'posters' && (cat.includes('poster') || name.includes('poster'))) {
-        matchesCategory = true;
-      } else if (f === 'business' && (cat.includes('biz') || cat.includes('business') || name.includes('proposal') || name.includes('invoice') || name.includes('profile'))) {
         matchesCategory = true;
       } else if (f === 'presentation' && (cat.includes('present') || cat.includes('deck') || cat.includes('pitch') || cat.includes('keynote'))) {
         matchesCategory = true;
@@ -664,13 +666,16 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
     return () => observer.disconnect();
   }, [filtered.length, visibleCount]);
 
-  const cats = ['All', 'Presentation', 'Resume', 'Business', 'Invitation', 'Posters', 'Flyers', 'Reports'];
+  const cats = ['All', 'Presentation', 'Business Cards', 'Resume', 'Business', 'Invitation', 'Posters', 'Flyers', 'Reports'];
   const catCounts = cats.map(c => {
     if (c === 'All') return { name: c, count: apiTemplates.length };
     const f = c.toLowerCase().trim();
     const count = apiTemplates.filter(t => {
       const cat = (t.category || '').toLowerCase().trim();
       const name = (t.name || '').toLowerCase();
+      const tags = Array.isArray(t.tags) ? t.tags.join(' ').toLowerCase() : '';
+      if (f.includes('card') && (cat.includes('card') || name.includes('card') || tags.includes('card'))) return true;
+      if (f === 'business' && (cat.includes('card') || name.includes('card'))) return false;
       if (cat === f || (cat + 's') === f || cat === (f + 's')) return true;
       if (f === 'flyers' && (cat.includes('flyer') || name.includes('flyer'))) return true;
       if (f === 'reports' && (cat.includes('report') || name.includes('report'))) return true;

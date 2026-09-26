@@ -5,6 +5,7 @@ import {
   Presentation, FileCode, ChevronDown, Loader2
 } from "lucide-react";
 import { exportToPptx, exportToPdf } from '../lib/exportServices';
+import { TemplateMiniRenderer } from './TemplateMiniRenderer';
 import {
   saveUserAsset,
   loadUserAssets,
@@ -12,6 +13,12 @@ import {
   getCurrentUserId,
   uploadToSupabaseStorageIfConfigured
 } from '../lib/assetStorage';
+import { 
+  classifyDocumentType, 
+  generateContentAwareRedesign, 
+  extractDocxText,
+  type RedesignCategory 
+} from '../lib/aiRedesignEngine';
 
 interface Asset {
   id: string;
@@ -170,6 +177,8 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   // Redesign state
   const [stylePreset, setStylePreset] = useState('modern');
   const [outputFormat, setOutputFormat] = useState('presentation');
+  const [variantIndex, setVariantIndex] = useState(0);
+  const [detectedCategory, setDetectedCategory] = useState<RedesignCategory>('presentation');
   const [refinementPrompt, setRefinementPrompt] = useState('');
   const [redesigning, setRedesigning] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -180,6 +189,9 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
     elements: any[];
     slides?: any[][];
     previewUrl?: string;
+    layoutFamily?: string;
+    variantIndex?: number;
+    category?: RedesignCategory;
   } | null>(null);
 
   const [showDlDropdown, setShowDlDropdown] = useState(false);
@@ -227,6 +239,16 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   }, []);
 
   const selectedAsset = assets.find(a => a.id === selectedId) || null;
+
+  // Auto-classify document whenever user selects an asset
+  useEffect(() => {
+    if (selectedAsset) {
+      const cls = classifyDocumentType(selectedAsset.name, selectedAsset.content);
+      setDetectedCategory(cls.category);
+      setOutputFormat(cls.category);
+      setVariantIndex(0);
+    }
+  }, [selectedAsset?.id]);
 
   // File Uploader logic
   const handleDragOver = (e: React.DragEvent) => {
@@ -278,7 +300,8 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
         const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|svg|webp|gif)$/i.test(file.name);
         const isText = file.type.startsWith('text/') || /\.(txt|md|csv|json)$/i.test(file.name);
         const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
-        const assetType: Asset['type'] = isImage ? 'image' : isText ? 'text' : isPdf ? 'pdf' : 'other';
+        const isDocx = /\.docx?$/i.test(file.name) || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        const assetType: Asset['type'] = isImage ? 'image' : isText ? 'text' : isPdf ? 'pdf' : isDocx ? 'text' : 'other';
 
         const assetId = 'user-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8);
         const uploadTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -307,9 +330,24 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
         }
 
         let textContent: string | undefined;
+        let pdfPages: string[] | undefined;
         if (isText) {
           try {
             textContent = await file.text();
+          } catch {}
+        } else if (isDocx) {
+          try {
+            const arrayBuffer = await file.arrayBuffer();
+            textContent = await extractDocxText(arrayBuffer);
+          } catch (err) {
+            console.warn('DOCX parse note:', err);
+          }
+        } else if (isPdf) {
+          try {
+            pdfPages = await extractPdfPages(file);
+            if (pdfPages && pdfPages.length > 0) {
+              textContent = pdfPages.join('\n\n--- Page Break ---\n\n');
+            }
           } catch {}
         }
 
@@ -320,6 +358,7 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
           type: assetType,
           previewUrl,
           content: textContent,
+          pdfPages,
           uploadedAt: uploadTime,
           isDemo: false,
           fileBlob: file,
@@ -374,11 +413,11 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   };
 
   // AI Redesign generation logic
-  const handleRedesign = async () => {
+  const handleRedesign = async (overrideVariant?: number) => {
     if (!selectedAsset) return;
+    const currentVariant = typeof overrideVariant === 'number' ? overrideVariant : variantIndex;
     setRedesigning(true);
     setProgress(0);
-    setResult(null);
 
     // On-demand deferred PDF extraction (upload was fast; extract only when user requests redesign)
     if (selectedAsset.type === 'pdf' && (!selectedAsset.pdfPages || selectedAsset.pdfPages.length === 0)) {
@@ -410,11 +449,10 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
     }
 
     const steps = [
-      { p: 15, t: 'Scanning layout elements and asset geometry...' },
-      { p: 35, t: 'Extracting key typography hierarchy and draft outlines...' },
-      { p: 60, t: 'Applying chosen color palette, vectors, and font pairings...' },
-      { p: 85, t: 'Structuring professional layers and canvas components...' },
-      { p: 100, t: 'Polishing premium layout & generating output preview...' }
+      { p: 25, t: 'Classifying document domain & content semantics...' },
+      { p: 55, t: 'Selecting bespoke composition family & structural grid...' },
+      { p: 85, t: 'Applying typography pairing, seals & vector layers...' },
+      { p: 100, t: 'Polishing high-fidelity canvas layout...' }
     ];
 
     let currentStep = 0;
@@ -426,249 +464,27 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
       } else {
         clearInterval(interval);
         setTimeout(() => {
-          generateRedesignOutput();
+          const generated = generateContentAwareRedesign(
+            selectedAsset.name,
+            selectedAsset.content,
+            currentVariant,
+            stylePreset,
+            outputFormat as RedesignCategory
+          );
+
+          setResult({
+            name: generated.name,
+            size: generated.size,
+            elements: generated.elements,
+            slides: generated.slides,
+            layoutFamily: generated.layoutFamily,
+            variantIndex: currentVariant,
+            category: generated.category
+          });
           setRedesigning(false);
-        }, 600);
+        }, 400);
       }
-    }, 800);
-  };
-
-  const generateRedesignOutput = () => {
-    if (!selectedAsset) return;
-
-    // Canvas sizes based on format selection
-    let size = '1080×1080';
-    let cW = 440;
-    let cH = 440;
-    if (outputFormat === 'presentation') {
-      size = '1920×1080';
-      cW = 780;
-      cH = 439;
-    } else if (outputFormat === 'poster') {
-      size = '1240×1748';
-      cW = 397;
-      cH = 560;
-    } else if (outputFormat === 'card') {
-      size = '1050×600';
-      cW = 600;
-      cH = 340;
-    }
-
-    // Dynamic coloring based on style preset
-    let bgFill = '#0f172a';
-    let brandColor = '#8b5cf6';
-    let titleColor = '#ffffff';
-    let bodyColor = '#94a3b8';
-    let accentRectColor = '#3b82f6';
-    let fontName = 'Inter';
-
-    if (stylePreset === 'gold') {
-      bgFill = '#0a0a0d';
-      brandColor = '#fbbf24';
-      titleColor = '#ffffff';
-      bodyColor = '#a1a1aa';
-      accentRectColor = '#ca8a04';
-      fontName = 'Syne';
-    } else if (stylePreset === 'neon') {
-      bgFill = '#0d0d14';
-      brandColor = '#f43f5e';
-      titleColor = '#ffffff';
-      bodyColor = '#c084fc';
-      accentRectColor = '#d946ef';
-      fontName = 'Impact';
-    } else if (stylePreset === 'clean') {
-      bgFill = '#f8fafc';
-      brandColor = '#0f766e';
-      titleColor = '#0f172a';
-      bodyColor = '#475569';
-      accentRectColor = '#14b8a6';
-      fontName = 'Georgia';
-    } else if (stylePreset === 'pastel') {
-      bgFill = '#faf5ff';
-      brandColor = '#d946ef';
-      titleColor = '#581c87';
-      bodyColor = '#6b21a8';
-      accentRectColor = '#c084fc';
-      fontName = 'Syne';
-    }
-
-    const uid = () => Math.random().toString(36).slice(2, 10);
-    const elements: any[] = [
-      { id: 'bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, rotation: 0, fill: bgFill, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true }
-    ];
-
-    // Check for multi-page PDF!
-    if (selectedAsset.type === 'pdf' && selectedAsset.pdfPages && selectedAsset.pdfPages.length > 0) {
-      const titleVal = selectedAsset.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ").toUpperCase();
-      const slides: any[][] = [];
-      
-      // 1. Generate Slide 1 (Cover Page)
-      const coverEls: any[] = [
-        { id: 'bg-0', type: 'rect', x: 0, y: 0, width: cW, height: cH, rotation: 0, fill: bgFill, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
-        { id: 'glow-0', type: 'circle', x: cW / 2 - 150, y: cH / 2 - 150, width: 300, height: 300, fill: `${brandColor}15`, opacity: 0.8, visible: true, locked: true },
-        { id: 'accent-rect-0', type: 'rect', x: 50, y: cH / 2 - 60, width: 4, height: 120, fill: brandColor, opacity: 1, visible: true, locked: true },
-        { id: 'title-0', type: 'text', x: 70, y: cH / 2 - 50, width: cW - 140, height: 50, fill: titleColor, text: titleVal, fontSize: 26, fontFamily: fontName, fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 1, visible: true, locked: false },
-        { id: 'desc-0', type: 'text', x: 70, y: cH / 2 + 10, width: cW - 140, height: 40, fill: bodyColor, text: `AI Redesigned Multi-page Document (${selectedAsset.pdfPages.length} Pages)`, fontSize: 13, fontFamily: 'Inter', fontWeight: 'normal', fontStyle: 'italic', textDecoration: 'none', opacity: 0.9, visible: true, locked: false },
-        { id: 'logo-text-0', type: 'text', x: 50, y: 40, width: 200, height: 20, fill: brandColor, text: '✦ NEXUS GLOBAL', fontSize: 12, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 0.8, visible: true, locked: false }
-      ];
-      slides.push(coverEls);
-
-      // 2. Generate Slides for each content page
-      selectedAsset.pdfPages.forEach((pageText, idx) => {
-        const slideIdx = idx + 1;
-        const pageEls: any[] = [
-          { id: `bg-${slideIdx}`, type: 'rect', x: 0, y: 0, width: cW, height: cH, rotation: 0, fill: bgFill, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
-          { id: `header-line-${slideIdx}`, type: 'rect', x: 50, y: 65, width: cW - 100, height: 1, fill: `${brandColor}30`, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
-          // Running Header
-          { id: `header-lbl-${slideIdx}`, type: 'text', x: 50, y: 40, width: cW - 100, height: 20, fill: brandColor, text: `${titleVal} — PAGE ${slideIdx}`, fontSize: 10, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 0.8, visible: true, locked: false },
-          // Page Content Text
-          { id: `content-${slideIdx}`, type: 'text', x: 50, y: 85, width: cW - 100, height: cH - 140, fill: titleColor, text: pageText || `[Page ${slideIdx} Content]`, fontSize: 11, fontFamily: fontName, fontWeight: 'normal', fontStyle: 'normal', textDecoration: 'none', opacity: 0.9, visible: true, locked: false },
-          // Footer / Page number
-          { id: `footer-lbl-${slideIdx}`, type: 'text', x: 50, y: cH - 40, width: cW - 100, height: 20, fill: bodyColor, text: `AI Redesigner v2.6 · Page ${slideIdx + 1} of ${selectedAsset.pdfPages!.length + 1}`, fontSize: 9, fontFamily: 'Inter', fontWeight: 'normal', fontStyle: 'normal', textDecoration: 'none', opacity: 0.5, visible: true, locked: true }
-        ];
-        slides.push(pageEls);
-      });
-
-      setResult({
-        name: `AI_Redesign_${selectedAsset.name.replace(/\.[^/.]+$/, '')}`,
-        size: size,
-        elements: slides[0],
-        slides: slides
-      });
-      return;
-    }
-
-    // Build template based on user content/mock
-    const titleVal = selectedAsset.id === 'demo-1' 
-      ? 'APEX CREATIVE' 
-      : selectedAsset.id === 'demo-2' 
-      ? 'SUMMER SOLSTICE' 
-      : selectedAsset.id === 'demo-3' 
-      ? 'CARTER CONSULTING' 
-      : selectedAsset.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ").toUpperCase();
-
-    const descVal = selectedAsset.id === 'demo-2'
-      ? 'July 18, 2026 · Central Park Meadows · Live Electronic & Pop Music'
-      : 'Redesigned branding vector asset & dynamic layout structure.';
-
-    if (outputFormat === 'presentation') {
-      // Presentation cover style elements
-      elements.push({
-        id: 'glow', type: 'circle', x: cW / 2 - 150, y: cH / 2 - 150, width: 300, height: 300, fill: `${brandColor}15`, opacity: 0.8, visible: true, locked: true
-      });
-      elements.push({
-        id: 'accent-rect', type: 'rect', x: 50, y: cH / 2 - 60, width: 4, height: 120, fill: brandColor, opacity: 1, visible: true, locked: true
-      });
-      elements.push({
-        id: 'title', type: 'text', x: 70, y: cH / 2 - 50, width: 600, height: 50, fill: titleColor, text: titleVal, fontSize: 36, fontFamily: fontName, fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 1, visible: true, locked: false
-      });
-      elements.push({
-        id: 'desc', type: 'text', x: 70, y: cH / 2 + 10, width: 600, height: 40, fill: bodyColor, text: descVal, fontSize: 13, fontFamily: 'Inter', fontWeight: 'normal', fontStyle: 'italic', textDecoration: 'none', opacity: 0.9, visible: true, locked: false
-      });
-      elements.push({
-        id: 'logo-text', type: 'text', x: 50, y: 40, width: 200, height: 20, fill: brandColor, text: '✦ NEXUS GLOBAL', fontSize: 12, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 0.8, visible: true, locked: false
-      });
-      elements.push({
-        id: 'date-badge', type: 'text', x: 50, y: cH - 50, width: 300, height: 20, fill: bodyColor, text: 'EST. 2026 · CONFIDENTIAL DECK', fontSize: 10, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 0.6, visible: true, locked: true
-      });
-      elements.push({
-        id: 'star-1', type: 'star', x: cW - 100, y: 50, width: 24, height: 24, fill: brandColor, opacity: 0.4, visible: true, locked: false
-      });
-    } else if (outputFormat === 'poster') {
-      // Poster format layout
-      elements.push({
-        id: 'border-1', type: 'rect', x: 15, y: 15, width: cW - 30, height: cH - 30, fill: 'transparent', stroke: brandColor, strokeWidth: 1.5, opacity: 0.5, visible: true, locked: true
-      });
-      elements.push({
-        id: 'border-2', type: 'rect', x: 22, y: 22, width: cW - 44, height: cH - 44, fill: 'transparent', stroke: accentRectColor, strokeWidth: 1, opacity: 0.3, visible: true, locked: true
-      });
-      elements.push({
-        id: 'top-lbl', type: 'text', x: 40, y: 50, width: cW - 80, height: 20, fill: brandColor, text: 'SPECIAL EDITION POSTER', fontSize: 10, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 0.8, visible: true, locked: false
-      });
-      elements.push({
-        id: 'title', type: 'text', x: 40, y: 90, width: cW - 80, height: 75, fill: titleColor, text: titleVal, fontSize: 32, fontFamily: fontName, fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 1, visible: true, locked: false
-      });
-      elements.push({
-        id: 'line', type: 'rect', x: 40, y: 180, width: 80, height: 3, fill: brandColor, opacity: 1, visible: true, locked: false
-      });
-      
-      // If event flyer, render details
-      if (selectedAsset.id === 'demo-2') {
-        elements.push({
-          id: 'event-details', type: 'text', x: 40, y: 210, width: cW - 80, height: 80, fill: titleColor, text: 'SATURDAY, JULY 18, 2026\nFROM 2:00 PM TILL LATE', fontSize: 13, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 1, visible: true, locked: false
-        });
-        elements.push({
-          id: 'venue-details', type: 'text', x: 40, y: 270, width: cW - 80, height: 50, fill: bodyColor, text: 'Central Park Meadows\nPre-sale $25 / Door $35', fontSize: 12, fontFamily: 'Inter', fontWeight: 'normal', fontStyle: 'normal', textDecoration: 'none', opacity: 0.9, visible: true, locked: false
-        });
-        elements.push({
-          id: 'headline-acts', type: 'text', x: 40, y: 340, width: cW - 80, height: 80, fill: brandColor, text: 'HEADLINING ACTS:\n✦ Sunset Syndicate\n✦ Neon Dreams\n✦ Velvet Vibe', fontSize: 14, fontFamily: fontName, fontWeight: 'bold', fontStyle: 'italic', textDecoration: 'none', opacity: 1, visible: true, locked: false
-        });
-      } else {
-        elements.push({
-          id: 'desc', type: 'text', x: 40, y: 210, width: cW - 80, height: 120, fill: bodyColor, text: 'This vector design concept was synthesized automatically using raw asset sketches. The typography layer, border highlights, and color palette have been fully optimized to match Canva professional standards. Every layer is fully editable inside the Design Studio canvas editor.', fontSize: 12, fontFamily: 'Inter', fontWeight: 'normal', fontStyle: 'normal', textDecoration: 'none', opacity: 0.85, visible: true, locked: false
-        });
-        elements.push({
-          id: 'qr-placeholder', type: 'rect', x: 40, y: 370, width: 80, height: 80, fill: 'transparent', stroke: brandColor, strokeWidth: 1.5, opacity: 0.7, visible: true, locked: false
-        });
-        elements.push({
-          id: 'qr-text', type: 'text', x: 135, y: 400, width: 220, height: 40, fill: bodyColor, text: 'SCAN TO EXPLORE LAYOUT\nwww.creative-studio.com', fontSize: 10, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 0.6, visible: true, locked: false
-        });
-      }
-
-      elements.push({
-        id: 'flower', type: 'text', x: cW - 75, y: cH - 60, width: 35, height: 35, fill: brandColor, text: '✦', fontSize: 24, fontFamily: 'Arial', fontStyle: 'normal', fontWeight: 'normal', textDecoration: 'none', opacity: 0.8, visible: true, locked: false
-      });
-    } else if (outputFormat === 'card') {
-      // Landscape business card layout
-      elements.push({
-        id: 'split', type: 'rect', x: 380, y: 0, width: 220, height: 340, fill: stylePreset === 'gold' ? '#141419' : 'rgba(255,255,255,0.03)', opacity: 1, visible: true, locked: true
-      });
-      elements.push({
-        id: 'accent-strip', type: 'rect', x: 378, y: 0, width: 2, height: 340, fill: brandColor, opacity: 0.8, visible: true, locked: true
-      });
-      elements.push({
-        id: 'title', type: 'text', x: 40, y: 70, width: 320, height: 30, fill: titleColor, text: titleVal, fontSize: 22, fontFamily: fontName, fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 1, visible: true, locked: false
-      });
-      elements.push({
-        id: 'subtitle', type: 'text', x: 40, y: 105, width: 320, height: 20, fill: brandColor, text: 'CREATIVE DIRECTOR', fontSize: 11, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 0.9, visible: true, locked: false
-      });
-      elements.push({
-        id: 'line', type: 'rect', x: 40, y: 135, width: 40, height: 2, fill: accentRectColor, opacity: 1, visible: true, locked: false
-      });
-      elements.push({
-        id: 'contact-details', type: 'text', x: 40, y: 155, width: 320, height: 90, fill: bodyColor, text: '📧 contact@ordstudio.com\n📞 +1 (555) 0199\n🌐 www.ordstudio.com\n📍 San Francisco, CA', fontSize: 12, fontFamily: 'Inter', fontWeight: 'normal', fontStyle: 'normal', textDecoration: 'none', opacity: 0.85, visible: true, locked: false
-      });
-      
-      elements.push({
-        id: 'brand-mark', type: 'text', x: 430, y: 150, width: 120, height: 40, fill: brandColor, text: '✦\nORDSTUDIO', fontSize: 16, fontFamily: 'Syne', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 0.8, visible: true, locked: false
-      });
-    } else {
-      // Instagram square format
-      elements.push({
-        id: 'glow', type: 'circle', x: 220, y: 220, width: 220, height: 220, fill: `${brandColor}12`, opacity: 0.8, visible: true, locked: true
-      });
-      elements.push({
-        id: 'title', type: 'text', x: 30, y: 50, width: 380, height: 40, fill: titleColor, text: titleVal, fontSize: 26, fontFamily: fontName, fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 1, visible: true, locked: false
-      });
-      elements.push({
-        id: 'desc', type: 'text', x: 30, y: 95, width: 380, height: 40, fill: brandColor, text: descVal, fontSize: 12, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 0.9, visible: true, locked: false
-      });
-      elements.push({
-        id: 'accent-frame', type: 'rect', x: 30, y: 150, width: 380, height: 230, fill: 'transparent', stroke: brandColor, strokeWidth: 1.5, opacity: 0.5, visible: true, locked: false
-      });
-      elements.push({
-        id: 'inner-badge', type: 'rect', x: 150, y: 345, width: 140, height: 30, fill: brandColor, opacity: 1, visible: true, locked: false
-      });
-      elements.push({
-        id: 'inner-badge-text', type: 'text', x: 160, y: 350, width: 120, height: 20, fill: bgFill === '#f8fafc' ? '#ffffff' : '#ffffff', text: 'EXPLORE NOW', fontSize: 10, fontFamily: 'Inter', fontWeight: 'bold', fontStyle: 'normal', textDecoration: 'none', opacity: 1, visible: true, locked: false
-      });
-    }
-
-    setResult({
-      name: `AI_Redesign_${selectedAsset.name.replace(/\.[^/.]+$/, '')}`,
-      size: size,
-      elements: elements
-    });
+    }, 250);
   };
 
   // Render and download the redesigned layout as PNG or JPG
@@ -695,16 +511,11 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
       ctx.save();
       ctx.globalAlpha = el.opacity ?? 1;
       
-      // Scale coordinates from preview size (cW, cH) to actual design size (w, h)
-      const previewW = result.size.includes('1920') ? 780 : 440;
-      const previewH = result.size.includes('1920') ? 439 : 440;
-      const scaleX = w / previewW;
-      const scaleY = h / previewH;
-      
-      const ex = el.x * scaleX;
-      const ey = el.y * scaleY;
-      const ew = el.width * scaleX;
-      const eh = el.height * scaleY;
+      // Coordinates are already in true canvas units
+      const ex = el.x;
+      const ey = el.y;
+      const ew = el.width;
+      const eh = el.height;
       
       if (el.type === 'rect') {
         ctx.fillStyle = el.fill;
@@ -821,22 +632,46 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   const handleEditManually = () => {
     if (!selectedAsset) return;
     
-    let size = '1080×1080';
-    let cW = 440;
-    let cH = 440;
+    let size = '1920×1080';
+    let cW = 1920;
+    let cH = 1080;
     
     if (outputFormat === 'presentation') {
       size = '1920×1080';
-      cW = 780;
-      cH = 439;
-    } else if (outputFormat === 'poster') {
-      size = '1240×1748';
-      cW = 397;
-      cH = 560;
+      cW = 1920;
+      cH = 1080;
     } else if (outputFormat === 'card') {
       size = '1050×600';
-      cW = 600;
-      cH = 340;
+      cW = 1050;
+      cH = 600;
+    } else if (outputFormat === 'poster') {
+      size = '1080×1528';
+      cW = 1080;
+      cH = 1528;
+    } else if (outputFormat === 'resume') {
+      size = '1200×1697';
+      cW = 1200;
+      cH = 1697;
+    } else if (outputFormat === 'flyer') {
+      size = '1200×1697';
+      cW = 1200;
+      cH = 1697;
+    } else if (outputFormat === 'invitation') {
+      size = '1400×2000';
+      cW = 1400;
+      cH = 2000;
+    } else if (outputFormat === 'report') {
+      size = '1200×1697';
+      cW = 1200;
+      cH = 1697;
+    } else if (outputFormat === 'business') {
+      size = '1200×1697';
+      cW = 1200;
+      cH = 1697;
+    } else if (outputFormat === 'square') {
+      size = '1080×1080';
+      cW = 1080;
+      cH = 1080;
     }
 
     const elements: any[] = [
@@ -1160,95 +995,48 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
               {/* Before/After visual switcher or side panel */}
               <div className="flex flex-col gap-4">
                 {/* Visual Preview Box */}
-                <div className="border border-white/[0.08] rounded-xl overflow-hidden bg-[#0d0d14] relative aspect-video flex items-center justify-center p-3 select-none">
-                  {/* Generated Layout Mockup Box */}
-                  <div 
-                    className="w-full h-full rounded-lg shadow-2xl flex flex-col items-center justify-center relative overflow-hidden p-3 border border-white/[0.05]"
-                    style={{
-                      background: result.elements[0]?.fill || '#0f172a',
-                    }}
-                  >
-                    {/* Background Circle elements if present */}
-                    {result.elements.map((el, i) => {
-                      if (el.id === 'bg') return null;
-                      if (el.type === 'circle') {
-                        return (
-                          <div 
-                            key={i} 
-                            className="absolute rounded-full border" 
-                            style={{ 
-                              left: `${(el.x / (result.size.includes('1920') ? 780 : 440)) * 100}%`,
-                              top: `${(el.y / 440) * 100}%`,
-                              width: `${(el.width / 440) * 100}%`,
-                              height: `${(el.height / 440) * 100}%`,
-                              background: el.fill,
-                              borderColor: el.stroke || 'transparent',
-                              opacity: el.opacity ?? 0.6
-                            }} 
-                          />
-                        );
-                      }
-                      if (el.type === 'rect') {
-                        return (
-                          <div 
-                            key={i} 
-                            className="absolute" 
-                            style={{ 
-                              left: `${(el.x / (result.size.includes('1920') ? 780 : 440)) * 100}%`,
-                              top: `${(el.y / 440) * 100}%`,
-                              width: `${(el.width / 440) * 100}%`,
-                              height: `${(el.height / 440) * 100}%`,
-                              background: el.fill,
-                              borderColor: el.stroke || 'transparent',
-                              borderWidth: el.strokeWidth || 0,
-                              opacity: el.opacity ?? 1
-                            }} 
-                          />
-                        );
-                      }
-                      if (el.type === 'text') {
-                        return (
-                          <div
-                            key={i}
-                            className="absolute font-semibold leading-tight text-left"
-                            style={{
-                              left: `${(el.x / (result.size.includes('1920') ? 780 : 440)) * 100}%`,
-                              top: `${(el.y / 440) * 100}%`,
-                              width: `${(el.width / (result.size.includes('1920') ? 780 : 440)) * 100}%`,
-                              color: el.fill,
-                              fontFamily: el.fontFamily || 'sans-serif',
-                              fontSize: `${Math.max(el.fontSize ? (el.fontSize / (result.size.includes('1920') ? 780 : 440)) * 280 : 10, 8)}px`,
-                              fontWeight: el.fontWeight || 'normal',
-                              fontStyle: el.fontStyle || 'normal',
-                              opacity: el.opacity ?? 1
-                            }}
-                          >
-                            {el.text}
-                          </div>
-                        );
-                      }
-                      if (el.type === 'star') {
-                        return (
-                          <div
-                            key={i}
-                            className="absolute text-yellow-400 font-semibold"
-                            style={{
-                              left: `${(el.x / (result.size.includes('1920') ? 780 : 440)) * 100}%`,
-                              top: `${(el.y / 440) * 100}%`,
-                              fontSize: '18px'
-                            }}
-                          >
-                            ✦
-                          </div>
-                        );
-                      }
-                      return null;
-                    })}
-                  </div>
-                </div>
+                {(() => {
+                  const dims = (result.size || '1920×1080').replace(/x/gi, '×').split('×').map(Number);
+                  const pW = dims[0] || 1920;
+                  const pH = dims[1] || 1080;
+                  const isLand = pW >= pH;
+                  return (
+                    <div className="border border-white/[0.08] rounded-xl overflow-hidden bg-[#07080e] relative flex items-center justify-center p-3 select-none h-[280px]">
+                      <div 
+                        className="relative rounded-lg shadow-2xl overflow-hidden border border-white/[0.08] flex items-center justify-center"
+                        style={{
+                          aspectRatio: `${pW} / ${pH}`,
+                          width: isLand ? '100%' : 'auto',
+                          height: !isLand ? '100%' : 'auto',
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          background: result.elements[0]?.fill || '#0f172a',
+                        }}
+                      >
+                        <TemplateMiniRenderer 
+                          template={{
+                            canvasWidth: pW,
+                            canvasHeight: pH,
+                            gradient: result.elements[0]?.fill || '#0f172a',
+                            elements: result.elements,
+                            slides: result.slides || [result.elements]
+                          }} 
+                          className="w-full h-full"
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="flex flex-col gap-1">
-                  <span className="text-[12px] font-bold text-white/90">{result.name}</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] font-bold text-white/90">{result.name}</span>
+                    {result.layoutFamily && (
+                      <span className="text-[10px] text-purple-300 font-mono px-2 py-0.5 rounded bg-purple-500/15 border border-purple-500/30">
+                        {result.layoutFamily}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[9.5px] text-white/40 font-semibold uppercase tracking-wider">{result.size} · Canvas Layout</span>
                 </div>
               </div>
@@ -1256,7 +1044,14 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
               {/* Actions */}
               <div className="flex flex-col gap-2.5 mt-auto">
                 <button
-                  onClick={() => onOpenInEditor({ name: result.name, size: result.size, elements: result.elements, slides: result.slides })}
+                  onClick={() => onOpenInEditor({ 
+                    name: result.name, 
+                    size: result.size, 
+                    elements: result.elements, 
+                    slides: result.slides,
+                    canvasWidth: parseInt(result.size.split(/×|x/)[0]) || 1920,
+                    canvasHeight: parseInt(result.size.split(/×|x/)[1]) || 1080
+                  } as any)}
                   className="w-full h-11 rounded-xl bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white font-bold text-[13px] flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-md shadow-purple-500/10"
                 >
                   <Eye size={15} /> Open in Canvas Editor
@@ -1310,12 +1105,23 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
                     )}
                   </div>
                   <button
-                    onClick={() => setResult(null)}
-                    className="h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-white/80 hover:text-white font-semibold text-[12px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    onClick={() => {
+                      const nextVar = (variantIndex + 1) % 4;
+                      setVariantIndex(nextVar);
+                      handleRedesign(nextVar);
+                    }}
+                    className="h-10 rounded-xl bg-purple-600/20 border border-purple-500/40 hover:bg-purple-600/30 text-purple-200 hover:text-white font-semibold text-[12px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+                    title="Generate a completely different layout composition family"
                   >
                     <RotateCcw size={13} /> Redesign Again
                   </button>
                 </div>
+                <button
+                  onClick={() => setResult(null)}
+                  className="text-center text-[11px] text-white/40 hover:text-white/80 py-1 transition-colors cursor-pointer"
+                >
+                  ← Adjust Redesign Settings
+                </button>
               </div>
             </div>
           ) : selectedAsset ? (
@@ -1362,16 +1168,27 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
 
                 {/* 2. Output format */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10.5px] font-bold text-white/40 uppercase tracking-wider">Output Canvas Layout</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10.5px] font-bold text-white/40 uppercase tracking-wider">Output Canvas Layout</label>
+                    {detectedCategory && (
+                      <span className="text-[9.5px] text-emerald-400 font-mono font-semibold">
+                        ✦ Auto: {detectedCategory.replace('_', ' ').toUpperCase()}
+                      </span>
+                    )}
+                  </div>
                   <select 
                     value={outputFormat}
                     onChange={(e) => setOutputFormat(e.target.value)}
                     className="w-full h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] px-3 text-[12.5px] font-medium text-white/80 outline-none hover:bg-white/[0.06] focus:border-purple-500/40 transition-colors"
                   >
-                    <option value="presentation" className="bg-[#161622] text-white/90">Presentation Slide (16:9)</option>
-                    <option value="poster" className="bg-[#161622] text-white/90">A4 Poster (Print Size)</option>
-                    <option value="card" className="bg-[#161622] text-white/90">Business Card (Landscape)</option>
-                    <option value="square" className="bg-[#161622] text-white/90">Instagram Square (1:1)</option>
+                    <option value="certificate" className="bg-[#161622] text-white/90">Professional Certificate & Credential (1920×1080)</option>
+                    <option value="consent_letter" className="bg-[#161622] text-white/90">Formal Institutional Consent Letter (1200×1697 · A4)</option>
+                    <option value="presentation" className="bg-[#161622] text-white/90">Presentation Slide (1920×1080 · 16:9)</option>
+                    <option value="resume" className="bg-[#161622] text-white/90">Professional ATS Resume (1200×1697 · A4)</option>
+                    <option value="poster" className="bg-[#161622] text-white/90">A3 Exhibition Poster (1080×1528)</option>
+                    <option value="flyer" className="bg-[#161622] text-white/90">Promotional Event Flyer (1200×1697 · A4)</option>
+                    <option value="business_card" className="bg-[#161622] text-white/90">Executive Business Card (1050×600)</option>
+                    <option value="report" className="bg-[#161622] text-white/90">Executive Corporate Report (1200×1697 · A4)</option>
                   </select>
                 </div>
 

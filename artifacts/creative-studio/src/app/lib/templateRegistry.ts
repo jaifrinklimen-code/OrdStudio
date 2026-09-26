@@ -338,7 +338,9 @@ export function normalizeCanonicalTemplate(t: any): CanonicalTemplate {
 
   if (!cW || !cH) {
     const cat = (t.category || t.type || '').toLowerCase();
-    if (cat.includes('present') || cat.includes('pitch') || cat.includes('deck')) {
+    if (cat.includes('card')) {
+      cW = 1050; cH = 600;
+    } else if (cat.includes('present') || cat.includes('pitch') || cat.includes('deck')) {
       cW = 1920; cH = 1080;
     } else if (cat.includes('resume') || cat.includes('report') || cat.includes('flyer') || cat.includes('business')) {
       cW = 1200; cH = 1697;
