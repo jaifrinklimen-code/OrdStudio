@@ -15,6 +15,7 @@ import {
   loadAllCanonicalTemplates
 } from "../lib/templateRegistry";
 import { fetchCachedTemplates, fetchCachedProjects } from "../lib/templateApiClient";
+import { normalizeCanonicalDesign } from "../lib/coordinateNormalizer";
 
 interface DashboardProps {
   onNavigate: (tab: string) => void;
@@ -307,7 +308,7 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
     }
   };
 
-  // Open saved design - 100% fidelity from user's saved data
+  // Open saved design - 100% fidelity from user's saved data with canonical coordinates
   const handleOpenSavedProject = (proj: any) => {
     if (onOpenTemplate) {
       const projSlides = Array.isArray(proj.slides) && proj.slides.length > 0
@@ -317,19 +318,28 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
         ? JSON.parse(JSON.stringify(proj.elements))
         : (projSlides[0] ? JSON.parse(JSON.stringify(projSlides[0])) : []);
 
+      const norm = normalizeCanonicalDesign({
+        ...proj,
+        elements: projElements,
+        slides: projSlides,
+        canvasWidth: proj.canvasWidth,
+        canvasHeight: proj.canvasHeight,
+        size: proj.size
+      });
+
       onOpenTemplate({
         id: proj.id,
         originalTemplateId: proj.originalTemplateId || proj.templateId || proj.sourceTemplateId,
         sourceTemplateId: proj.sourceTemplateId || proj.originalTemplateId || proj.templateId,
         name: proj.name || 'My Design',
-        category: proj.type || proj.category || 'Presentation',
-        type: proj.type || proj.category || 'Presentation',
+        category: proj.type || proj.category || (norm.isLandscape ? 'Presentation' : 'Document'),
+        type: proj.type || proj.category || (norm.isLandscape ? 'Presentation' : 'Document'),
         gradient: proj.gradient || '#0b131e',
-        size: proj.size || (proj.canvasWidth && proj.canvasHeight ? `${proj.canvasWidth}×${proj.canvasHeight}` : '1920×1080'),
-        canvasWidth: proj.canvasWidth || (proj.type === 'Presentation' || proj.category === 'Presentation' ? 1920 : 1200),
-        canvasHeight: proj.canvasHeight || (proj.type === 'Presentation' || proj.category === 'Presentation' ? 1080 : 1697),
-        elements: projElements,
-        slides: projSlides,
+        size: `${norm.canvasWidth}×${norm.canvasHeight}`,
+        canvasWidth: norm.canvasWidth,
+        canvasHeight: norm.canvasHeight,
+        elements: norm.elements,
+        slides: norm.slides,
         thumbnailUrl: proj.thumbnailUrl,
         createdAt: proj.createdAt || proj.updatedAt,
         updatedAt: proj.updatedAt || new Date().toISOString(),
@@ -569,18 +579,27 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
                 ? proj.elements
                 : (projSlides[0] || []);
 
+              const norm = normalizeCanonicalDesign({
+                ...proj,
+                elements: projElements,
+                slides: projSlides,
+                canvasWidth: proj.canvasWidth,
+                canvasHeight: proj.canvasHeight,
+                size: proj.size
+              });
+
               const savedDesignPayload = {
                 ...proj,
                 id: proj.id,
                 name: proj.name || 'Untitled Design',
-                category: proj.type || proj.category || 'Presentation',
-                type: proj.type || proj.category || 'Presentation',
+                category: proj.type || proj.category || (norm.isLandscape ? 'Presentation' : 'Document'),
+                type: proj.type || proj.category || (norm.isLandscape ? 'Presentation' : 'Document'),
                 gradient: proj.gradient || '#0b131e',
-                size: proj.size || (proj.canvasWidth && proj.canvasHeight ? `${proj.canvasWidth}×${proj.canvasHeight}` : '1920×1080'),
-                canvasWidth: proj.canvasWidth || (proj.type === 'Presentation' || proj.category === 'Presentation' ? 1920 : 1200),
-                canvasHeight: proj.canvasHeight || (proj.type === 'Presentation' || proj.category === 'Presentation' ? 1080 : 1697),
-                elements: projElements,
-                slides: projSlides,
+                size: `${norm.canvasWidth}×${norm.canvasHeight}`,
+                canvasWidth: norm.canvasWidth,
+                canvasHeight: norm.canvasHeight,
+                elements: norm.elements,
+                slides: norm.slides,
                 thumbnailUrl: proj.thumbnailUrl,
                 isSavedProject: true
               };

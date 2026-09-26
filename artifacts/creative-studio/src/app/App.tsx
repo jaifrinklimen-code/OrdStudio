@@ -58,6 +58,7 @@ const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ defau
 import { getAppUrl } from "../lib/getAppUrl";
 import type { Session } from "@supabase/supabase-js";
 import { toast } from 'sonner';
+import { normalizeCanonicalDesign } from './lib/coordinateNormalizer';
 
 const RouteSuspenseFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center bg-[#0d0d14] text-white">
@@ -227,9 +228,21 @@ export default function App() {
   const handleOpenTemplateWithAuth = useCallback((designPayload: any) => {
     if (!designPayload) return;
 
+    const norm = normalizeCanonicalDesign(designPayload);
+    const finalPayload = {
+      ...designPayload,
+      category: designPayload.category || designPayload.type || (norm.isLandscape ? 'Presentation' : 'Document'),
+      type: designPayload.type || designPayload.category || (norm.isLandscape ? 'Presentation' : 'Document'),
+      canvasWidth: norm.canvasWidth,
+      canvasHeight: norm.canvasHeight,
+      size: `${norm.canvasWidth}×${norm.canvasHeight}`,
+      elements: norm.elements,
+      slides: norm.slides
+    };
+
     if (!session) {
       try {
-        sessionStorage.setItem('ord_pending_template', JSON.stringify(designPayload));
+        sessionStorage.setItem('ord_pending_template', JSON.stringify(finalPayload));
       } catch (e) {
         console.warn('Unable to save pending template to session storage:', e);
       }
@@ -237,7 +250,7 @@ export default function App() {
       return;
     }
 
-    setCustomDesign(designPayload);
+    setCustomDesign(finalPayload);
   }, [session, navigate]);
 
   const handleGoogleLogin = async () => {

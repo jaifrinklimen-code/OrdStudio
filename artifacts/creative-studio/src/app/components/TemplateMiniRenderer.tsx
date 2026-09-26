@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { resolveElementImageSrc } from '../lib/templateRegistry';
+import { normalizeCanonicalDesign } from '../lib/coordinateNormalizer';
 
 
 interface TemplateMiniRendererProps {
@@ -160,51 +161,20 @@ function extractDominantColor(gradStr: string): string {
  * - Cross-origin images use anonymous crossOrigin for proper loading
  */
 export const TemplateMiniRenderer = React.memo(function TemplateMiniRenderer({ template, className = '' }: TemplateMiniRendererProps) {
-  // 1. Resolve canonical dimensions and elements
+  // 1. Resolve canonical dimensions and elements via Canonical Coordinate Normalizer
   const { canvasW, canvasH, elements, bgGradient, isLandscape, templateId } = useMemo(() => {
     if (!template) {
       return { canvasW: 1920, canvasH: 1080, elements: [], bgGradient: '#0f172a', isLandscape: true, templateId: 'default' };
     }
 
-    let cW = template.canvasWidth || (template.size ? parseInt(String(template.size).split(/×|x/)[0], 10) : 0);
-    let cH = template.canvasHeight || (template.size ? parseInt(String(template.size).split(/×|x/)[1], 10) : 0);
-
-    let rawEls: any[] = [];
-    if (Array.isArray(template.elements) && template.elements.length > 0) {
-      rawEls = template.elements;
-    } else if (Array.isArray(template.slides) && template.slides.length > 0) {
-      const s0 = template.slides[0];
-      rawEls = Array.isArray(s0) ? s0 : (Array.isArray(s0?.elements) ? s0.elements : []);
-    } else if (Array.isArray(template.pages) && template.pages.length > 0) {
-      const p0 = template.pages[0];
-      rawEls = Array.isArray(p0) ? p0 : (Array.isArray(p0?.elements) ? p0.elements : []);
-    }
-
-    if (!cW || !cH) {
-      const bg = rawEls.find((e: any) => (e.id && String(e.id).includes('bg')) || (e.type === 'rect' && e.x === 0 && e.y === 0 && e.width >= 300));
-      if (bg && bg.width && bg.height) {
-        cW = bg.width;
-        cH = bg.height;
-      }
-    }
-
-    if (!cW || !cH) {
-      const cat = (template.category || template.type || '').toLowerCase();
-      if (cat.includes('present') || cat.includes('pitch') || cat.includes('deck')) {
-        cW = 1920; cH = 1080;
-      } else if (cat.includes('resume') || cat.includes('report') || cat.includes('flyer') || cat.includes('business')) {
-        cW = 1200; cH = 1697;
-      } else if (cat.includes('poster')) {
-        cW = 1080; cH = 1528;
-      } else if (cat.includes('invite')) {
-        cW = 1400; cH = 2000;
-      } else {
-        cW = 1080; cH = 1080;
-      }
-    }
+    const norm = normalizeCanonicalDesign(template);
+    const cW = norm.canvasWidth || 1920;
+    const cH = norm.canvasHeight || 1080;
+    const rawEls = norm.elements;
+    const isLand = norm.isLandscape;
 
     const grad = template.gradient || (cW >= cH ? '#0b0f19' : '#0f172a');
-    const RENDERER_VERSION = 'v2_4';
+    const RENDERER_VERSION = 'v2_5';
     const id = `${String(template.id || template.name || 'tmpl').replace(/[^a-zA-Z0-9_-]/g, '_')}_${RENDERER_VERSION}`;
 
     return {
@@ -212,7 +182,7 @@ export const TemplateMiniRenderer = React.memo(function TemplateMiniRenderer({ t
       canvasH: cH,
       elements: rawEls,
       bgGradient: grad,
-      isLandscape: cW >= cH,
+      isLandscape: isLand,
       templateId: id
     };
   }, [template]);
@@ -318,6 +288,8 @@ export const TemplateMiniRenderer = React.memo(function TemplateMiniRenderer({ t
           aspectRatio: `${canvasW} / ${canvasH}`,
           width: isLandscape ? '100%' : 'auto',
           height: !isLandscape ? '100%' : 'auto',
+          maxWidth: '100%',
+          maxHeight: '100%',
           background: isCSSGradient(bgGradient) ? bgGradient : (bgGradient || '#0f172a')
         }}
       >
@@ -340,6 +312,7 @@ export const TemplateMiniRenderer = React.memo(function TemplateMiniRenderer({ t
         {hasElements && (
           <svg
             viewBox={`0 0 ${canvasW} ${canvasH}`}
+            preserveAspectRatio="xMidYMid meet"
             className="w-full h-full block select-none pointer-events-none"
             xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink"
