@@ -58,7 +58,7 @@ const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ defau
 import { getAppUrl } from "../lib/getAppUrl";
 import type { Session } from "@supabase/supabase-js";
 import { toast } from 'sonner';
-import { normalizeCanonicalDesign } from './lib/coordinateNormalizer';
+import { normalizeCanonicalDesign, fitAIRedesignToCanonicalCanvas, isAIRedesignProject } from './lib/coordinateNormalizer';
 
 const RouteSuspenseFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center bg-[#0d0d14] text-white">
@@ -73,8 +73,18 @@ export default function App() {
   const isPublicRoute = location.pathname === '/' || location.pathname.startsWith('/blog') || location.pathname.startsWith('/features') || location.pathname === '/about' || location.pathname === '/contact' || location.pathname === '/privacy-policy' || location.pathname === '/terms-of-service' || location.pathname === '/cookie-policy' || location.pathname === '/disclaimer';
 
   const [activeTab, setActiveTab] = useState(() => {
+    if (location.pathname === '/design') return 'design';
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) return tabParam;
     return localStorage.getItem('activeTab') || 'home';
   });
+
+  useEffect(() => {
+    if (location.pathname === '/design' && activeTab !== 'design') {
+      setActiveTab('design');
+    }
+  }, [location.pathname]);
   const [loadingKey, setLoadingKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -228,11 +238,17 @@ export default function App() {
   const handleOpenTemplateWithAuth = useCallback((designPayload: any) => {
     if (!designPayload) return;
 
-    const norm = normalizeCanonicalDesign(designPayload);
+    // For AI Redesign projects: apply the canonical canvas fit FIRST, then normalize
+    let payloadToProcess = designPayload;
+    if (isAIRedesignProject(designPayload)) {
+      payloadToProcess = fitAIRedesignToCanonicalCanvas(designPayload);
+    }
+
+    const norm = normalizeCanonicalDesign(payloadToProcess);
     const finalPayload = {
-      ...designPayload,
-      category: designPayload.category || designPayload.type || (norm.isLandscape ? 'Presentation' : 'Document'),
-      type: designPayload.type || designPayload.category || (norm.isLandscape ? 'Presentation' : 'Document'),
+      ...payloadToProcess,
+      category: payloadToProcess.category || payloadToProcess.type || (norm.isLandscape ? 'Presentation' : 'Document'),
+      type: payloadToProcess.type || payloadToProcess.category || (norm.isLandscape ? 'Presentation' : 'Document'),
       canvasWidth: norm.canvasWidth,
       canvasHeight: norm.canvasHeight,
       size: `${norm.canvasWidth}×${norm.canvasHeight}`,
@@ -308,6 +324,7 @@ export default function App() {
           onSave={(elements, slides, thumbnailUrl, designTitle) => {
             const finalName = designTitle || customDesign.name || 'My Design';
             const designId = customDesign.id || ('design_' + Date.now());
+            const isAIRedesign = isAIRedesignProject(customDesign);
             const updated = {
               ...customDesign,
               id: designId,
@@ -321,8 +338,9 @@ export default function App() {
               size: customDesign.size || (customDesign.canvasWidth && customDesign.canvasHeight ? `${customDesign.canvasWidth}×${customDesign.canvasHeight}` : '1920×1080'),
               canvasWidth: customDesign.canvasWidth || 1920,
               canvasHeight: customDesign.canvasHeight || 1080,
-              coordinateVersion: 2,
-              canonicalCoordinateVersion: 2,
+              coordinateVersion: isAIRedesign ? 3 : 2,
+              canonicalCoordinateVersion: isAIRedesign ? 3 : 2,
+              aiRedesignCanvasFit: isAIRedesign ? true : undefined,
               elements: JSON.parse(JSON.stringify(elements)),
               slides: JSON.parse(JSON.stringify(slides)),
               thumbnailUrl: thumbnailUrl || customDesign.thumbnailUrl,
@@ -368,7 +386,7 @@ export default function App() {
         case 'stickers':  content = <StickerLab />; break;
         case 'upload':    content = <AssetUploader onOpenInEditor={handleOpenTemplateWithAuth} />; break;
         case 'settings':  content = <SettingsPage />; break;
-        default:          content = <Dashboard onNavigate={handleNavigate} onOpenTemplate={handleOpenTemplateWithAuth} />; break;
+        default:          content = <Dashboard onNavigate={handleNavigate} onOpenTemplate={handleOpenTemplateWithAuth} activeTab={activeTab} />; break;
       }
     }
 
@@ -432,6 +450,35 @@ export default function App() {
         {/* Dashboard Route - Allows Guest Template Library Discovery & Gated Editing */}
         <Route 
           path="/dashboard" 
+          element={
+            <DashboardLayout
+              isMobile={isMobile}
+              activeTab={activeTab}
+              handleNavigate={handleNavigate}
+              isCollapsed={isCollapsed}
+              setIsCollapsed={setIsCollapsed}
+              customDesign={customDesign}
+              setCustomDesign={setCustomDesign}
+              globalSearchQuery={globalSearchQuery}
+              setGlobalSearchQuery={setGlobalSearchQuery}
+              topSearchRef={topSearchRef}
+              showNotif={showNotif}
+              setShowNotif={setShowNotif}
+              showProfile={showProfile}
+              setShowProfile={setShowProfile}
+              handleGoogleLogin={handleGoogleLogin}
+              handleLogout={handleLogout}
+              notifRef={notifRef}
+              profileRef={profileRef}
+              loading={loading}
+              loadingKey={loadingKey}
+              session={session}
+              renderSection={renderSection}
+            />
+          } 
+        />
+        <Route 
+          path="/design" 
           element={
             <DashboardLayout
               isMobile={isMobile}

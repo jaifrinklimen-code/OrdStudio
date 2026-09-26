@@ -6,6 +6,7 @@ import {
   Layers, Compass, ExternalLink, Clock, User
 } from "lucide-react";
 import { TemplateMiniRenderer } from "./TemplateMiniRenderer";
+import { SavedDesignCard, buildSavedDesignPayload } from "./SavedDesignCard";
 import { TemplatePreviewModal } from "./TemplatePreviewModal";
 import { supabase } from "../../lib/supabase";
 import {
@@ -15,11 +16,12 @@ import {
   loadAllCanonicalTemplates
 } from "../lib/templateRegistry";
 import { fetchCachedTemplates, fetchCachedProjects } from "../lib/templateApiClient";
-import { normalizeCanonicalDesign } from "../lib/coordinateNormalizer";
+import { normalizeCanonicalDesign, fitAIRedesignToCanonicalCanvas, isAIRedesignProject } from "../lib/coordinateNormalizer";
 
 interface DashboardProps {
   onNavigate: (tab: string) => void;
   onOpenTemplate?: (design: any) => void;
+  activeTab?: string;
 }
 
 // Dynamically resolve authenticated display name or email username with Creator fallback
@@ -66,7 +68,7 @@ const CATEGORY_SHORTCUTS = [
   { id: 'Business', label: 'Proposal', icon: Folder, dims: '1200×1697', desc: 'Strategic corporate deck', color: '#8b5cf6', count: 'Corporate' }
 ];
 
-export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
+export function Dashboard({ onNavigate, onOpenTemplate, activeTab = 'home' }: DashboardProps) {
   const [userName, setUserName] = useState<string>(() => getResolvedDisplayName(null));
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("All");
@@ -112,10 +114,20 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed)) {
-            let hasMigration = false;
+                      let hasMigration = false;
             const valid = parsed
               .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
               .map((p: any) => {
+                // AI Redesign projects: apply canonical fit (center-based, 92% fill)
+                if (isAIRedesignProject(p) && p.aiRedesignCanvasFit !== true) {
+                  hasMigration = true;
+                  const fitted = fitAIRedesignToCanonicalCanvas(p);
+                  return {
+                    ...fitted,
+                    category: p.category || (fitted.canvasWidth >= fitted.canvasHeight ? 'Presentation' : 'Document'),
+                    type: p.type || (fitted.canvasWidth >= fitted.canvasHeight ? 'Presentation' : 'Document')
+                  };
+                }
                 const norm = normalizeCanonicalDesign(p);
                 if (norm.needsScale) {
                   hasMigration = true;
@@ -220,6 +232,24 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
           if (mounted && Array.isArray(userProjects) && userProjects.length > 0) {
             setSavedProjects(prev => {
               const normalizedBack = userProjects.map(p => {
+                // AI Redesign projects from backend: apply canonical fit
+                if (isAIRedesignProject(p) && p.aiRedesignCanvasFit !== true) {
+                  const fitted = fitAIRedesignToCanonicalCanvas({
+                    ...p,
+                    slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
+                    elements: p.elements || (Array.isArray(p.slides?.[0]) ? p.slides[0] : (p.pages?.[0] || [])),
+                    canvasWidth: p.canvasWidth || p.dimensions?.width,
+                    canvasHeight: p.canvasHeight || p.dimensions?.height,
+                    size: p.size
+                  });
+                  return {
+                    ...p,
+                    ...fitted,
+                    thumbnailUrl: p.thumbnailUrl || p.thumbnail,
+                    updatedAt: p.updatedAt || new Date().toISOString(),
+                    isSavedProject: true
+                  };
+                }
                 const norm = normalizeCanonicalDesign({
                   ...p,
                   slides: p.slides || p.pages || (p.elements ? [p.elements] : []),
@@ -584,7 +614,7 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
       {/* ================================================== */}
       {/* RECENT DESIGNS / CONTINUE WORKING                 */}
       {/* ================================================== */}
-      {savedProjects.length > 0 && !searchedTemplates && (
+      {activeTab === 'home' && savedProjects.length > 0 && !searchedTemplates && (
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -614,92 +644,22 @@ export function Dashboard({ onNavigate, onOpenTemplate }: DashboardProps) {
             </div>
           </div>
 
+          {/* Continue Working Carousel — uses same visual design as Templates for you */}
           <div
             ref={recentsRef}
-            className="flex gap-4 overflow-x-auto pb-1.5 pt-1 items-stretch no-scrollbar scroll-smooth"
+            className="flex gap-4 sm:gap-5 overflow-x-auto pb-1.5 pt-1 items-stretch no-scrollbar scroll-smooth"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {savedProjects.map((proj, idx) => {
-              const projSlides = Array.isArray(proj.slides) && proj.slides.length > 0
-                ? proj.slides
-                : (Array.isArray(proj.pages) && proj.pages.length > 0 ? proj.pages : (Array.isArray(proj.elements) ? [proj.elements] : []));
-              const projElements = Array.isArray(proj.elements) && proj.elements.length > 0
-                ? proj.elements
-                : (projSlides[0] || []);
-
-              const norm = normalizeCanonicalDesign({
-                ...proj,
-                elements: projElements,
-                slides: projSlides,
-                canvasWidth: proj.canvasWidth,
-                canvasHeight: proj.canvasHeight,
-                size: proj.size
-              });
-
-              const savedDesignPayload = {
-                ...proj,
-                id: proj.id,
-                name: proj.name || 'Untitled Design',
-                category: proj.type || proj.category || (norm.isLandscape ? 'Presentation' : 'Document'),
-                type: proj.type || proj.category || (norm.isLandscape ? 'Presentation' : 'Document'),
-                gradient: proj.gradient || '#0b131e',
-                size: `${norm.canvasWidth}×${norm.canvasHeight}`,
-                canvasWidth: norm.canvasWidth,
-                canvasHeight: norm.canvasHeight,
-                elements: norm.elements,
-                slides: norm.slides,
-                thumbnailUrl: proj.thumbnailUrl,
-                isSavedProject: true
-              };
-
+              const payload = buildSavedDesignPayload(proj);
               return (
-                <div
+                <SavedDesignCard
                   key={proj.id || idx}
-                  onClick={() => handleOpenSavedProject(savedDesignPayload)}
-                  className="group relative flex-shrink-0 flex flex-col bg-[#111118] border border-white/[0.08] hover:border-purple-500/50 rounded-xl overflow-hidden cursor-pointer shadow-md hover:shadow-2xl transition-all duration-200"
-                  style={{ width: '260px', height: '340px' }}
-                >
-                  {/* Real First Page Rendered Preview (Fixed 255px Frame) */}
-                  <div
-                    className="w-full relative overflow-hidden flex items-center justify-center p-3 bg-[#08090d] border-b border-white/[0.06]"
-                    style={{ height: '255px' }}
-                  >
-                    <TemplateMiniRenderer template={savedDesignPayload} className="w-full h-full" />
-                    {/* Hover Overlay */}
-                    <div 
-                      className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-[2px] cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenSavedProject(savedDesignPayload);
-                      }}
-                    >
-                      <span className="px-3.5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg flex items-center gap-1.5">
-                        <Play size={12} fill="white" /> Open Editor
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Metadata (Fixed 85px Frame) */}
-                  <div
-                    className="w-full p-3 flex flex-col justify-between bg-[#12121c]"
-                    style={{ height: '85px' }}
-                  >
-                    <span
-                      className="text-xs font-bold text-white line-clamp-2 leading-snug group-hover:text-purple-300 transition-colors"
-                      title={proj.name}
-                    >
-                      {proj.name || 'Untitled Design'}
-                    </span>
-                    <div className="flex items-center justify-between text-[11px] text-white/40 mt-auto pt-1">
-                      <span className="text-emerald-400/90 font-medium">
-                        {proj.type || proj.category || 'Design'}
-                      </span>
-                      <span className="flex items-center gap-1 text-[10px] text-white/35">
-                        <Clock size={11} /> {proj.time || 'Recently'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                  project={proj}
+                  isFavorite={favorites.has(proj.id)}
+                  onOpen={() => handleOpenSavedProject(payload)}
+                  onToggleFavorite={() => toggleFavorite(proj.id)}
+                />
               );
             })}
           </div>

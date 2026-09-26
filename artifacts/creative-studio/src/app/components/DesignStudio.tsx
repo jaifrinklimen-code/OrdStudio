@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { createProfessionalSlides } from "./presentationBuilder";
 import { loadAllCanonicalTemplates } from '../lib/templateRegistry';
 import { fetchCachedTemplates, fetchCachedProjects } from '../lib/templateApiClient';
-import { normalizeCanonicalDesign } from '../lib/coordinateNormalizer';
+import { normalizeCanonicalDesign, fitAIRedesignToCanonicalCanvas, isAIRedesignProject } from '../lib/coordinateNormalizer';
 
 const CUSTOM_TEMPLATES_STORAGE_KEY = 'ds_custom_templates';
 
@@ -161,10 +161,20 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed)) {
-            let hasMigration = false;
+                      let hasMigration = false;
             const valid = parsed
               .filter((p: any) => p && p.name !== 'Brand Kit v2' && p.name !== 'Product Launch' && p.name !== 'Q4 Presentation')
               .map((p: any) => {
+                // AI Redesign projects: apply canonical fit (center-based, 92% fill)
+                if (isAIRedesignProject(p) && p.aiRedesignCanvasFit !== true) {
+                  hasMigration = true;
+                  const fitted = fitAIRedesignToCanonicalCanvas(p);
+                  return {
+                    ...fitted,
+                    category: p.category || (fitted.canvasWidth >= fitted.canvasHeight ? 'Presentation' : 'Document'),
+                    type: p.type || (fitted.canvasWidth >= fitted.canvasHeight ? 'Presentation' : 'Document')
+                  };
+                }
                 const norm = normalizeCanonicalDesign(p);
                 if (norm.needsScale) {
                   hasMigration = true;
@@ -822,6 +832,7 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
         onBack={() => setSelected(null)}
         onSave={async (elements, slides, thumbnailUrl, designTitle) => {
           const finalName = designTitle || tmpl?.name || 'My Design';
+          const isAIRedesign = isAIRedesignProject(tmpl);
           const updatedProj = {
             ...tmpl,
             id: selected,
@@ -831,11 +842,12 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
             type: tmpl?.category || tmpl?.type || 'Presentation',
             category: tmpl?.category || tmpl?.type || 'Presentation',
             gradient: tmpl?.gradient || '#0b131e',
-            size: tmpl?.size || (tmpl?.canvasWidth && tmpl?.canvasHeight ? `${tmpl?.canvasWidth}×${tmpl?.canvasHeight}` : '1920×1080'),
+            size: tmpl?.size || (tmpl?.canvasWidth && tmpl?.canvasHeight ? `${tmpl?.canvasWidth}x${tmpl?.canvasHeight}` : '1920x1080'),
             canvasWidth: tmpl?.canvasWidth || 1920,
             canvasHeight: tmpl?.canvasHeight || 1080,
-            coordinateVersion: 2,
-            canonicalCoordinateVersion: 2,
+            coordinateVersion: isAIRedesign ? 3 : 2,
+            canonicalCoordinateVersion: isAIRedesign ? 3 : 2,
+            aiRedesignCanvasFit: isAIRedesign ? true : undefined,
             thumbnailUrl: thumbnailUrl || tmpl?.thumbnailUrl,
             elements: JSON.parse(JSON.stringify(elements)),
             slides: JSON.parse(JSON.stringify(slides)),
@@ -937,87 +949,6 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
           </div>
         </div>
       </FadeIn>
-
-      {/* Statistics removed per user request */}
-      {/* ─── Continue Recent Projects ─────────────────────── */}
-      {apiProjects.length > 0 && (
-        <FadeIn delay={160} duration={500}>
-          <div className="ds-section">
-            <div className="ds-section-header">
-              <div>
-                <h3 className="ds-section-title"><Clock size={15} />Continue Working</h3>
-                <p className="text-sm text-gray-400 mt-1">You were previously working on this</p>
-              </div>
-              <button className="ds-section-link">View all <ArrowRight size={12} /></button>
-            </div>
-            <div className="ds-recent-grid">
-              {apiProjects.map((p, i) => {
-                const projSlides = Array.isArray(p.slides) && p.slides.length > 0
-                  ? p.slides
-                  : (Array.isArray(p.pages) && p.pages.length > 0 ? p.pages : (Array.isArray(p.elements) ? [p.elements] : []));
-                const projElements = Array.isArray(p.elements) && p.elements.length > 0
-                  ? p.elements
-                  : (projSlides[0] || []);
-
-                const norm = normalizeCanonicalDesign({
-                  ...p,
-                  elements: projElements,
-                  slides: projSlides,
-                  canvasWidth: p.canvasWidth,
-                  canvasHeight: p.canvasHeight,
-                  size: p.size
-                });
-
-                const savedDesignPayload = {
-                  ...p,
-                  id: p.id,
-                  name: p.name || 'Untitled Design',
-                  category: p.type || p.category || (norm.isLandscape ? 'Presentation' : 'Document'),
-                  type: p.type || p.category || (norm.isLandscape ? 'Presentation' : 'Document'),
-                  gradient: p.gradient || '#0b131e',
-                  size: `${norm.canvasWidth}×${norm.canvasHeight}`,
-                  canvasWidth: norm.canvasWidth,
-                  canvasHeight: norm.canvasHeight,
-                  coordinateVersion: 2,
-                  canonicalCoordinateVersion: 2,
-                  elements: norm.elements,
-                  slides: norm.slides,
-                  thumbnailUrl: p.thumbnailUrl,
-                  isSavedProject: true
-                };
-
-                return (
-                  <div key={p.id || i} className="ds-recent-card" tabIndex={0} role="button" aria-label={`Continue ${p.name}`} onClick={() => {
-                    if (onOpenTemplate) {
-                      onOpenTemplate(savedDesignPayload);
-                    } else {
-                      setSelected(p.id);
-                    }
-                  }}>
-                    <div className="ds-recent-thumb relative overflow-hidden bg-slate-950 flex items-center justify-center p-2">
-                      <TemplateMiniRenderer template={savedDesignPayload} className="w-full h-full" />
-                      <div className="ds-recent-play"><Play size={16} fill="white" /></div>
-                    </div>
-                    <div className="ds-recent-info">
-                      <div className="ds-recent-name">{p.name || 'Untitled Design'}</div>
-                      <div className="ds-recent-meta">
-                        <span className="ds-recent-type">{p.type || p.category || 'Design'}</span>
-                        <span>·</span>
-                        <span>{p.time || 'Recently'}</span>
-                      </div>
-                      <div className="ds-progress-bar">
-                        <div className="ds-progress-fill" style={{ width: `${p.progress || 100}%`, background: p.gradient || 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)' }} />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </FadeIn>
-      )}
-
-
 
       {/* ─── Template Gallery ─────────────────────────────── */}
       <FadeIn delay={240} duration={500}>

@@ -139,11 +139,179 @@ export function calculateForegroundBounds(elements: any[], canvasW: number, canv
 }
 
 /**
+ * Check if a design is an AI Redesign project
+ */
+export function isAIRedesignProject(project: any): boolean {
+  if (!project) return false;
+  const name = String(project.name || '').trim();
+  const category = String(project.category || '').toLowerCase();
+  const type = String(project.type || '').toLowerCase();
+
+  return (
+    name.startsWith('AI_Redesign_') ||
+    name.toLowerCase().startsWith('ai_redesign_') ||
+    name.toLowerCase().includes('ai_redesign') ||
+    project.isAIRedesign === true ||
+    category === 'ai-redesign' ||
+    type === 'ai-redesign'
+  );
+}
+
+/**
+ * IMPLEMENT ONE CANONICAL AI REDESIGN FIT
+ * 
+ * Fits the foreground composition to ~92% of the project's own canvas dimensions.
+ * Uses center-based scaling: canvasCenter + (oldCoord - contentCenter) * scale
+ * Background element stays at (0, 0, canvasW, canvasH).
+ * Idempotent: if aiRedesignCanvasFit === true && coordinateVersion === 3, returns unchanged.
+ */
+export function fitAIRedesignToCanonicalCanvas(project: any): any {
+  if (!project) return project;
+  if (project.aiRedesignCanvasFit === true && project.coordinateVersion === 3) {
+    return project;
+  }
+
+  // Resolve the project's declared canvas size (certificate=1920×1080, consent letter=1200×1697, etc.)
+  let canvasWidth = Number(project.canvasWidth) || 0;
+  let canvasHeight = Number(project.canvasHeight) || 0;
+
+  if (canvasWidth <= 0 || canvasHeight <= 0) {
+    const sizeStr = String(project.size || '').replace(/x/gi, '×');
+    const parts = sizeStr.split('×').map(Number);
+    canvasWidth = parts[0] || 1920;
+    canvasHeight = parts[1] || 1080;
+  }
+
+  // Normalize portrait A4 and other known canvas sizes
+  if (canvasWidth <= 0) canvasWidth = 1920;
+  if (canvasHeight <= 0) canvasHeight = 1080;
+
+  const targetWidth = 0.92 * canvasWidth;    // ~92% of canvas width
+  const targetHeight = 0.92 * canvasHeight;  // ~92% of canvas height
+  const canvasCenterX = canvasWidth / 2;
+  const canvasCenterY = canvasHeight / 2;
+  const finalSize = `${canvasWidth}×${canvasHeight}`;
+
+  let rawSlides: any[][] = [];
+  if (Array.isArray(project.slides) && project.slides.length > 0) {
+    rawSlides = project.slides.map((s: any) => Array.isArray(s) ? s : (Array.isArray(s?.elements) ? s.elements : []));
+  } else if (Array.isArray(project.pages) && project.pages.length > 0) {
+    rawSlides = project.pages.map((p: any) => Array.isArray(p) ? p : (Array.isArray(p?.elements) ? p.elements : []));
+  } else if (Array.isArray(project.elements) && project.elements.length > 0) {
+    rawSlides = [project.elements];
+  } else {
+    rawSlides = [[]];
+  }
+
+  const fittedSlides = rawSlides.map((pageEls: any[]) => {
+    if (!Array.isArray(pageEls) || pageEls.length === 0) return [];
+
+    // Step 2: Exclude background from bounding box
+    const fg = calculateForegroundBounds(pageEls, canvasWidth, canvasHeight);
+
+    if (!fg.hasForeground || fg.width <= 0 || fg.height <= 0) {
+      return pageEls.map(el => {
+        if (isBackgroundElement(el, canvasWidth, canvasHeight)) {
+          return { ...el, x: 0, y: 0, width: canvasWidth, height: canvasHeight, coordinateVersion: 3 };
+        }
+        return { ...el, coordinateVersion: 3 };
+      });
+    }
+
+    // Steps 3 & 4: Calculate content bounding box dimensions & center
+    const contentWidth = fg.width;
+    const contentHeight = fg.height;
+    const contentCenterX = fg.minX + contentWidth / 2;
+    const contentCenterY = fg.minY + contentHeight / 2;
+
+    // Step 5: Scale that fills ~92% of canvas (uniform scale, preserve aspect ratio)
+    const scale = Math.min(
+      targetWidth / contentWidth,
+      targetHeight / contentHeight
+    );
+
+    // Step 6: Transform EVERY foreground element around the CONTENT CENTER (NOT 0,0)
+    return pageEls.map(el => {
+      if (!el) return el;
+
+      if (isBackgroundElement(el, canvasWidth, canvasHeight)) {
+        return {
+          ...el,
+          x: 0,
+          y: 0,
+          width: canvasWidth,
+          height: canvasHeight,
+          coordinateVersion: 3
+        };
+      }
+
+      const oldX = Number(el.x) || 0;
+      const oldY = Number(el.y) || 0;
+      const oldWidth = Number(el.width) || 0;
+      const oldHeight = Number(el.height) || 0;
+
+      // Center-based positioning: maps contentCenter → canvasCenter
+      const newX = Math.round(canvasCenterX + (oldX - contentCenterX) * scale);
+      const newY = Math.round(canvasCenterY + (oldY - contentCenterY) * scale);
+      const newWidth = Math.round(oldWidth * scale);
+      const newHeight = Math.round(oldHeight * scale);
+
+      const transformed: any = {
+        ...el,
+        x: newX,
+        y: newY,
+        width: newWidth,
+        height: newHeight,
+        coordinateVersion: 3
+      };
+
+      if (typeof el.fontSize === 'number' && el.fontSize > 0) {
+        transformed.fontSize = Math.round(el.fontSize * scale);
+      }
+      if (typeof el.strokeWidth === 'number' && el.strokeWidth > 0) {
+        transformed.strokeWidth = Math.max(1, Math.round(el.strokeWidth * scale));
+      }
+      if (typeof el.borderWidth === 'number' && el.borderWidth > 0) {
+        transformed.borderWidth = Math.max(1, Math.round(el.borderWidth * scale));
+      }
+      if (typeof el.borderRadius === 'number' && el.borderRadius > 0) {
+        transformed.borderRadius = Math.round(el.borderRadius * scale);
+      }
+      if (typeof el.cornerRadius === 'number' && el.cornerRadius > 0) {
+        transformed.cornerRadius = Math.round(el.cornerRadius * scale);
+      }
+      if (typeof el.lineHeight === 'number' && el.lineHeight > 3) {
+        transformed.lineHeight = Math.round(el.lineHeight * scale);
+      }
+
+      return transformed;
+    });
+  });
+
+  const fittedElements = fittedSlides[0] || [];
+
+  return {
+    ...project,
+    size: finalSize,
+    canvasWidth,
+    canvasHeight,
+    coordinateVersion: 3,
+    canonicalCoordinateVersion: 3,
+    aiRedesignCanvasFit: true,
+    elements: fittedElements,
+    slides: fittedSlides
+  };
+}
+
+/**
  * Dedicated detector: Identifies legacy AI Redesign records whose foreground
  * elements were authored in the legacy 780x439 (or 397x560) preview coordinate frame.
  */
 export function isLegacyAIRedesign(project: any): boolean {
   if (!project) return false;
+  if (isAIRedesignProject(project)) {
+    return project.aiRedesignCanvasFit !== true;
+  }
   const norm = normalizeCanonicalDesign(project);
   return norm.needsScale;
 }
@@ -161,6 +329,33 @@ export function normalizeCanonicalDesign(design: any): NormalizedDesignResult {
       scaleY: 1,
       coordinateVersion: 2,
       foregroundBounds: { minX: 0, minY: 0, maxX: 0, maxY: 0, width: 0, height: 0 }
+    };
+  }
+
+  // Intercept AI Redesign projects: apply canonical AI redesign fit (center-based, 92% fill)
+  if (isAIRedesignProject(design)) {
+    const fitted = fitAIRedesignToCanonicalCanvas(design);
+    const fittedCanvasW = fitted.canvasWidth || 1920;
+    const fittedCanvasH = fitted.canvasHeight || 1080;
+    const fg = calculateForegroundBounds(fitted.elements, fittedCanvasW, fittedCanvasH);
+    return {
+      canvasWidth: fittedCanvasW,
+      canvasHeight: fittedCanvasH,
+      isLandscape: fittedCanvasW >= fittedCanvasH,
+      elements: fitted.elements,
+      slides: fitted.slides,
+      needsScale: false,
+      scaleX: 1,
+      scaleY: 1,
+      coordinateVersion: 3,
+      foregroundBounds: {
+        minX: fg.minX,
+        minY: fg.minY,
+        maxX: fg.maxX,
+        maxY: fg.maxY,
+        width: fg.width,
+        height: fg.height
+      }
     };
   }
 

@@ -19,6 +19,7 @@ import {
   extractDocxText,
   type RedesignCategory 
 } from '../lib/aiRedesignEngine';
+import { fitAIRedesignToCanonicalCanvas } from '../lib/coordinateNormalizer';
 
 interface Asset {
   id: string;
@@ -472,14 +473,20 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
             outputFormat as RedesignCategory
           );
 
+          // CRITICAL: Immediately fit the AI redesign composition to fill the canvas (92% coverage, centered)
+          const fitted = fitAIRedesignToCanonicalCanvas({
+            ...generated,
+            isAIRedesign: true
+          });
+
           setResult({
-            name: generated.name,
-            size: generated.size,
-            elements: generated.elements,
-            slides: generated.slides,
-            layoutFamily: generated.layoutFamily,
+            name: fitted.name,
+            size: fitted.size,
+            elements: fitted.elements,
+            slides: fitted.slides,
+            layoutFamily: fitted.layoutFamily,
             variantIndex: currentVariant,
-            category: generated.category
+            category: fitted.category
           });
           setRedesigning(false);
         }, 400);
@@ -1044,14 +1051,24 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
               {/* Actions */}
               <div className="flex flex-col gap-2.5 mt-auto">
                 <button
-                  onClick={() => onOpenInEditor({ 
-                    name: result.name, 
-                    size: result.size, 
-                    elements: result.elements, 
-                    slides: result.slides,
-                    canvasWidth: parseInt(result.size.split(/×|x/)[0]) || 1920,
-                    canvasHeight: parseInt(result.size.split(/×|x/)[1]) || 1080
-                  } as any)}
+                  onClick={() => {
+                    const sizeStr = String(result.size || '1920×1080').replace(/x/gi, '×');
+                    const sizeParts = sizeStr.split('×').map(Number);
+                    const cW = sizeParts[0] || 1920;
+                    const cH = sizeParts[1] || 1080;
+                    const payload: any = {
+                      name: result.name,
+                      size: result.size,
+                      elements: result.elements,
+                      slides: result.slides,
+                      canvasWidth: cW,
+                      canvasHeight: cH,
+                      isAIRedesign: true
+                    };
+                    // Ensure the composition is fitted before opening in editor
+                    const fitted = fitAIRedesignToCanonicalCanvas(payload);
+                    onOpenInEditor(fitted);
+                  }}
                   className="w-full h-11 rounded-xl bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white font-bold text-[13px] flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-md shadow-purple-500/10"
                 >
                   <Eye size={15} /> Open in Canvas Editor
