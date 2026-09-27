@@ -256,18 +256,8 @@ export default function App() {
       slides: norm.slides
     };
 
-    if (!session) {
-      try {
-        sessionStorage.setItem('ord_pending_template', JSON.stringify(finalPayload));
-      } catch (e) {
-        console.warn('Unable to save pending template to session storage:', e);
-      }
-      navigate('/login');
-      return;
-    }
-
     setCustomDesign(finalPayload);
-  }, [session, navigate]);
+  }, []);
 
   const handleGoogleLogin = async () => {
     const { checkSupabaseConnection, supabase } = await import('../lib/supabase');
@@ -302,14 +292,6 @@ export default function App() {
   const renderSection = () => {
     let content: React.ReactNode = null;
     if (customDesign) {
-      if (!session) {
-        try {
-          sessionStorage.setItem('ord_pending_template', JSON.stringify(customDesign));
-        } catch (e) {}
-        setCustomDesign(null);
-        navigate('/login');
-        return null;
-      }
       content = (
         <CanvasEditor
           templateName={customDesign.name}
@@ -776,7 +758,13 @@ function DashboardLayout({
               <div className={`tb-tab ${activeTab === 'stickers' ? 'active' : ''}`} onClick={() => handleNavigate('stickers')}>Sticker Lab</div>
             </div>
             <div className="tb-search">
-              <SearchIcon />
+              <SearchIcon 
+                className="cursor-pointer hover:text-purple-400 transition-colors" 
+                onClick={() => {
+                  if (activeTab !== 'search') handleNavigate('search');
+                  topSearchRef.current?.focus();
+                }} 
+              />
               <input 
                 ref={topSearchRef}
                 type="text" 
@@ -786,6 +774,13 @@ function DashboardLayout({
                   setGlobalSearchQuery(e.target.value);
                   if (activeTab !== 'search') {
                     handleNavigate('search');
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (activeTab !== 'search') {
+                      handleNavigate('search');
+                    }
                   }
                 }}
                 onFocus={() => {

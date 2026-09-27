@@ -761,10 +761,9 @@ export function DesignStudio({ onOpenTemplate }: { onOpenTemplate?: (design: any
       };
     } else {
       // Original template from library
-      tmpl = apiTemplates.find(t => String(t.id) === String(selected));
-      if (!tmpl) {
-        tmpl = templatesWithSlides.find(t => String(t.id) === String(selected)) || templates.find(t => String(t.id) === String(selected));
-      }
+      tmpl = apiTemplates.find(t => String(t.id) === String(selected)) ||
+             templatesWithSlides.find(t => String(t.id) === String(selected)) ||
+             null;
     }
 
     if (!tmpl) {

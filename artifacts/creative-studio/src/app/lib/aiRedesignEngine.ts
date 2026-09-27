@@ -264,54 +264,139 @@ export function extractDocumentContent(fileName: string, content?: string, categ
 
   const cat = category || classifyDocumentType(fileName, content).category;
 
+  // Dynamic content extraction helper
+  const findLineMatching = (patterns: RegExp[]): string | undefined => {
+    for (const line of lines) {
+      for (const pattern of patterns) {
+        const m = line.match(pattern);
+        if (m && m[1] && m[1].trim().length > 2) {
+          return m[1].trim();
+        }
+      }
+    }
+    return undefined;
+  };
+
+  // Recipient / Candidate / Person extraction
+  const dynamicRecipient = findLineMatching([
+    /(?:awarded to|presented to|conferred upon|certifies that|certify that|name\s*[:\-]|student\s*[:\-]|candidate\s*[:\-])\s*([A-Za-z\s\.\,\'\-]+)/i,
+    /(?:mr\.|ms\.|dr\.|prof\.)\s+([A-Za-z\s\.\,\'\-]+)/i,
+    /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})$/
+  ]);
+
+  // Organization / University / Institution extraction
+  const dynamicOrg = findLineMatching([
+    /(?:institution|university|department|college|institute|organization|academy|school|company|corp)\s*[:\-]?\s*([A-Za-z0-9\s\,\.\&\-]+)/i,
+    /^([A-Z\s\,\.\&\-]{8,60})$/
+  ]);
+
+  // Reference / Credential ID extraction
+  const dynamicRef = findLineMatching([
+    /(?:ref\s*(?:no|id)?|credential\s*id|certificate\s*no|license\s*no|id)\s*[:\-#]\s*([A-Za-z0-9\-\/]+)/i
+  ]);
+
+  // Date extraction
+  const dynamicDate = findLineMatching([
+    /(?:date|issued|on\s+date)\s*[:\-]?\s*([A-Za-z0-9\s\,\.\/\-]+)/i,
+    /((?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s+\d{4})/i,
+    /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/
+  ]);
+
+  // Extract non-header informative body paragraphs
+  const informativeLines = lines.filter(l => 
+    l.length > 25 && 
+    !l.toLowerCase().includes('certificate') && 
+    !l.toLowerCase().includes('ref no') &&
+    !l.toLowerCase().includes('date:')
+  );
+
   if (cat === 'certificate') {
-    const isCyber = cleanTitle.toLowerCase().includes('cyber') || cleanTitle.toLowerCase().includes('security');
+    const isCyber = cleanTitle.toLowerCase().includes('cyber') || cleanTitle.toLowerCase().includes('security') || (content && content.toLowerCase().includes('cyber'));
+    const recipient = dynamicRecipient || (lines[1] && lines[1].length < 40 ? lines[1] : (isCyber ? 'ALEXANDER V. CHEN' : 'ELIZABETH J. MONTGOMERY'));
+    const org = dynamicOrg || (isCyber 
+      ? 'GLOBAL CYBERSECURITY & DEFENSIVE TELEMETRY ALLIANCE' 
+      : 'INTERNATIONAL ACCREDITATION COUNCIL FOR TECHNICAL EXCELLENCE');
+    const refNo = dynamicRef ? `CREDENTIAL ID: ${dynamicRef}` : `CREDENTIAL ID: CSA-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}X`;
+    const dateStr = dynamicDate ? dynamicDate.toUpperCase() : 'OCTOBER 24, 2026';
+    const bodyParagraph = informativeLines[0] || (isCyber
+      ? 'Has demonstrated rigorous mastery of threat telemetry, adversarial simulation, incident response orchestration, and zero-trust perimeter defense architectures.'
+      : 'In recognition of outstanding competence, professional diligence, and exemplary standards achieved in advanced technical assessments.');
+
     return {
       rawTitle: cleanTitle,
       displayTitle: cleanTitle.toUpperCase(),
       category: 'certificate',
-      organization: isCyber 
-        ? 'GLOBAL CYBERSECURITY & DEFENSIVE TELEMETRY ALLIANCE' 
-        : 'INTERNATIONAL ACCREDITATION COUNCIL FOR TECHNICAL EXCELLENCE',
-      recipient: 'ALEXANDER V. CHEN',
-      referenceNo: 'CREDENTIAL ID: CSA-2026-9842X',
-      dateStr: 'OCTOBER 24, 2026',
+      organization: org,
+      recipient: recipient.toUpperCase(),
+      referenceNo: refNo,
+      dateStr: dateStr,
       bodyParagraphs: [
-        'Has demonstrated rigorous mastery of threat telemetry, adversarial simulation, incident response orchestration, and zero-trust perimeter defense architectures.',
-        'Having successfully completed all rigorous theoretical benchmarks and timed red-team simulations under verified supervisory audit.'
+        bodyParagraph,
+        informativeLines[1] || 'Having successfully completed all rigorous theoretical benchmarks and supervisory audits.'
       ],
       signatories: [
-        { name: 'Dr. Marcus Vance, Ph.D.', title: 'Director of Cyber Defense Operations' },
-        { name: 'Elena Rostova, CISM', title: 'Chief Information Security Officer' }
+        { name: 'Dr. Marcus Vance, Ph.D.', title: 'Director of Professional Certification' },
+        { name: 'Elena Rostova, CISM', title: 'Executive Secretary of the Board' }
       ],
-      tags: ['Verified Credential', 'SOC-2 Aligned', 'Level 4 Mastery'],
-      badges: ['256-BIT SHA HASH', 'ACCREDITED 2026', 'DEFENSIVE TELEMETRY']
+      tags: ['Verified Credential', 'Accredited 2026', 'SOC-2 Aligned'],
+      badges: ['VERIFIED CREDENTIAL', 'HONORS ACCREDITATION', 'OFFICIAL EMBOSS']
     };
   }
 
   if (cat === 'consent_letter') {
     const isSih = cleanTitle.toLowerCase().includes('sih') || (content && content.toLowerCase().includes('sih'));
+    const org = dynamicOrg || 'DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING\nAPEX INSTITUTE OF TECHNOLOGY & ADVANCED RESEARCH';
+    const recipient = dynamicRecipient 
+      ? `The Head of Admissions / Review Board\nAttention: ${dynamicRecipient}`
+      : (isSih 
+          ? 'The Organizing Committee\nSmart India Hackathon (SIH) 2026\nMinistry of Education\'s Innovation Cell, AICTE\nNew Delhi, India'
+          : 'To Whom It May Concern\nAuthorized Committee for Institutional Affiliation');
+    const refNo = dynamicRef ? `REF NO: ${dynamicRef}` : `REF NO: AUTH-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const dateStr = dynamicDate || 'October 24, 2026';
+
+    const p1 = informativeLines[0] || (isSih 
+      ? 'This is to officially certify that the Department of Computer Science & Engineering has reviewed and formally sanctioned the participation of the nominated team in the Smart India Hackathon 2026.'
+      : 'This letter confirms that the undersigned institution has formally reviewed and sanctioned the requested authorization and full participation in the designated program.');
+    const p2 = informativeLines[1] || 'The nominated candidates are bonafide students/members of this institution and are permitted full access to campus resources and laboratory facilities.';
+    const p3 = informativeLines[2] || 'The institution undertakes full responsibility in accordance with governing institutional bylaws and state council regulations.';
+
     return {
       rawTitle: cleanTitle,
-      displayTitle: isSih 
-        ? 'SMART INDIA HACKATHON 2026 — INSTITUTIONAL CONSENT LETTER' 
-        : cleanTitle.toUpperCase(),
+      displayTitle: cleanTitle.toUpperCase(),
       category: 'consent_letter',
-      organization: 'DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING\nAPEX INSTITUTE OF TECHNOLOGY & ADVANCED RESEARCH',
-      recipient: 'The Organizing Committee\nSmart India Hackathon (SIH) 2026\nMinistry of Education\'s Innovation Cell, AICTE\nNew Delhi, India',
-      referenceNo: 'REF NO: AIT/CSE/SIH-2026/AUTH-042',
-      dateStr: 'October 24, 2026',
-      bodyParagraphs: [
-        'This is to officially certify that the Department of Computer Science & Engineering has reviewed and formally sanctioned the participation of Team "NEXUS" in the Smart India Hackathon 2026.',
-        'The nominated team members are bonafide students of this institution and are permitted to participate in all regional, national, and grand finale rounds with access to dedicated campus lab infrastructure.',
-        'The institution undertakes full responsibility for providing mentoring, hardware components, and travel arrangements in accordance with AICTE & Ministry of Education guidelines.'
-      ],
+      organization: org,
+      recipient: recipient,
+      referenceNo: refNo,
+      dateStr: dateStr,
+      bodyParagraphs: [p1, p2, p3],
       signatories: [
-        { name: 'Prof. Rachel Adams', title: 'Head of Department', dept: 'Dept. of Computer Science & Engineering' },
+        { name: 'Prof. Rachel Adams', title: 'Head of Department', dept: 'Department of Computer Science & Engineering' },
         { name: 'Dr. Arthur Pendelton', title: 'Principal & Dean of Academics', dept: 'Apex Institute of Technology' }
       ],
       tags: ['Official Letterhead', 'Institutional Approval', 'Bonafide Endorsement'],
       badges: ['OFFICIAL SEAL', 'NOMINATION APPROVED', 'NBA ACCREDITED']
+    };
+  }
+
+  // Resume or CV
+  if (cat === 'resume') {
+    const recipient = dynamicRecipient || (lines[0] && lines[0].length < 35 ? lines[0] : 'ALEXANDER V. CHEN');
+    return {
+      rawTitle: cleanTitle,
+      displayTitle: cleanTitle.toUpperCase(),
+      category: 'resume',
+      organization: dynamicOrg || 'SYSTEMS ARCHITECTURE & SECURITY',
+      recipient: recipient.toUpperCase(),
+      referenceNo: `CV-${Date.now().toString().slice(-6)}`,
+      dateStr: dynamicDate || 'OCTOBER 2026',
+      bodyParagraphs: informativeLines.length > 0 ? informativeLines.slice(0, 3) : [
+        'Senior Software Engineer & Distributed Systems Architect with 8+ years leading production infrastructure, high-throughput pipelines, and security automation.'
+      ],
+      signatories: [
+        { name: recipient, title: 'Principal Engineer' }
+      ],
+      tags: ['Verified Resume', 'Executive Profile', 'ATS Aligned'],
+      badges: ['VERIFIED CANDIDATE', 'LEVEL 4 MASTERY']
     };
   }
 
@@ -320,11 +405,11 @@ export function extractDocumentContent(fileName: string, content?: string, categ
     rawTitle: cleanTitle,
     displayTitle: cleanTitle.toUpperCase(),
     category: cat,
-    organization: 'ORD STUDIO ENTERPRISE DESIGN SYSTEMS',
-    recipient: 'EXECUTIVE COMMITTEE',
-    referenceNo: `DOC-${Date.now().toString().slice(-6)}`,
-    dateStr: 'OCTOBER 2026',
-    bodyParagraphs: lines.length > 0 ? lines.slice(0, 3) : ['Comprehensive strategic framework & verified enterprise deliverable.'],
+    organization: dynamicOrg || 'ORD STUDIO ENTERPRISE DESIGN SYSTEMS',
+    recipient: dynamicRecipient || 'EXECUTIVE COMMITTEE',
+    referenceNo: dynamicRef ? `DOC-${dynamicRef}` : `DOC-${Date.now().toString().slice(-6)}`,
+    dateStr: dynamicDate || 'OCTOBER 2026',
+    bodyParagraphs: informativeLines.length > 0 ? informativeLines.slice(0, 3) : (lines.length > 0 ? lines.slice(0, 3) : ['Comprehensive strategic framework & verified enterprise deliverable.']),
     signatories: [
       { name: 'Sarah Lin', title: 'Managing Partner' },
       { name: 'David Miller', title: 'Executive Director' }
@@ -369,87 +454,65 @@ export function generateContentAwareRedesign(
     isLandscape: cW >= cH
   };
 
+
   const doc = extractDocumentContent(fileName, content, activeCategory);
   const size = `${cW}×${cH}`;
 
-  // Palette selection based on stylePreset
-  let bg = '#0f172a';
-  let cardBg = '#1e293b';
-  let brand = '#8b5cf6';
-  let titleColor = '#ffffff';
-  let bodyColor = '#94a3b8';
-  let accent = '#38bdf8';
-  let borderColor = 'rgba(255,255,255,0.1)';
+  // 4-way variant palette system — each variant gets distinct palette + layout family
+  // variantIndex 0,1,2,3 → 4 totally different design systems
+  const v = ((variantIndex % 4) + 4) % 4; // normalize to 0-3
 
-  if (classification.category === 'consent_letter') {
-    // Letters use authentic white/ivory document stock
-    if (variantIndex % 2 === 0) {
-      bg = '#ffffff';
-      cardBg = '#f8fafc';
-      brand = '#1e3a8a'; // Deep Institutional Navy
-      titleColor = '#0f172a';
-      bodyColor = '#334155';
-      accent = '#2563eb';
-      borderColor = '#cbd5e1';
-    } else {
-      bg = '#fafaf9'; // Crisp Ivory Memorandum
-      cardBg = '#f1f5f9';
-      brand = '#0f766e'; // Institutional Teal/Slate
-      titleColor = '#111827';
-      bodyColor = '#374151';
-      accent = '#0d9488';
-      borderColor = '#e2e8f0';
-    }
-  } else if (classification.category === 'certificate') {
-    if (variantIndex % 2 === 0) {
-      // Guilloche Dark Navy & Pure Gold
-      bg = '#090d16';
-      cardBg = '#121826';
-      brand = '#d4af37'; // Pure Certificate Gold
-      titleColor = '#ffffff';
-      bodyColor = '#cbd5e1';
-      accent = '#38bdf8';
-      borderColor = 'rgba(212, 175, 55, 0.4)';
-    } else {
-      // Modern Asymmetric Technical Slate & Cyan
-      bg = '#0b0f17';
-      cardBg = '#131b2a';
-      brand = '#06b6d4'; // Technical Cyan
-      titleColor = '#ffffff';
-      bodyColor = '#94a3b8';
-      accent = '#a855f7';
-      borderColor = 'rgba(6, 182, 212, 0.35)';
-    }
-  } else {
-    if (stylePreset === 'gold') {
-      bg = '#0a0a0f';
-      brand = '#d4af37';
-      titleColor = '#ffffff';
-      bodyColor = '#a1a1aa';
-      accent = '#eab308';
-    } else if (stylePreset === 'clean') {
-      bg = '#f8fafc';
-      brand = '#0f766e';
-      titleColor = '#0f172a';
-      bodyColor = '#475569';
-      accent = '#14b8a6';
-      cardBg = '#ffffff';
-      borderColor = '#e2e8f0';
-    } else if (stylePreset === 'neon') {
-      bg = '#090912';
-      brand = '#f43f5e';
-      titleColor = '#ffffff';
-      bodyColor = '#c084fc';
-      accent = '#06b6d4';
-    }
+  // Base palette presets
+  const palettes = [
+    // v=0: Modern Dark Purple — midnight slate + violet
+    { bg: '#0f172a', cardBg: '#1e293b', brand: '#8b5cf6', titleColor: '#ffffff', bodyColor: '#94a3b8', accent: '#38bdf8', borderColor: 'rgba(255,255,255,0.1)' },
+    // v=1: Gold Executive — near-black + rich gold
+    { bg: '#0a0a0f', cardBg: '#111118', brand: '#d4af37', titleColor: '#f8fafc', bodyColor: '#a1a1aa', accent: '#eab308', borderColor: 'rgba(212,175,55,0.3)' },
+    // v=2: Neon Cyberpunk — deep black + rose/cyan
+    { bg: '#090912', cardBg: '#12121f', brand: '#f43f5e', titleColor: '#ffffff', bodyColor: '#c084fc', accent: '#06b6d4', borderColor: 'rgba(244,63,94,0.25)' },
+    // v=3: Organic Clean — crisp white + emerald teal
+    { bg: '#f8fafc', cardBg: '#ffffff', brand: '#0f766e', titleColor: '#0f172a', bodyColor: '#475569', accent: '#14b8a6', borderColor: '#e2e8f0' },
+  ];
+
+  // Override for document categories that require specific palette reasoning
+  let p = { ...palettes[v] };
+
+  if (activeCategory === 'consent_letter' || activeCategory === 'resume' || activeCategory === 'report') {
+    // Document types: Always light paper aesthetics; vary the accent/brand
+    const docPalettes = [
+      { bg: '#ffffff', cardBg: '#f8fafc', brand: '#1e3a8a', titleColor: '#0f172a', bodyColor: '#334155', accent: '#2563eb', borderColor: '#cbd5e1' },
+      { bg: '#fafaf9', cardBg: '#f1f5f9', brand: '#0f766e', titleColor: '#111827', bodyColor: '#374151', accent: '#0d9488', borderColor: '#e2e8f0' },
+      { bg: '#fff7ed', cardBg: '#fef3c7', brand: '#b45309', titleColor: '#1c1917', bodyColor: '#57534e', accent: '#d97706', borderColor: '#fde68a' },
+      { bg: '#f0fdf4', cardBg: '#dcfce7', brand: '#166534', titleColor: '#0f172a', bodyColor: '#4b5563', accent: '#16a34a', borderColor: '#bbf7d0' },
+    ];
+    p = { ...docPalettes[v] };
+  } else if (activeCategory === 'certificate') {
+    const certPalettes = [
+      { bg: '#090d16', cardBg: '#121826', brand: '#d4af37', titleColor: '#ffffff', bodyColor: '#cbd5e1', accent: '#38bdf8', borderColor: 'rgba(212,175,55,0.4)' },
+      { bg: '#0b0f17', cardBg: '#131b2a', brand: '#06b6d4', titleColor: '#ffffff', bodyColor: '#94a3b8', accent: '#a855f7', borderColor: 'rgba(6,182,212,0.35)' },
+      { bg: '#0c0a00', cardBg: '#1a1500', brand: '#f59e0b', titleColor: '#fef9c3', bodyColor: '#d4b483', accent: '#ef4444', borderColor: 'rgba(245,158,11,0.4)' },
+      { bg: '#0a0a10', cardBg: '#0f0f1a', brand: '#a855f7', titleColor: '#f0e6ff', bodyColor: '#a78bfa', accent: '#ec4899', borderColor: 'rgba(168,85,247,0.4)' },
+    ];
+    p = { ...certPalettes[v] };
+  } else if (stylePreset === 'gold') {
+    p.bg = '#0a0a0f'; p.brand = '#d4af37'; p.titleColor = '#ffffff'; p.bodyColor = '#a1a1aa'; p.accent = '#eab308';
+  } else if (stylePreset === 'clean') {
+    p.bg = '#f8fafc'; p.brand = '#0f766e'; p.titleColor = '#0f172a'; p.bodyColor = '#475569'; p.accent = '#14b8a6'; p.cardBg = '#ffffff'; p.borderColor = '#e2e8f0';
+  } else if (stylePreset === 'neon') {
+    p.bg = '#090912'; p.brand = '#f43f5e'; p.titleColor = '#ffffff'; p.bodyColor = '#c084fc'; p.accent = '#06b6d4';
+  } else if (stylePreset === 'pastel') {
+    p.bg = '#fdf4ff'; p.cardBg = '#f3e8ff'; p.brand = '#9333ea'; p.titleColor = '#3b0764'; p.bodyColor = '#7e22ce'; p.accent = '#db2777'; p.borderColor = '#e879f9';
   }
+
+  const { bg, cardBg, brand, titleColor, bodyColor, accent, borderColor } = p;
 
   let elements: any[] = [];
   let layoutFamily = '';
 
+
   switch (classification.category) {
     case 'certificate': {
-      if (variantIndex % 2 === 0) {
+      if (v <= 1) {  // v=0: Gold dark, v=1: Cyan technical
         // =========================================================================
         // CERTIFICATE VARIANT 1: Formal Precision Security Frame & Centered Honor Hierarchy
         // =========================================================================
@@ -497,9 +560,9 @@ export function generateContentAwareRedesign(
           // Footer Verification Hash
           { id: 'cert-foot-meta', type: 'text', x: 100, y: 940, width: cW - 200, height: 25, fill: bodyColor, text: `${doc.referenceNo}  •  ISSUED: ${doc.dateStr}  •  VERIFIED VIA 256-BIT CRYPTOGRAPHIC CONSORTIUM REGISTRY`, fontSize: 11, fontFamily: 'Space Grotesk', letterSpacing: 2, textAlign: 'center', opacity: 0.6, visible: true, locked: true }
         ];
-      } else {
+      } else {  // v=2 or v=3: amber/purple variants reuse the technical sidebar layout with different palette
         // =========================================================================
-        // CERTIFICATE VARIANT 2: Modern Technical Cyber Analyst Credential (Asymmetric Sidebar Grid)
+        // CERTIFICATE VARIANT 2+: Modern Technical Cyber Analyst Credential (Asymmetric Sidebar Grid)
         // =========================================================================
         layoutFamily = 'Asymmetric Technical Credential Sidebar';
         elements = [
@@ -544,7 +607,7 @@ export function generateContentAwareRedesign(
     }
 
     case 'consent_letter': {
-      if (variantIndex % 2 === 0) {
+      if (v <= 1) {  // v=0: Navy institutional, v=1: Teal memorandum
         // =========================================================================
         // CONSENT LETTER VARIANT 1: Formal Institutional Letterhead with Official Stamp
         // =========================================================================
@@ -597,9 +660,9 @@ export function generateContentAwareRedesign(
           { id: 'letter-foot-rule', type: 'rect', x: 80, y: 1590, width: cW - 160, height: 1, fill: borderColor, opacity: 0.9, visible: true, locked: true },
           { id: 'letter-foot-txt', type: 'text', x: 80, y: 1610, width: cW - 160, height: 30, fill: bodyColor, text: 'APEX CAMPUS · SECTOR 14, INSTITUTIONAL AREA · WEB: WWW.APEXTECH.EDU · VERIFIED INSTITUTIONAL RECORD', fontSize: 10, fontFamily: 'Space Grotesk', letterSpacing: 2, textAlign: 'center', opacity: 0.6, visible: true, locked: true }
         ];
-      } else {
+      } else {  // v=2 or v=3: amber/green variants reuse executive memorandum layout with different palette
         // =========================================================================
-        // CONSENT LETTER VARIANT 2: Modern Executive Memorandum Layout (Left Reference Rail)
+        // CONSENT LETTER VARIANT 2+: Modern Executive Memorandum Layout (Left Reference Rail)
         // =========================================================================
         layoutFamily = 'Executive Memorandum & Left Reference Rail';
         elements = [
@@ -643,81 +706,276 @@ export function generateContentAwareRedesign(
     }
 
     case 'resume': {
-      layoutFamily = variantIndex % 2 === 0 ? 'Modern Two-Column ATS Resume' : 'Executive Single-Column Chronological';
-      elements = [
-        { id: 'res-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
-        { id: 'res-hdr-bg', type: 'rect', x: 60, y: 60, width: cW - 120, height: 150, fill: cardBg, borderRadius: 10, opacity: 1, visible: true, locked: true },
-        { id: 'res-name', type: 'text', x: 90, y: 85, width: 800, height: 45, fill: titleColor, text: doc.recipient || 'ALEXANDER V. CHEN', fontSize: 34, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
-        { id: 'res-role', type: 'text', x: 90, y: 135, width: 800, height: 25, fill: brand, text: 'SENIOR SYSTEMS ARCHITECT & THREAT RESEARCHER', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
-        { id: 'res-contact', type: 'text', x: 90, y: 165, width: cW - 180, height: 25, fill: bodyColor, text: 'contact@ordstudio.com  •  +1 (555) 019-2834  •  San Francisco, CA', fontSize: 12, fontFamily: 'Inter', opacity: 0.85, visible: true, locked: false },
-        // Left Column (Skills)
-        { id: 'res-l-col', type: 'rect', x: 60, y: 240, width: 340, height: 1390, fill: cardBg, borderRadius: 10, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
-        { id: 'res-l-title', type: 'text', x: 85, y: 270, width: 290, height: 30, fill: brand, text: 'TECHNICAL MASTERY', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
-        { id: 'res-l-body', type: 'text', x: 85, y: 310, width: 290, height: 400, fill: bodyColor, text: '• Distributed Systems Architecture\n• Zero-Trust Network Defense\n• Cloud Security & Kubernetes\n• Kernel Behavioral Telemetry\n• SOC-2 Type II Compliance\n• Threat Hunting & SIEM', fontSize: 13, fontFamily: 'Inter', lineHeight: 2.1, opacity: 0.9, visible: true, locked: false },
-        // Right Column (Experience)
-        { id: 'res-r-title', type: 'text', x: 440, y: 270, width: 700, height: 30, fill: brand, text: 'EXECUTIVE TRACK RECORD', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
-        { id: 'res-r-body', type: 'text', x: 440, y: 310, width: cW - 500, height: 1200, fill: titleColor, text: `PRINCIPAL ARCHITECT — APEX DEFENSE LABS\n2022 – Present · San Francisco, CA\n• Directed 90+ person engineering division across platform telemetry and zero-trust edge.\n• Decreased MTTR by 74% through automated behavioral anomaly pipelines.\n\nSENIOR ENGINEER — ORBIT SYSTEMS\n2018 – 2022 · New York, NY\n• Led core architecture rewrite scaling throughput by 12x with zero security incidents.`, fontSize: 14, fontFamily: 'Inter', lineHeight: 1.9, opacity: 0.95, visible: true, locked: false }
-      ];
+      if (v === 0) {
+        layoutFamily = 'Modern Two-Column ATS Resume';
+        elements = [
+          { id: 'res-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'res-hdr-bg', type: 'rect', x: 60, y: 60, width: cW - 120, height: 150, fill: cardBg, borderRadius: 10, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'res-name', type: 'text', x: 90, y: 85, width: 800, height: 45, fill: titleColor, text: doc.recipient || 'ALEXANDER V. CHEN', fontSize: 34, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'res-role', type: 'text', x: 90, y: 135, width: 800, height: 25, fill: brand, text: doc.displayTitle || 'SENIOR SYSTEMS ARCHITECT & RESEARCHER', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'res-contact', type: 'text', x: 90, y: 165, width: cW - 180, height: 25, fill: bodyColor, text: 'contact@ordstudio.com  •  +1 (555) 019-2834  •  San Francisco, CA', fontSize: 12, fontFamily: 'Inter', opacity: 0.85, visible: true, locked: false },
+          { id: 'res-l-col', type: 'rect', x: 60, y: 240, width: 340, height: cH - 300, fill: cardBg, borderRadius: 10, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'res-l-title', type: 'text', x: 85, y: 270, width: 290, height: 30, fill: brand, text: 'TECHNICAL MASTERY', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'res-l-body', type: 'text', x: 85, y: 310, width: 290, height: 400, fill: bodyColor, text: '• Distributed Systems\n• Zero-Trust Security\n• Cloud Infrastructure\n• Telemetry & Analytics\n• SOC-2 Compliance\n• Threat Automation', fontSize: 13, fontFamily: 'Inter', lineHeight: 2.1, opacity: 0.9, visible: true, locked: false },
+          { id: 'res-r-title', type: 'text', x: 440, y: 270, width: 700, height: 30, fill: brand, text: 'EXECUTIVE TRACK RECORD', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'res-r-body', type: 'text', x: 440, y: 310, width: cW - 500, height: 1100, fill: titleColor, text: `${doc.bodyParagraphs[0]}\n\nCORE HIGHLIGHTS & ACHIEVEMENTS:\n• ${doc.bodyParagraphs[1] || 'Spearheaded critical engineering milestones with verified 99.9% uptime.'}\n• ${doc.bodyParagraphs[2] || 'Reduced operational latency by 45% through modern architecture redesign.'}`, fontSize: 14, fontFamily: 'Inter', lineHeight: 1.9, opacity: 0.95, visible: true, locked: false }
+        ];
+      } else if (v === 1) {
+        layoutFamily = 'Executive Single-Column Chronological';
+        elements = [
+          { id: 'res2-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'res2-top-bar', type: 'rect', x: 0, y: 0, width: cW, height: 12, fill: brand, opacity: 1, visible: true, locked: true },
+          { id: 'res2-name', type: 'text', x: 80, y: 60, width: cW - 160, height: 50, fill: titleColor, text: doc.recipient || 'ALEXANDER V. CHEN', fontSize: 38, fontFamily: 'Space Grotesk', fontWeight: '900', letterSpacing: 1, opacity: 1, visible: true, locked: false },
+          { id: 'res2-sub', type: 'text', x: 80, y: 115, width: cW - 160, height: 26, fill: brand, text: doc.organization || 'EXECUTIVE LEADERSHIP & SYSTEMS ENGINEERING', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: '800', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'res2-line1', type: 'rect', x: 80, y: 155, width: cW - 160, height: 2, fill: brand, opacity: 0.8, visible: true, locked: true },
+          { id: 'res2-summary-lbl', type: 'text', x: 80, y: 180, width: cW - 160, height: 25, fill: brand, text: 'EXECUTIVE PROFILE', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'res2-summary', type: 'text', x: 80, y: 215, width: cW - 160, height: 110, fill: bodyColor, text: doc.bodyParagraphs[0], fontSize: 14, fontFamily: 'Inter', lineHeight: 1.9, opacity: 0.95, visible: true, locked: false },
+          { id: 'res2-exp-lbl', type: 'text', x: 80, y: 350, width: cW - 160, height: 25, fill: brand, text: 'PROFESSIONAL EXPERIENCE & OUTCOMES', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'res2-exp-box', type: 'rect', x: 80, y: 390, width: cW - 160, height: 420, fill: cardBg, borderRadius: 10, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'res2-exp-t', type: 'text', x: 110, y: 415, width: cW - 220, height: 360, fill: titleColor, text: `SENIOR DIRECTOR OF TECHNOLOGY\n2021 – Present · San Francisco HQ\n\n${doc.bodyParagraphs[1] || 'Orchestrated cross-functional systems scaling and zero-downtime migrations.'}\n\nKEY SPECIALIZATIONS:\n• Architectural Governance & Resilience\n• Enterprise Scalability & Security Protocols\n• Talent Mentorship & Team Acceleration`, fontSize: 14, fontFamily: 'Inter', lineHeight: 1.9, opacity: 0.95, visible: true, locked: false }
+        ];
+      } else if (v === 2) {
+        layoutFamily = 'Creative Colored-Sidebar CV';
+        elements = [
+          { id: 'res3-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'res3-side', type: 'rect', x: 0, y: 0, width: 380, height: cH, fill: brand, opacity: 0.12, stroke: 'transparent', strokeWidth: 0, visible: true, locked: true },
+          { id: 'res3-side-div', type: 'rect', x: 380, y: 0, width: 2, height: cH, fill: brand, opacity: 0.5, visible: true, locked: true },
+          { id: 'res3-sb-name', type: 'text', x: 40, y: 80, width: 300, height: 100, fill: titleColor, text: doc.recipient || 'ALEXANDER\nCHEN', fontSize: 32, fontFamily: 'Space Grotesk', fontWeight: '900', lineHeight: 1.1, opacity: 1, visible: true, locked: false },
+          { id: 'res3-sb-contact', type: 'text', x: 40, y: 210, width: 300, height: 180, fill: bodyColor, text: `PORTFOLIO:\nordstudio.com/lead\n\nCONTACT:\nhello@ordstudio.com\n+1 555 491 2049\n\nLOCATION:\nSan Francisco, CA`, fontSize: 12, fontFamily: 'Space Grotesk', lineHeight: 1.8, opacity: 0.9, visible: true, locked: false },
+          { id: 'res3-main-title', type: 'text', x: 430, y: 80, width: cW - 480, height: 40, fill: brand, text: doc.displayTitle || 'LEAD ARCHITECT & RESEARCHER', fontSize: 18, fontFamily: 'Space Grotesk', fontWeight: '800', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'res3-main-body', type: 'text', x: 430, y: 140, width: cW - 480, height: 300, fill: titleColor, text: doc.bodyParagraphs[0], fontSize: 15, fontFamily: 'Inter', lineHeight: 1.9, opacity: 0.95, visible: true, locked: false }
+        ];
+      } else {
+        layoutFamily = 'Minimalist Grid Resume';
+        elements = [
+          { id: 'res4-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'res4-tag', type: 'text', x: 80, y: 70, width: 500, height: 25, fill: brand, text: 'CURRICULUM VITAE // 2026', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: '800', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'res4-name', type: 'text', x: 80, y: 110, width: cW - 160, height: 60, fill: titleColor, text: doc.recipient || 'ALEXANDER CHEN', fontSize: 44, fontFamily: 'Space Grotesk', fontWeight: '900', opacity: 1, visible: true, locked: false },
+          { id: 'res4-rule', type: 'rect', x: 80, y: 185, width: cW - 160, height: 1, fill: borderColor, opacity: 0.8, visible: true, locked: true },
+          { id: 'res4-c1', type: 'rect', x: 80, y: 220, width: (cW - 200) / 2, height: 350, fill: cardBg, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'res4-c1-t', type: 'text', x: 110, y: 250, width: (cW - 260) / 2, height: 280, fill: titleColor, text: `CORE COMPETENCIES\n\n${doc.bodyParagraphs[0]}`, fontSize: 14, fontFamily: 'Inter', lineHeight: 1.8, opacity: 0.95, visible: true, locked: false },
+          { id: 'res4-c2', type: 'rect', x: cW / 2 + 20, y: 220, width: (cW - 200) / 2, height: 350, fill: cardBg, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'res4-c2-t', type: 'text', x: cW / 2 + 50, y: 250, width: (cW - 260) / 2, height: 280, fill: titleColor, text: `SELECTED IMPACT\n\n${doc.bodyParagraphs[1] || 'Engineered automated verification framework with 100% compliance rate.'}`, fontSize: 14, fontFamily: 'Inter', lineHeight: 1.8, opacity: 0.95, visible: true, locked: false }
+        ];
+      }
       break;
     }
 
     case 'poster': {
-      layoutFamily = variantIndex % 2 === 0 ? 'Full-Bleed Typographic Exhibition' : 'Asymmetric Modular Grid Poster';
-      elements = [
-        { id: 'pos-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
-        { id: 'pos-border', type: 'rect', x: 50, y: 50, width: cW - 100, height: cH - 100, fill: 'transparent', stroke: brand, strokeWidth: 1.5, opacity: 0.6, visible: true, locked: true },
-        { id: 'pos-tag', type: 'text', x: 80, y: 90, width: 400, height: 30, fill: brand, text: 'EXHIBIT ARCHIVE // VOL. 26', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 3, opacity: 1, visible: true, locked: false },
-        { id: 'pos-title', type: 'text', x: 80, y: 150, width: cW - 160, height: 260, fill: titleColor, text: doc.displayTitle, fontSize: 64, fontFamily: 'Space Grotesk', fontWeight: '900', lineHeight: 1.05, opacity: 1, visible: true, locked: false },
-        { id: 'pos-desc-card', type: 'rect', x: 80, y: 440, width: cW - 160, height: 380, fill: `${brand}12`, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
-        { id: 'pos-desc', type: 'text', x: 110, y: 480, width: cW - 220, height: 300, fill: bodyColor, text: doc.bodyParagraphs[0], fontSize: 22, fontFamily: 'Inter', lineHeight: 1.7, opacity: 0.9, visible: true, locked: false },
-        { id: 'pos-date', type: 'text', x: 80, y: 880, width: 450, height: 160, fill: titleColor, text: 'SCHEDULE & DATES\nOCTOBER 24 – NOV 18, 2026\nDAILY 10:00 – 20:00', fontSize: 18, fontFamily: 'Space Grotesk', fontWeight: 'bold', lineHeight: 1.7, opacity: 1, visible: true, locked: false },
-        { id: 'pos-venue', type: 'text', x: 550, y: 880, width: 450, height: 160, fill: titleColor, text: 'VENUE & LOCATION\nMETROPOLITAN HALL\nPARIS · BY INVITATION', fontSize: 18, fontFamily: 'Space Grotesk', fontWeight: 'bold', lineHeight: 1.7, opacity: 1, visible: true, locked: false }
-      ];
+      if (v === 0) {
+        layoutFamily = 'Full-Bleed Typographic Exhibition';
+        elements = [
+          { id: 'pos-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'pos-border', type: 'rect', x: 50, y: 50, width: cW - 100, height: cH - 100, fill: 'transparent', stroke: brand, strokeWidth: 1.5, opacity: 0.6, visible: true, locked: true },
+          { id: 'pos-tag', type: 'text', x: 80, y: 90, width: 400, height: 30, fill: brand, text: 'EXHIBIT ARCHIVE // VOL. 26', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 3, opacity: 1, visible: true, locked: false },
+          { id: 'pos-title', type: 'text', x: 80, y: 150, width: cW - 160, height: 260, fill: titleColor, text: doc.displayTitle, fontSize: 64, fontFamily: 'Space Grotesk', fontWeight: '900', lineHeight: 1.05, opacity: 1, visible: true, locked: false },
+          { id: 'pos-desc-card', type: 'rect', x: 80, y: 440, width: cW - 160, height: 380, fill: `${brand}12`, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'pos-desc', type: 'text', x: 110, y: 480, width: cW - 220, height: 300, fill: bodyColor, text: doc.bodyParagraphs[0], fontSize: 22, fontFamily: 'Inter', lineHeight: 1.7, opacity: 0.9, visible: true, locked: false },
+          { id: 'pos-date', type: 'text', x: 80, y: 880, width: 450, height: 160, fill: titleColor, text: 'SCHEDULE & DATES\nOCTOBER 24 – NOV 18, 2026\nDAILY 10:00 – 20:00', fontSize: 18, fontFamily: 'Space Grotesk', fontWeight: 'bold', lineHeight: 1.7, opacity: 1, visible: true, locked: false },
+          { id: 'pos-venue', type: 'text', x: 550, y: 880, width: 450, height: 160, fill: titleColor, text: 'VENUE & LOCATION\nMETROPOLITAN HALL\nPARIS · BY INVITATION', fontSize: 18, fontFamily: 'Space Grotesk', fontWeight: 'bold', lineHeight: 1.7, opacity: 1, visible: true, locked: false }
+        ];
+      } else if (v === 1) {
+        layoutFamily = 'Asymmetric Modular Grid Poster';
+        elements = [
+          { id: 'pos2-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'pos2-top', type: 'rect', x: 60, y: 60, width: cW - 120, height: 260, fill: cardBg, borderRadius: 16, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'pos2-tag', type: 'text', x: 90, y: 90, width: 400, height: 25, fill: brand, text: '✦ SPECIAL SHOWCASE', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: '800', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'pos2-title', type: 'text', x: 90, y: 130, width: cW - 180, height: 160, fill: titleColor, text: doc.displayTitle, fontSize: 50, fontFamily: 'Space Grotesk', fontWeight: '900', lineHeight: 1.1, opacity: 1, visible: true, locked: false },
+          { id: 'pos2-col1', type: 'rect', x: 60, y: 350, width: (cW - 140) / 2, height: 600, fill: `${brand}15`, borderRadius: 16, stroke: brand, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'pos2-col1-t', type: 'text', x: 90, y: 390, width: (cW - 200) / 2, height: 500, fill: titleColor, text: `CURATORIAL STATEMENT:\n\n${doc.bodyParagraphs[0]}`, fontSize: 17, fontFamily: 'Inter', lineHeight: 1.8, opacity: 0.95, visible: true, locked: false },
+          { id: 'pos2-col2', type: 'rect', x: cW / 2 + 10, y: 350, width: (cW - 140) / 2, height: 600, fill: cardBg, borderRadius: 16, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'pos2-col2-t', type: 'text', x: cW / 2 + 40, y: 390, width: (cW - 200) / 2, height: 500, fill: bodyColor, text: `EVENT HIGHLIGHTS:\n\n• Keynote Dialogue with Master Creators\n• Immersive Holographic Installations\n• Exclusive Collector Edition Catalog\n\nDATE: ${doc.dateStr}`, fontSize: 16, fontFamily: 'Inter', lineHeight: 2, opacity: 0.9, visible: true, locked: false }
+        ];
+      } else if (v === 2) {
+        layoutFamily = 'Dark Editorial Hero Poster';
+        elements = [
+          { id: 'pos3-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'pos3-badge', type: 'circle', x: cW / 2 - 80, y: 120, width: 160, height: 160, fill: `${brand}20`, stroke: brand, strokeWidth: 2, opacity: 0.8, visible: true, locked: true },
+          { id: 'pos3-badge-t', type: 'text', x: cW / 2 - 80, y: 180, width: 160, height: 40, fill: brand, text: '★ 2026 ★', fontSize: 18, fontFamily: 'Space Grotesk', fontWeight: '900', textAlign: 'center', opacity: 1, visible: true, locked: false },
+          { id: 'pos3-title', type: 'text', x: 60, y: 320, width: cW - 120, height: 260, fill: titleColor, text: doc.displayTitle, fontSize: 62, fontFamily: 'Cinzel', fontWeight: '900', textAlign: 'center', lineHeight: 1.1, opacity: 1, visible: true, locked: false },
+          { id: 'pos3-bar', type: 'rect', x: cW / 2 - 140, y: 600, width: 280, height: 3, fill: brand, opacity: 1, visible: true, locked: true },
+          { id: 'pos3-sub', type: 'text', x: 100, y: 640, width: cW - 200, height: 180, fill: bodyColor, text: doc.bodyParagraphs[0], fontSize: 20, fontFamily: 'Inter', textAlign: 'center', lineHeight: 1.8, opacity: 0.9, visible: true, locked: false }
+        ];
+      } else {
+        layoutFamily = 'Clean Split-Column Poster';
+        elements = [
+          { id: 'pos4-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'pos4-side', type: 'rect', x: 0, y: 0, width: 160, height: cH, fill: brand, opacity: 0.9, visible: true, locked: true },
+          { id: 'pos4-side-t', type: 'text', x: 20, y: cH - 260, width: cH - 300, height: 100, fill: '#ffffff', text: 'ORD STUDIO ANNUAL DESIGN FESTIVAL', fontSize: 16, fontFamily: 'Space Grotesk', fontWeight: '800', letterSpacing: 4, opacity: 0.95, visible: true, locked: false },
+          { id: 'pos4-title', type: 'text', x: 220, y: 120, width: cW - 280, height: 280, fill: titleColor, text: doc.displayTitle, fontSize: 56, fontFamily: 'Space Grotesk', fontWeight: '900', lineHeight: 1.05, opacity: 1, visible: true, locked: false },
+          { id: 'pos4-desc', type: 'text', x: 220, y: 440, width: cW - 280, height: 260, fill: bodyColor, text: doc.bodyParagraphs[0], fontSize: 19, fontFamily: 'Inter', lineHeight: 1.8, opacity: 0.9, visible: true, locked: false }
+        ];
+      }
       break;
     }
 
     case 'business_card': {
-      layoutFamily = variantIndex % 2 === 0 ? 'Split Executive Contact Grid' : 'Minimalist Central Luxury Card';
-      elements = [
-        { id: 'bc-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
-        { id: 'bc-bar', type: 'rect', x: 0, y: 0, width: 14, height: cH, fill: brand, opacity: 1, visible: true, locked: true },
-        { id: 'bc-name', type: 'text', x: 70, y: 150, width: 560, height: 50, fill: titleColor, text: doc.recipient || doc.displayTitle, fontSize: 32, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
-        { id: 'bc-role', type: 'text', x: 70, y: 210, width: 560, height: 30, fill: brand, text: 'EXECUTIVE PARTNER & ADVISOR', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: '700', letterSpacing: 2, opacity: 1, visible: true, locked: false },
-        { id: 'bc-rule', type: 'rect', x: 70, y: 250, width: 60, height: 2, fill: accent, opacity: 1, visible: true, locked: true },
-        { id: 'bc-contact', type: 'text', x: 70, y: 280, width: 560, height: 220, fill: bodyColor, text: '📧 contact@ordstudio.com\n📞 +1 (555) 234-8900\n🌐 www.ordstudio.com\n📍 100 Montgomery St, San Francisco, CA', fontSize: 14, fontFamily: 'Inter', lineHeight: 1.8, opacity: 0.9, visible: true, locked: false },
-        { id: 'bc-qr-box', type: 'rect', x: 760, y: 160, width: 210, height: 250, fill: cardBg, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
-        { id: 'bc-qr-txt', type: 'text', x: 760, y: 210, width: 210, height: 100, fill: brand, text: '☵ ☲\n☲ ☵\nVERIFIED ID', fontSize: 24, fontFamily: 'monospace', textAlign: 'center', opacity: 0.9, visible: true, locked: false }
-      ];
+      if (v === 0) {
+        layoutFamily = 'Split Executive Contact Grid';
+        elements = [
+          { id: 'bc-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'bc-bar', type: 'rect', x: 0, y: 0, width: 14, height: cH, fill: brand, opacity: 1, visible: true, locked: true },
+          { id: 'bc-name', type: 'text', x: 70, y: 150, width: 560, height: 50, fill: titleColor, text: doc.recipient || doc.displayTitle, fontSize: 32, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'bc-role', type: 'text', x: 70, y: 210, width: 560, height: 30, fill: brand, text: doc.organization || 'EXECUTIVE PARTNER & ADVISOR', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: '700', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'bc-rule', type: 'rect', x: 70, y: 250, width: 60, height: 2, fill: accent, opacity: 1, visible: true, locked: true },
+          { id: 'bc-contact', type: 'text', x: 70, y: 280, width: 560, height: 220, fill: bodyColor, text: '📧 contact@ordstudio.com\n📞 +1 (555) 234-8900\n🌐 www.ordstudio.com\n📍 100 Montgomery St, San Francisco, CA', fontSize: 14, fontFamily: 'Inter', lineHeight: 1.8, opacity: 0.9, visible: true, locked: false },
+          { id: 'bc-qr-box', type: 'rect', x: 760, y: 160, width: 210, height: 250, fill: cardBg, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'bc-qr-txt', type: 'text', x: 760, y: 210, width: 210, height: 100, fill: brand, text: '☵ ☲\n☲ ☵\nVERIFIED ID', fontSize: 24, fontFamily: 'monospace', textAlign: 'center', opacity: 0.9, visible: true, locked: false }
+        ];
+      } else if (v === 1) {
+        layoutFamily = 'Minimalist Central Luxury Card';
+        elements = [
+          { id: 'bc2-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'bc2-border', type: 'rect', x: 30, y: 30, width: cW - 60, height: cH - 60, fill: 'transparent', stroke: brand, strokeWidth: 1, opacity: 0.6, visible: true, locked: true },
+          { id: 'bc2-name', type: 'text', x: 50, y: 180, width: cW - 100, height: 60, fill: titleColor, text: doc.recipient || 'ALEXANDER CHEN', fontSize: 36, fontFamily: 'Cinzel', fontWeight: '800', textAlign: 'center', opacity: 1, visible: true, locked: false },
+          { id: 'bc2-role', type: 'text', x: 50, y: 250, width: cW - 100, height: 30, fill: brand, text: 'MANAGING DIRECTOR', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 4, textAlign: 'center', opacity: 1, visible: true, locked: false },
+          { id: 'bc2-foot', type: 'text', x: 50, y: 380, width: cW - 100, height: 40, fill: bodyColor, text: 'NEW YORK  ·  LONDON  ·  PARIS  ·  ORDSTUDIO.COM', fontSize: 11, fontFamily: 'Space Grotesk', letterSpacing: 3, textAlign: 'center', opacity: 0.8, visible: true, locked: false }
+        ];
+      } else if (v === 2) {
+        layoutFamily = 'Neon Gradient Tech Card';
+        elements = [
+          { id: 'bc3-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'bc3-card', type: 'rect', x: 40, y: 40, width: cW - 80, height: cH - 80, fill: cardBg, borderRadius: 16, stroke: brand, strokeWidth: 1.5, opacity: 1, visible: true, locked: true },
+          { id: 'bc3-tag', type: 'text', x: 80, y: 80, width: 400, height: 25, fill: brand, text: '✦ FOUNDER & CHIEF ARCHITECT', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: '800', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'bc3-name', type: 'text', x: 80, y: 120, width: 600, height: 60, fill: titleColor, text: doc.recipient || 'ALEXANDER CHEN', fontSize: 38, fontFamily: 'Space Grotesk', fontWeight: '900', opacity: 1, visible: true, locked: false },
+          { id: 'bc3-body', type: 'text', x: 80, y: 220, width: cW - 160, height: 180, fill: bodyColor, text: 'Distributed Infrastructure & Automated Systems\nEmail: alex@ordstudio.com | Matrix: @alex:ord.io\nGitHub: github.com/ordstudio', fontSize: 14, fontFamily: 'Inter', lineHeight: 2, opacity: 0.9, visible: true, locked: false }
+        ];
+      } else {
+        layoutFamily = 'Organic Clean Card';
+        elements = [
+          { id: 'bc4-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'bc4-stripe', type: 'rect', x: 0, y: cH - 24, width: cW, height: 24, fill: brand, opacity: 0.9, visible: true, locked: true },
+          { id: 'bc4-name', type: 'text', x: 80, y: 120, width: cW - 160, height: 50, fill: titleColor, text: doc.recipient || 'ALEXANDER CHEN', fontSize: 32, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'bc4-role', type: 'text', x: 80, y: 180, width: cW - 160, height: 30, fill: brand, text: 'CONSULTING PRINCIPAL', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: '700', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'bc4-details', type: 'text', x: 80, y: 240, width: cW - 160, height: 180, fill: bodyColor, text: 'Direct: +1 (555) 891-2300\nStudio: sf@ordstudio.com\nWeb: ordstudio.com', fontSize: 13, fontFamily: 'Inter', lineHeight: 2.1, opacity: 0.85, visible: true, locked: false }
+        ];
+      }
       break;
     }
 
     default: {
-      // Presentation Deck
-      layoutFamily = variantIndex % 2 === 0 ? 'Executive 3-Column Metric Deck' : 'Split Keynote Editorial Slide';
-      elements = [
-        { id: 'deck-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
-        { id: 'deck-pill', type: 'rect', x: 100, y: 90, width: 340, height: 40, fill: `${brand}20`, stroke: brand, strokeWidth: 1, borderRadius: 20, opacity: 1, visible: true, locked: true },
-        { id: 'deck-pill-t', type: 'text', x: 120, y: 100, width: 300, height: 20, fill: brand, text: '✦ STRATEGIC EXECUTIVE BRIEFING', fontSize: 11, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
-        { id: 'deck-title', type: 'text', x: 100, y: 170, width: cW - 200, height: 150, fill: titleColor, text: doc.displayTitle, fontSize: 54, fontFamily: 'Space Grotesk', fontWeight: '800', lineHeight: 1.1, opacity: 1, visible: true, locked: false },
-        { id: 'deck-desc', type: 'text', x: 100, y: 350, width: cW - 260, height: 90, fill: bodyColor, text: doc.bodyParagraphs[0], fontSize: 19, fontFamily: 'Inter', lineHeight: 1.6, opacity: 0.9, visible: true, locked: false },
-        // 3 Cards
-        { id: 'deck-c1', type: 'rect', x: 100, y: 510, width: 520, height: 230, fill: cardBg, borderRadius: 14, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
-        { id: 'deck-c1-v', type: 'text', x: 140, y: 545, width: 440, height: 60, fill: brand, text: '99.4%', fontSize: 48, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
-        { id: 'deck-c1-l', type: 'text', x: 140, y: 625, width: 440, height: 60, fill: bodyColor, text: 'Execution Accuracy Rating\nVerified Automated Pipeline', fontSize: 15, fontFamily: 'Inter', opacity: 0.85, visible: true, locked: false },
-        { id: 'deck-c2', type: 'rect', x: 680, y: 510, width: 520, height: 230, fill: cardBg, borderRadius: 14, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
-        { id: 'deck-c2-v', type: 'text', x: 720, y: 545, width: 440, height: 60, fill: '#10b981', text: '4.8x', fontSize: 48, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
-        { id: 'deck-c2-l', type: 'text', x: 720, y: 625, width: 440, height: 60, fill: bodyColor, text: 'Throughput Acceleration\nEnterprise Standard Delivered', fontSize: 15, fontFamily: 'Inter', opacity: 0.85, visible: true, locked: false },
-        { id: 'deck-c3', type: 'rect', x: 1260, y: 510, width: 520, height: 230, fill: cardBg, borderRadius: 14, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
-        { id: 'deck-c3-v', type: 'text', x: 1300, y: 545, width: 440, height: 60, fill: accent, text: 'SOC-2', fontSize: 48, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
-        { id: 'deck-c3-l', type: 'text', x: 1300, y: 625, width: 440, height: 60, fill: bodyColor, text: 'Compliance Certification\nZero Critical Vulnerabilities', fontSize: 15, fontFamily: 'Inter', opacity: 0.85, visible: true, locked: false },
-        // Footer
-        { id: 'deck-foot', type: 'text', x: 100, y: cH - 80, width: cW - 200, height: 30, fill: bodyColor, text: `${doc.organization} · ${doc.referenceNo} · STRICTLY CONFIDENTIAL`, fontSize: 11, fontFamily: 'Space Grotesk', letterSpacing: 2, opacity: 0.6, visible: true, locked: true }
-      ];
+      // Presentation Deck — 4 genuinely distinct layout families
+      if (v === 0) {
+        // VARIANT 0: Executive 3-Column Metric Dashboard (dark)
+        layoutFamily = 'Executive 3-Column Metric Dashboard';
+        elements = [
+          { id: 'deck-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'deck-pill', type: 'rect', x: 100, y: 90, width: 340, height: 40, fill: `${brand}20`, stroke: brand, strokeWidth: 1, borderRadius: 20, opacity: 1, visible: true, locked: true },
+          { id: 'deck-pill-t', type: 'text', x: 120, y: 100, width: 300, height: 20, fill: brand, text: '✦ STRATEGIC EXECUTIVE BRIEFING', fontSize: 11, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'deck-title', type: 'text', x: 100, y: 170, width: cW - 200, height: 150, fill: titleColor, text: doc.displayTitle, fontSize: 54, fontFamily: 'Space Grotesk', fontWeight: '800', lineHeight: 1.1, opacity: 1, visible: true, locked: false },
+          { id: 'deck-desc', type: 'text', x: 100, y: 350, width: cW - 260, height: 90, fill: bodyColor, text: doc.bodyParagraphs[0] || 'Comprehensive strategic framework & verified enterprise deliverable.', fontSize: 19, fontFamily: 'Inter', lineHeight: 1.6, opacity: 0.9, visible: true, locked: false },
+          { id: 'deck-c1', type: 'rect', x: 100, y: 510, width: 520, height: 230, fill: cardBg, borderRadius: 14, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'deck-c1-v', type: 'text', x: 140, y: 545, width: 440, height: 60, fill: brand, text: '99.4%', fontSize: 48, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'deck-c1-l', type: 'text', x: 140, y: 625, width: 440, height: 60, fill: bodyColor, text: 'Execution Accuracy Rating\nVerified Automated Pipeline', fontSize: 15, fontFamily: 'Inter', opacity: 0.85, visible: true, locked: false },
+          { id: 'deck-c2', type: 'rect', x: 680, y: 510, width: 520, height: 230, fill: cardBg, borderRadius: 14, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'deck-c2-v', type: 'text', x: 720, y: 545, width: 440, height: 60, fill: accent, text: '4.8x', fontSize: 48, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'deck-c2-l', type: 'text', x: 720, y: 625, width: 440, height: 60, fill: bodyColor, text: 'Throughput Acceleration\nEnterprise Standard Delivered', fontSize: 15, fontFamily: 'Inter', opacity: 0.85, visible: true, locked: false },
+          { id: 'deck-c3', type: 'rect', x: 1260, y: 510, width: 520, height: 230, fill: cardBg, borderRadius: 14, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'deck-c3-v', type: 'text', x: 1300, y: 545, width: 440, height: 60, fill: '#10b981', text: 'SOC-2', fontSize: 48, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'deck-c3-l', type: 'text', x: 1300, y: 625, width: 440, height: 60, fill: bodyColor, text: 'Compliance Certification\nZero Critical Vulnerabilities', fontSize: 15, fontFamily: 'Inter', opacity: 0.85, visible: true, locked: false },
+          { id: 'deck-foot', type: 'text', x: 100, y: cH - 80, width: cW - 200, height: 30, fill: bodyColor, text: `${doc.organization} · ${doc.referenceNo} · STRICTLY CONFIDENTIAL`, fontSize: 11, fontFamily: 'Space Grotesk', letterSpacing: 2, opacity: 0.6, visible: true, locked: true }
+        ];
+      } else if (v === 1) {
+        // VARIANT 1: Split-Panel Keynote Editorial (side image rail + text column)
+        layoutFamily = 'Split-Panel Keynote Editorial Slide';
+        elements = [
+          { id: 'kn-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          // Left accent rail
+          { id: 'kn-rail', type: 'rect', x: 0, y: 0, width: 640, height: cH, fill: `${brand}18`, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'kn-rail-border', type: 'rect', x: 640, y: 0, width: 3, height: cH, fill: brand, opacity: 0.6, visible: true, locked: true },
+          // Left panel content
+          { id: 'kn-left-tag', type: 'text', x: 70, y: 100, width: 500, height: 25, fill: brand, text: '✦ ' + doc.organization, fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'kn-left-num', type: 'text', x: 70, y: 140, width: 500, height: 160, fill: brand, text: '01', fontSize: 120, fontFamily: 'Space Grotesk', fontWeight: '900', lineHeight: 1, opacity: 0.15, visible: true, locked: true },
+          { id: 'kn-left-metric1', type: 'rect', x: 70, y: 340, width: 240, height: 120, fill: `${brand}20`, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'kn-left-m1-v', type: 'text', x: 90, y: 360, width: 200, height: 45, fill: brand, text: '2026', fontSize: 36, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'kn-left-m1-l', type: 'text', x: 90, y: 410, width: 200, height: 30, fill: bodyColor, text: 'Edition Year', fontSize: 13, fontFamily: 'Inter', opacity: 0.8, visible: true, locked: false },
+          { id: 'kn-left-metric2', type: 'rect', x: 340, y: 340, width: 240, height: 120, fill: `${accent}15`, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'kn-left-m2-v', type: 'text', x: 360, y: 360, width: 200, height: 45, fill: accent, text: '∞', fontSize: 40, fontFamily: 'Space Grotesk', fontWeight: '900', opacity: 1, visible: true, locked: false },
+          { id: 'kn-left-m2-l', type: 'text', x: 360, y: 410, width: 200, height: 30, fill: bodyColor, text: 'Scale Potential', fontSize: 13, fontFamily: 'Inter', opacity: 0.8, visible: true, locked: false },
+          { id: 'kn-left-tags', type: 'text', x: 70, y: 500, width: 540, height: 80, fill: bodyColor, text: doc.tags?.join('  ·  ') || 'Strategy · Innovation · Growth · Scale', fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', lineHeight: 1.6, opacity: 0.7, visible: true, locked: false },
+          // Right panel content
+          { id: 'kn-right-title', type: 'text', x: 700, y: 90, width: cW - 760, height: 220, fill: titleColor, text: doc.displayTitle, fontSize: 58, fontFamily: 'Space Grotesk', fontWeight: '900', lineHeight: 1.05, opacity: 1, visible: true, locked: false },
+          { id: 'kn-right-rule', type: 'rect', x: 700, y: 330, width: 120, height: 4, fill: brand, opacity: 0.9, visible: true, locked: true },
+          { id: 'kn-right-desc', type: 'text', x: 700, y: 360, width: cW - 760, height: 120, fill: bodyColor, text: doc.bodyParagraphs[0] || 'Comprehensive strategic framework & verified enterprise deliverable.', fontSize: 20, fontFamily: 'Inter', lineHeight: 1.7, opacity: 0.9, visible: true, locked: false },
+          { id: 'kn-right-card1', type: 'rect', x: 700, y: 520, width: 560, height: 160, fill: cardBg, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'kn-right-c1t', type: 'text', x: 740, y: 545, width: 480, height: 100, fill: titleColor, text: `KEY OBJECTIVE\n${doc.bodyParagraphs[1] || 'Deliver measurable ROI through focused execution, iterative refinement and robust cross-functional alignment.'}`, fontSize: 14, fontFamily: 'Inter', lineHeight: 1.7, opacity: 0.9, visible: true, locked: false },
+          { id: 'kn-foot', type: 'text', x: 700, y: cH - 70, width: cW - 760, height: 25, fill: bodyColor, text: `${doc.referenceNo} · EXECUTIVE DECK · 2026`, fontSize: 11, fontFamily: 'Space Grotesk', letterSpacing: 2, opacity: 0.5, visible: true, locked: true }
+        ];
+      } else if (v === 2) {
+        // VARIANT 2: Centered Hero Spotlight (large centered title with orbit stats)
+        layoutFamily = 'Centered Hero Spotlight Deck';
+        elements = [
+          { id: 'hero-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          // Dramatic centered hero
+          { id: 'hero-glow', type: 'circle', x: cW / 2 - 200, y: cH / 2 - 200, width: 400, height: 400, fill: `${brand}08`, stroke: brand, strokeWidth: 1, opacity: 0.5, visible: true, locked: true },
+          { id: 'hero-tag', type: 'text', x: 100, y: 70, width: cW - 200, height: 28, fill: brand, text: `✦  ${doc.organization}  ✦`, fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 3, textAlign: 'center', opacity: 0.9, visible: true, locked: false },
+          { id: 'hero-title', type: 'text', x: 100, y: 120, width: cW - 200, height: 240, fill: titleColor, text: doc.displayTitle, fontSize: 68, fontFamily: 'Space Grotesk', fontWeight: '900', lineHeight: 1.08, textAlign: 'center', opacity: 1, visible: true, locked: false },
+          { id: 'hero-bar', type: 'rect', x: cW / 2 - 200, y: 380, width: 400, height: 3, fill: brand, opacity: 0.9, visible: true, locked: true },
+          { id: 'hero-desc', type: 'text', x: 200, y: 410, width: cW - 400, height: 70, fill: bodyColor, text: doc.bodyParagraphs[0] || 'Visionary strategy · Premium execution · Measurable outcomes', fontSize: 18, fontFamily: 'Inter', lineHeight: 1.6, textAlign: 'center', opacity: 0.85, visible: true, locked: false },
+          // Bottom stat row
+          { id: 'hero-s1-box', type: 'rect', x: 80, y: 560, width: 380, height: 160, fill: `${brand}12`, borderRadius: 16, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'hero-s1-v', type: 'text', x: 120, y: 595, width: 300, height: 55, fill: brand, text: '100%', fontSize: 42, fontFamily: 'Space Grotesk', fontWeight: '900', opacity: 1, visible: true, locked: false },
+          { id: 'hero-s1-l', type: 'text', x: 120, y: 655, width: 300, height: 40, fill: bodyColor, text: 'Mission Alignment', fontSize: 15, fontFamily: 'Inter', opacity: 0.8, visible: true, locked: false },
+          { id: 'hero-s2-box', type: 'rect', x: 530, y: 560, width: 380, height: 160, fill: `${accent}12`, borderRadius: 16, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'hero-s2-v', type: 'text', x: 570, y: 595, width: 300, height: 55, fill: accent, text: '$12M+', fontSize: 42, fontFamily: 'Space Grotesk', fontWeight: '900', opacity: 1, visible: true, locked: false },
+          { id: 'hero-s2-l', type: 'text', x: 570, y: 655, width: 300, height: 40, fill: bodyColor, text: 'Revenue Generated', fontSize: 15, fontFamily: 'Inter', opacity: 0.8, visible: true, locked: false },
+          { id: 'hero-s3-box', type: 'rect', x: 980, y: 560, width: 380, height: 160, fill: `${brand}12`, borderRadius: 16, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'hero-s3-v', type: 'text', x: 1020, y: 595, width: 300, height: 55, fill: brand, text: '8.9x', fontSize: 42, fontFamily: 'Space Grotesk', fontWeight: '900', opacity: 1, visible: true, locked: false },
+          { id: 'hero-s3-l', type: 'text', x: 1020, y: 655, width: 300, height: 40, fill: bodyColor, text: 'ROI Multiplier', fontSize: 15, fontFamily: 'Inter', opacity: 0.8, visible: true, locked: false },
+          { id: 'hero-s4-box', type: 'rect', x: 1430, y: 560, width: 380, height: 160, fill: `${accent}12`, borderRadius: 16, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'hero-s4-v', type: 'text', x: 1470, y: 595, width: 300, height: 55, fill: accent, text: '99.9%', fontSize: 42, fontFamily: 'Space Grotesk', fontWeight: '900', opacity: 1, visible: true, locked: false },
+          { id: 'hero-s4-l', type: 'text', x: 1470, y: 655, width: 300, height: 40, fill: bodyColor, text: 'Uptime SLA', fontSize: 15, fontFamily: 'Inter', opacity: 0.8, visible: true, locked: false },
+          { id: 'hero-foot', type: 'text', x: 100, y: cH - 65, width: cW - 200, height: 25, fill: bodyColor, text: `${doc.referenceNo} · CONFIDENTIAL EXECUTIVE DOCUMENT · 2026`, fontSize: 11, fontFamily: 'Space Grotesk', letterSpacing: 2, textAlign: 'center', opacity: 0.5, visible: true, locked: true }
+        ];
+      } else {
+        // VARIANT 3: Asymmetric Timeline/Roadmap Layout
+        layoutFamily = 'Asymmetric Roadmap & Timeline Deck';
+        elements = [
+          { id: 'tm-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bg, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          // Top header bar
+          { id: 'tm-hdr', type: 'rect', x: 0, y: 0, width: cW, height: 160, fill: `${brand}12`, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'tm-hdr-border', type: 'rect', x: 0, y: 160, width: cW, height: 2, fill: brand, opacity: 0.4, visible: true, locked: true },
+          { id: 'tm-hdr-tag', type: 'text', x: 80, y: 40, width: 400, height: 25, fill: brand, text: `✦ ${doc.organization}`, fontSize: 13, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'tm-hdr-title', type: 'text', x: 80, y: 75, width: 1200, height: 75, fill: titleColor, text: doc.displayTitle, fontSize: 48, fontFamily: 'Space Grotesk', fontWeight: '900', lineHeight: 1.1, opacity: 1, visible: true, locked: false },
+          { id: 'tm-hdr-date', type: 'text', x: cW - 400, y: 40, width: 320, height: 30, fill: brand, text: doc.dateStr || 'Q4 2026', fontSize: 14, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, textAlign: 'right', opacity: 1, visible: true, locked: false },
+          // Timeline horizontal line
+          { id: 'tm-line', type: 'rect', x: 80, y: 290, width: cW - 160, height: 3, fill: brand, opacity: 0.3, visible: true, locked: true },
+          // Timeline nodes Q1-Q4
+          { id: 'tm-n1', type: 'circle', x: 100, y: 279, width: 24, height: 24, fill: brand, stroke: 'transparent', strokeWidth: 0, opacity: 1, visible: true, locked: true },
+          { id: 'tm-n2', type: 'circle', x: 540, y: 279, width: 24, height: 24, fill: brand, stroke: 'transparent', strokeWidth: 0, opacity: 0.8, visible: true, locked: true },
+          { id: 'tm-n3', type: 'circle', x: 980, y: 279, width: 24, height: 24, fill: accent, stroke: 'transparent', strokeWidth: 0, opacity: 0.8, visible: true, locked: true },
+          { id: 'tm-n4', type: 'circle', x: 1800, y: 279, width: 24, height: 24, fill: accent, stroke: 'transparent', strokeWidth: 0, opacity: 0.6, visible: true, locked: true },
+          // Phase cards below timeline
+          { id: 'tm-p1', type: 'rect', x: 80, y: 330, width: 420, height: 240, fill: `${brand}18`, borderRadius: 12, stroke: brand, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'tm-p1-q', type: 'text', x: 110, y: 355, width: 360, height: 25, fill: brand, text: 'Q1 2026 — PHASE 1', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'tm-p1-t', type: 'text', x: 110, y: 390, width: 360, height: 40, fill: titleColor, text: 'Platform General Availability', fontSize: 20, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'tm-p1-b', type: 'text', x: 110, y: 440, width: 360, height: 110, fill: bodyColor, text: 'Full production launch with core feature set, security audit completion, and 99.9% SLA commitment across all markets.', fontSize: 13, fontFamily: 'Inter', lineHeight: 1.7, opacity: 0.85, visible: true, locked: false },
+          { id: 'tm-p2', type: 'rect', x: 540, y: 330, width: 420, height: 240, fill: `${brand}12`, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'tm-p2-q', type: 'text', x: 570, y: 355, width: 360, height: 25, fill: brand, text: 'Q2 2026 — PHASE 2', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'tm-p2-t', type: 'text', x: 570, y: 390, width: 360, height: 40, fill: titleColor, text: 'AI Autonomous Pipeline', fontSize: 20, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'tm-p2-b', type: 'text', x: 570, y: 440, width: 360, height: 110, fill: bodyColor, text: 'Multi-agent automation rollout with self-healing infrastructure, predictive analytics, and zero-touch deployment.', fontSize: 13, fontFamily: 'Inter', lineHeight: 1.7, opacity: 0.85, visible: true, locked: false },
+          { id: 'tm-p3', type: 'rect', x: 980, y: 330, width: 420, height: 240, fill: `${accent}12`, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'tm-p3-q', type: 'text', x: 1010, y: 355, width: 360, height: 25, fill: accent, text: 'H1 2027 — PHASE 3', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 1, visible: true, locked: false },
+          { id: 'tm-p3-t', type: 'text', x: 1010, y: 390, width: 360, height: 40, fill: titleColor, text: 'Global Market Expansion', fontSize: 20, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'tm-p3-b', type: 'text', x: 1010, y: 440, width: 360, height: 110, fill: bodyColor, text: 'APAC & EMEA market entry with localized compliance frameworks, partnership network, and dedicated regional hubs.', fontSize: 13, fontFamily: 'Inter', lineHeight: 1.7, opacity: 0.85, visible: true, locked: false },
+          { id: 'tm-p4', type: 'rect', x: 1420, y: 330, width: 420, height: 240, fill: cardBg, borderRadius: 12, stroke: borderColor, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'tm-p4-q', type: 'text', x: 1450, y: 355, width: 360, height: 25, fill: accent, text: 'H2 2027 — PHASE 4', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 'bold', letterSpacing: 2, opacity: 0.7, visible: true, locked: false },
+          { id: 'tm-p4-t', type: 'text', x: 1450, y: 390, width: 360, height: 40, fill: titleColor, text: 'Ecosystem & Marketplace', fontSize: 20, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 0.8, visible: true, locked: false },
+          { id: 'tm-p4-b', type: 'text', x: 1450, y: 440, width: 360, height: 110, fill: bodyColor, text: 'Third-party ecosystem launch with certified partner program, API marketplace, and developer certification tracks.', fontSize: 13, fontFamily: 'Inter', lineHeight: 1.7, opacity: 0.7, visible: true, locked: false },
+          // CTA footer
+          { id: 'tm-cta', type: 'rect', x: 80, y: 620, width: cW - 160, height: 80, fill: `${brand}20`, borderRadius: 12, stroke: brand, strokeWidth: 1, opacity: 1, visible: true, locked: true },
+          { id: 'tm-cta-t', type: 'text', x: 120, y: 640, width: 700, height: 40, fill: titleColor, text: "LET'S BUILD THE FUTURE OF " + doc.displayTitle, fontSize: 18, fontFamily: 'Space Grotesk', fontWeight: '800', opacity: 1, visible: true, locked: false },
+          { id: 'tm-cta-btn', type: 'rect', x: cW - 400, y: 633, width: 280, height: 50, fill: brand, borderRadius: 8, opacity: 1, visible: true, locked: true },
+          { id: 'tm-cta-btn-t', type: 'text', x: cW - 400, y: 648, width: 280, height: 25, fill: '#ffffff', text: 'CONTACT STRATEGY TEAM →', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 'bold', textAlign: 'center', opacity: 1, visible: true, locked: false },
+          { id: 'tm-cta-ref', type: 'text', x: 120, y: 682, width: 600, height: 20, fill: bodyColor, text: `${doc.referenceNo} · ${doc.dateStr} · CONFIDENTIAL`, fontSize: 11, fontFamily: 'Space Grotesk', letterSpacing: 1, opacity: 0.55, visible: true, locked: true }
+        ];
+      }
       break;
     }
   }
 
   // Calculate fingerprint
+
   const textCount = elements.filter(e => e.type === 'text').length;
   const rectCount = elements.filter(e => e.type === 'rect').length;
   const structureHash = `${classification.category}_v${variantIndex}_${cW}x${cH}_e${elements.length}_t${textCount}_r${rectCount}`;

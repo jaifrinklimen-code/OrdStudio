@@ -4,6 +4,7 @@ import {
   RotateCcw, Download, LayoutGrid, Eye, ArrowRight, RefreshCw, FileQuestion,
   Presentation, FileCode, ChevronDown, Loader2
 } from "lucide-react";
+import { toast } from 'sonner';
 import { exportToPptx, exportToPdf } from '../lib/exportServices';
 import { TemplateMiniRenderer } from './TemplateMiniRenderer';
 import {
@@ -179,6 +180,8 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   const [stylePreset, setStylePreset] = useState('modern');
   const [outputFormat, setOutputFormat] = useState('presentation');
   const [variantIndex, setVariantIndex] = useState(0);
+  // Track which asset was last used for redesign — allows auto-incrementing without resetting on same-asset re-selection
+  const lastDesignedAssetId = useRef<string | null>(null);
   const [detectedCategory, setDetectedCategory] = useState<RedesignCategory>('presentation');
   const [refinementPrompt, setRefinementPrompt] = useState('');
   const [redesigning, setRedesigning] = useState(false);
@@ -241,13 +244,18 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
 
   const selectedAsset = assets.find(a => a.id === selectedId) || null;
 
-  // Auto-classify document whenever user selects an asset
+  // Auto-classify document whenever user selects an ASSET THAT IS DIFFERENT from the previous one
   useEffect(() => {
     if (selectedAsset) {
       const cls = classifyDocumentType(selectedAsset.name, selectedAsset.content);
       setDetectedCategory(cls.category);
       setOutputFormat(cls.category);
-      setVariantIndex(0);
+      // Only reset variant to 0 when the user picks a genuinely different asset.
+      // Do NOT reset if the same asset is re-selected (e.g. after Redesign Again or page re-mount).
+      if (lastDesignedAssetId.current !== selectedAsset.id) {
+        setVariantIndex(0);
+        setResult(null);
+      }
     }
   }, [selectedAsset?.id]);
 
@@ -416,7 +424,13 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
   // AI Redesign generation logic
   const handleRedesign = async (overrideVariant?: number) => {
     if (!selectedAsset) return;
-    const currentVariant = typeof overrideVariant === 'number' ? overrideVariant : variantIndex;
+    // If the same asset is redesigned again without an override, auto-increment the variant
+    // so consecutive redesign calls always produce a different layout.
+    const currentVariant = typeof overrideVariant === 'number'
+      ? overrideVariant
+      : lastDesignedAssetId.current === selectedAsset.id
+        ? (variantIndex + 1) % 4
+        : variantIndex;
     setRedesigning(true);
     setProgress(0);
 
@@ -488,6 +502,9 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
             variantIndex: currentVariant,
             category: fitted.category
           });
+          // Update state so next click always increments from this variant
+          setVariantIndex(currentVariant);
+          lastDesignedAssetId.current = selectedAsset.id;
           setRedesigning(false);
         }, 400);
       }
@@ -533,7 +550,7 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
         ctx.fillStyle = el.fill;
         ctx.fill();
       } else if (el.type === 'text') {
-        const fsz = (el.fontSize ?? 12) * scaleX;
+        const fsz = el.fontSize ?? 12;
         ctx.font = `${el.fontWeight || 'normal'} ${fsz}px ${el.fontFamily || 'sans-serif'}`;
         ctx.fillStyle = el.fill;
         ctx.textBaseline = 'top';
@@ -1123,8 +1140,8 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
                   </div>
                   <button
                     onClick={() => {
-                      const nextVar = (variantIndex + 1) % 4;
-                      setVariantIndex(nextVar);
+                      // Always advance to next distinct variant (0→1→2→3→0) to guarantee a different layout
+                      const nextVar = ((variantIndex + 1) % 4);
                       handleRedesign(nextVar);
                     }}
                     className="h-10 rounded-xl bg-purple-600/20 border border-purple-500/40 hover:bg-purple-600/30 text-purple-200 hover:text-white font-semibold text-[12px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
@@ -1242,7 +1259,7 @@ export function AssetUploader({ onOpenInEditor }: AssetUploaderProps) {
               {/* Action */}
               <div className="flex flex-col gap-2 mt-auto">
                 <button
-                  onClick={handleRedesign}
+                  onClick={() => handleRedesign()}
                   className="w-full h-11 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 active:from-purple-700 active:to-indigo-700 text-white font-bold text-[13px] flex items-center justify-center gap-2 mt-auto cursor-pointer transition-colors shadow-lg shadow-purple-500/10"
                 >
                   <Sparkles size={14} className="animate-pulse" /> Run AI Redesign

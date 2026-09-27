@@ -48,27 +48,27 @@ router.get("/search", async (req, res) => {
     // Map database models to standard search result formats
     const mappedTemplates: SearchResult[] = templates.map(t => ({
       id: `template-${t.id}`,
-      type: "Template",
-      name: t.name,
-      cat: t.category,
-      size: t.size,
+      type: "Template" as const,
+      name: t.name || t.title || 'Untitled',
+      cat: t.category || t.type || 'Design',
+      size: t.size || '1920×1080',
       gradient: t.gradient
     }));
 
     const mappedProjects: SearchResult[] = projects.map(p => ({
       id: `project-${p.id}`,
-      type: "Project",
-      name: p.name,
-      cat: p.type,
-      size: `${p.progress}% Completed`,
+      type: "Project" as const,
+      name: p.name || 'Untitled Project',
+      cat: p.type || p.category || 'Design',
+      size: `${p.progress ?? 0}% Completed`,
       gradient: p.gradient
     }));
 
     const mappedStickers: SearchResult[] = stickers.map(s => ({
       id: `sticker-${s.id}`,
-      type: "Sticker",
-      name: s.name,
-      cat: s.style,
+      type: "Sticker" as const,
+      name: s.name || 'Sticker',
+      cat: s.style || s.category || 'Sticker',
       size: "Sticker",
       gradient: s.gradient,
       symbol: s.symbol
@@ -83,11 +83,12 @@ router.get("/search", async (req, res) => {
       ...staticGuides
     ];
 
-    // Filter results based on search query match
+    // Filter results based on search query match (null-safe)
     let filtered = catalog.filter(item => {
-      return item.name.toLowerCase().includes(q) ||
-             item.cat.toLowerCase().includes(q) ||
-             item.type.toLowerCase().includes(q);
+      const name = (item.name || '').toLowerCase();
+      const cat = (item.cat || '').toLowerCase();
+      const type = (item.type || '').toLowerCase();
+      return name.includes(q) || cat.includes(q) || type.includes(q);
     });
 
     // Filter results based on category filters
@@ -102,11 +103,13 @@ router.get("/search", async (req, res) => {
       });
     }
 
-    res.json(filtered);
+    // Limit results to top 50 for performance
+    res.json(filtered.slice(0, 50));
   } catch (error) {
     logger.error({ err: error }, "Search failed");
     res.status(500).json({ error: "Search failed" });
   }
 });
+
 
 export default router;

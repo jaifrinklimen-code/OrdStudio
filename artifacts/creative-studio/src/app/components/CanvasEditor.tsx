@@ -286,7 +286,7 @@ function autoName(type: ElementType, elements: CanvasElement[]): string {
 
 /* ── Styles ─────────────────────────────────────────────────── */
 const S = {
-  wrap: { display: 'flex', flexDirection: 'column' as const, height: '100vh', background: '#0d0d14', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif', overflow: 'hidden' },
+  wrap: (isMobile?: boolean) => ({ display: 'flex', flexDirection: 'column' as const, height: isMobile ? 'calc(100vh - 72px)' : '100vh', background: '#0d0d14', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif', overflow: 'hidden' }),
   topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', height: 48, background: '#111118', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, position: 'relative' as const, zIndex: 50 },
   topLeft: { display: 'flex', alignItems: 'center', gap: 12 },
   topRight: { display: 'flex', alignItems: 'center', gap: 8 },
@@ -296,13 +296,13 @@ const S = {
   midRow: { display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' },
   toolBar: { width: 52, background: '#111118', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', padding: '10px 0', gap: 4, flexShrink: 0, overflowY: 'auto' as const },
   toolBtn: (active: boolean) => ({ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', background: active ? 'rgba(139,92,246,0.18)' : 'transparent', border: active ? '1.5px solid rgba(139,92,246,0.55)' : '1.5px solid transparent', borderRadius: 10, color: active ? '#c4b5fd' : 'rgba(255,255,255,0.5)', cursor: 'pointer', transition: 'all .15s', boxShadow: active ? '0 0 12px rgba(139,92,246,0.2)' : 'none' }),
-  canvasWrap: { flex: 1, minWidth: 0, minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'flex-start', background: '#0d0d14', backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px', overflowY: 'auto' as const, overflowX: 'auto' as const, position: 'relative' as const, gap: 24, padding: '24px 0', scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const },
+  canvasWrap: { flex: 1, minWidth: 0, minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'flex-start', background: '#0d0d14', backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px', overflowY: 'auto' as const, overflowX: 'auto' as const, position: 'relative' as const, gap: 16, padding: '16px 0', scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const },
   layersPanel: { width: 210, background: '#111118', borderLeft: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' as const, flexShrink: 0 },
   layerHeader: { padding: '12px 14px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' as const, letterSpacing: '0.08em', borderBottom: '1px solid rgba(255,255,255,0.06)' },
   layerItem: (sel: boolean) => ({ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', cursor: 'pointer', background: sel ? 'rgba(139,92,246,0.12)' : 'transparent', borderLeft: sel ? '2px solid #8b5cf6' : '2px solid transparent', transition: 'all .12s' }),
   layerName: { flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' },
   layerBtn: { background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' },
-  propsBar: { minHeight: 52, background: '#111118', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', flexWrap: 'wrap' as const, padding: '12px 16px', gap: 12, flexShrink: 0, overflow: 'visible' as const },
+  propsBar: (isMobile?: boolean) => ({ minHeight: isMobile ? 48 : 52, background: '#111118', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', flexWrap: isMobile ? ('nowrap' as const) : ('wrap' as const), overflowX: isMobile ? ('auto' as const) : ('visible' as const), padding: isMobile ? '8px 12px' : '12px 16px', gap: 12, flexShrink: 0, WebkitOverflowScrolling: 'touch' as const }),
   propGroup: { display: 'flex', flexDirection: 'column' as const, gap: 8, minWidth: 180, maxWidth: 320 },
   propLabel: { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginBottom: 2, whiteSpace: 'nowrap' as const },
   propInput: { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#fff', padding: '8px 10px', fontSize: 12, width: 140, outline: 'none' },
@@ -431,6 +431,125 @@ function getCachedImage(src: string, targetWidth?: number): HTMLImageElement | n
   return null;
 }
 
+/* ── Synchronous Template Slide & Element Resolver ────────── */
+function resolveInitialSlides(
+  normalizedDesign: any,
+  templateSlides?: any[][],
+  templateElements?: any[],
+  templateFileUrl?: string,
+  templateFileType?: string,
+  templateFileName?: string,
+  resolvedName?: string,
+  cW: number = 1920,
+  cH: number = 1080,
+  templateGradient?: string,
+  isPresentation?: boolean
+): CanvasElement[][] {
+  let initialSlides: CanvasElement[][] = [];
+  const isUploadedFileTemplate = Boolean(templateFileUrl && templateFileType);
+
+  const sourceSlides = normalizedDesign?.slides && normalizedDesign.slides.length > 0 && normalizedDesign.slides[0]?.length > 0
+    ? normalizedDesign.slides
+    : (templateSlides && templateSlides.length > 0 ? templateSlides : []);
+  const sourceElements = normalizedDesign?.elements && normalizedDesign.elements.length > 0
+    ? normalizedDesign.elements
+    : templateElements;
+
+  if (sourceSlides && sourceSlides.length > 0) {
+    initialSlides = sourceSlides.map((slide: any) => {
+      const els = Array.isArray(slide)
+        ? slide
+        : Array.isArray(slide?.elements)
+        ? slide.elements
+        : [];
+      return els.map((el: any) => ({ ...el, id: el.id || uid() }));
+    }).filter((s: CanvasElement[]) => s.length > 0);
+  }
+
+  if (initialSlides.length === 0 && sourceElements && sourceElements.length > 0) {
+    const flatEls = Array.isArray(sourceElements)
+      ? sourceElements
+      : Array.isArray((sourceElements as any)?.elements)
+      ? (sourceElements as any).elements
+      : [];
+    if (flatEls.length > 0) {
+      initialSlides = [
+        flatEls.map((el: any) => ({ ...el, id: el.id || uid() }))
+      ];
+    }
+  }
+
+  if (initialSlides.length === 0 && isUploadedFileTemplate) {
+    const uploadedFileKind = (templateFileType || '').toLowerCase();
+
+    if (uploadedFileKind.startsWith('image/')) {
+      initialSlides = [[{
+        id: `uploaded-${templateFileName || resolvedName || 'template'}`,
+        type: 'image',
+        x: 0,
+        y: 0,
+        width: cW,
+        height: cH,
+        src: templateFileUrl,
+        fill: 'transparent',
+        stroke: 'transparent',
+        strokeWidth: 0,
+        opacity: 1,
+        visible: true,
+        locked: true,
+      }]];
+    } else {
+      initialSlides = [[{
+        id: `uploaded-${templateFileName || resolvedName || 'template'}`,
+        type: 'rect',
+        x: 0,
+        y: 0,
+        width: cW,
+        height: cH,
+        fill: '#0f172a',
+        stroke: 'transparent',
+        strokeWidth: 0,
+        opacity: 1,
+        visible: true,
+        locked: true,
+      }]];
+    }
+  }
+
+  // Professional Fallback: If still empty, generate rich multi-element slides (all 10 slides for presentations!)
+  if (initialSlides.length === 0) {
+    if (isPresentation) {
+      const generated = createProfessionalSlides(resolvedName || 'Executive Presentation', '1920×1080');
+      if (generated && generated.length > 0) {
+        initialSlides = generated.map(s => s.map((el: any) => ({ ...el, id: el.id || uid() })));
+      }
+    }
+
+    if (initialSlides.length === 0) {
+      const bgFill = templateGradient || (isPresentation ? '#0b0f19' : '#0f172a');
+      const accent = '#38bdf8';
+      initialSlides = [[
+        { id: uid(), type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bgFill, stroke: 'transparent', strokeWidth: 0, opacity: 1, locked: true, visible: true },
+        { id: uid(), type: 'rect', x: Math.round(cW * 0.08), y: Math.round(cH * 0.12), width: 180, height: 32, fill: 'rgba(56,189,248,0.15)', stroke: accent, strokeWidth: 1, borderRadius: 16, opacity: 1, locked: false, visible: true },
+        { id: uid(), type: 'text', x: Math.round(cW * 0.08) + 16, y: Math.round(cH * 0.12) + 6, width: 150, height: 20, fill: accent, text: 'FEATURED DESIGN', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 'bold', opacity: 1, locked: false, visible: true },
+        { id: uid(), type: 'text', x: Math.round(cW * 0.08), y: Math.round(cH * 0.22), width: Math.round(cW * 0.84), height: 90, fill: '#ffffff', text: resolvedName || 'Executive Presentation', fontSize: Math.min(56, Math.round(cW * 0.045)), fontFamily: 'Space Grotesk', fontWeight: 'bold', opacity: 1, locked: false, visible: true },
+        { id: uid(), type: 'rect', x: Math.round(cW * 0.08), y: Math.round(cH * 0.36), width: 120, height: 4, fill: accent, stroke: 'transparent', strokeWidth: 0, opacity: 1, locked: false, visible: true },
+        { id: uid(), type: 'text', x: Math.round(cW * 0.08), y: Math.round(cH * 0.40), width: Math.round(cW * 0.75), height: 70, fill: '#94a3b8', text: 'Professional high-impact visual design crafted for modern creative workflows.', fontSize: Math.min(22, Math.round(cW * 0.018)), fontFamily: 'Inter', fontWeight: 'normal', opacity: 1, locked: false, visible: true }
+      ]];
+    }
+  }
+
+  // Preserve all 10 presentation slides for full deck editing, navigation, and export
+  if (isPresentation && initialSlides.length > 0 && initialSlides.length < 10) {
+    const profSlides = createProfessionalSlides(resolvedName || 'Executive Presentation', `${cW}×${cH}`);
+    while (initialSlides.length < 10 && initialSlides.length < profSlides.length) {
+      initialSlides.push(profSlides[initialSlides.length].map((el: any) => ({ ...el, id: el.id || uid() })));
+    }
+  }
+
+  return initialSlides;
+}
+
 /* ── Main Component ─────────────────────────────────────────── */
 export function CanvasEditor({
   templateName,
@@ -489,21 +608,51 @@ export function CanvasEditor({
       availW = rect.width;
       availH = rect.height;
     }
+    const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 768;
+
     if (availW <= 0 || availH <= 0) {
-      const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 768;
       const leftSidebarWidth = isSmallScreen ? 0 : (isPresentation ? 180 + 52 : 220 + 52);
       const rightSidebarWidth = isSmallScreen ? 0 : 210;
-      availW = typeof window !== 'undefined' ? Math.max(window.innerWidth - leftSidebarWidth - rightSidebarWidth - 48, 320) : 800;
+      availW = typeof window !== 'undefined' ? Math.max(window.innerWidth - leftSidebarWidth - rightSidebarWidth, 320) : 800;
       availH = typeof window !== 'undefined' ? Math.max(window.innerHeight - 48 - 60 - 64 - 40, 320) : 500;
-    } else {
-      availW = Math.max(availW - 48, 280);
-      availH = Math.max(availH - (isPresentation ? 80 : 48), 280);
     }
+
+    if (isSmallScreen) {
+      // Mobile-optimized fit: fill available horizontal width cleanly with minimal margins
+      const padX = 16;
+      const targetW = Math.max(availW - padX, 280);
+      let scale = targetW / cW;
+      // In landscape mobile or short screens, constrain by height if needed
+      if (availH > 120 && (scale * cH) > (availH - 24)) {
+        scale = (availH - 24) / cH;
+      }
+      return Math.max(0.14, Math.min(Number(scale.toFixed(3)), 3.0));
+    }
+
+    availW = Math.max(availW - 48, 280);
+    availH = Math.max(availH - (isPresentation ? 80 : 48), 280);
     const scale = Math.min(availW / cW, availH / cH) * (isPresentation ? 0.96 : 0.94);
     return Math.max(0.12, Math.min(Number(scale.toFixed(3)), 3.0));
   }, [cW, cH, isPresentation]);
 
-  /* Core state */
+  /* Resolve slides synchronously so frame 0 has real content */
+  const initialResolvedSlides = useMemo(() => {
+    return resolveInitialSlides(
+      normalizedDesign,
+      templateSlides,
+      templateElements,
+      templateFileUrl,
+      templateFileType,
+      templateFileName,
+      resolvedName,
+      cW,
+      cH,
+      templateGradient,
+      isPresentation
+    );
+  }, [normalizedDesign, templateSlides, templateElements, templateFileUrl, templateFileType, templateFileName, resolvedName, cW, cH, templateGradient, isPresentation]);
+
+  /* Core state: initialized synchronously with real slide elements */
   const [designTitle, setDesignTitle] = useState(resolvedName);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -513,9 +662,9 @@ export function CanvasEditor({
     }
   }, [templateName]);
 
-  const [slides, setSlides] = useState<CanvasElement[][]>([]);
+  const [slides, setSlides] = useState<CanvasElement[][]>(() => initialResolvedSlides);
   const [activeSlideIdx, setActiveSlideIdx] = useState(0);
-  const [elements, setElements] = useState<CanvasElement[]>([]);
+  const [elements, setElements] = useState<CanvasElement[]>(() => initialResolvedSlides[0] || []);
 
   // Synchronous references to eliminate stale React closures during interactions & auto-save
   const elementsRef = useRef<CanvasElement[]>(elements);
@@ -527,11 +676,25 @@ export function CanvasEditor({
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tool, setTool] = useState<ToolType>('select');
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
   const [zoom, setZoom] = useState(() => calcFitZoom());
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const isPanningRef = useRef(false);
   const panStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+
+  // Dynamically observe wrapper size to recalculate fit scale when dimensions settle
+  useEffect(() => {
+    if (!canvasWrapRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+          setZoom(calcFitZoom());
+        }
+      }
+    });
+    observer.observe(canvasWrapRef.current);
+    return () => observer.disconnect();
+  }, [calcFitZoom]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -598,6 +761,8 @@ export function CanvasEditor({
 
   const [isDirty, setIsDirty] = useState(false);
   const [bgColor, setBgColor] = useState<string>(() => {
+    const bgEl = (initialResolvedSlides[0] || []).find(e => e.id?.endsWith('-bg'));
+    if (bgEl && bgEl.fill) return bgEl.fill;
     if (!templateGradient) return '#ffffff';
     return templateGradient.includes('gradient') ? '#ffffff' : templateGradient;
   });
@@ -638,8 +803,11 @@ export function CanvasEditor({
     slides: CanvasElement[][];
     activeSlideIdx: number;
   }
-  const [history, setHistory] = useState<HistoryStep[]>([]);
-  const [historyIdx, setHistoryIdx] = useState(-1);
+  const [history, setHistory] = useState<HistoryStep[]>(() => [{
+    slides: initialResolvedSlides,
+    activeSlideIdx: 0
+  }]);
+  const [historyIdx, setHistoryIdx] = useState(0);
 
   const pushHistory = useCallback((nextSlides: CanvasElement[][], customActiveIdx?: number) => {
     const activeIdx = customActiveIdx !== undefined ? customActiveIdx : activeSlideIdxRef.current;
@@ -971,121 +1139,43 @@ const deleteSlide = () => {
   );
 
   useEffect(() => {
-    let initialSlides: CanvasElement[][] = [];
-    const isUploadedFileTemplate = Boolean(templateFileUrl && templateFileType);
-
-    const sourceSlides = normalizedDesign.slides && normalizedDesign.slides.length > 0 && normalizedDesign.slides[0]?.length > 0
-      ? normalizedDesign.slides
-      : (templateSlides && templateSlides.length > 0 ? templateSlides : []);
-    const sourceElements = normalizedDesign.elements && normalizedDesign.elements.length > 0
-      ? normalizedDesign.elements
-      : templateElements;
-
-    if (sourceSlides && sourceSlides.length > 0) {
-      initialSlides = sourceSlides.map((slide: any) => {
-        const els = Array.isArray(slide)
-          ? slide
-          : Array.isArray(slide?.elements)
-          ? slide.elements
-          : [];
-        return els.map((el: any) => ({ ...el, id: el.id || uid() }));
-      }).filter((s: CanvasElement[]) => s.length > 0);
-    } 
-    
-    if (initialSlides.length === 0 && sourceElements && sourceElements.length > 0) {
-      const flatEls = Array.isArray(sourceElements)
-        ? sourceElements
-        : Array.isArray((sourceElements as any)?.elements)
-        ? (sourceElements as any).elements
-        : [];
-      if (flatEls.length > 0) {
-        initialSlides = [
-          flatEls.map((el: any) => ({ ...el, id: el.id || uid() }))
-        ];
+    if (elements.length === 0 && initialResolvedSlides.length > 0) {
+      setSlides(initialResolvedSlides);
+      setElements(initialResolvedSlides[0] || []);
+      setHistory([{ slides: initialResolvedSlides, activeSlideIdx: 0 }]);
+      setHistoryIdx(0);
+      const bgEl = (initialResolvedSlides[0] || []).find(e => e.id?.endsWith('-bg'));
+      if (bgEl && bgEl.fill) {
+        setBgColor(bgEl.fill);
       }
     }
+  }, [initialResolvedSlides, elements.length]);
 
-    if (initialSlides.length === 0 && isUploadedFileTemplate) {
-      const uploadedFileKind = (templateFileType || '').toLowerCase();
+  /* Progressive background preloading for remaining presentation slides */
+  useEffect(() => {
+    if (!slides || slides.length <= 1) return;
+    let cancel = false;
+    const idleCallback = typeof window !== 'undefined' && (window as any).requestIdleCallback
+      ? (window as any).requestIdleCallback
+      : (cb: Function) => setTimeout(cb, 200);
 
-      if (uploadedFileKind.startsWith('image/')) {
-        initialSlides = [[{
-          id: `uploaded-${templateFileName || resolvedName || 'template'}`,
-          type: 'image',
-          x: 0,
-          y: 0,
-          width: cW,
-          height: cH,
-          src: templateFileUrl,
-          fill: 'transparent',
-          stroke: 'transparent',
-          strokeWidth: 0,
-          opacity: 1,
-          visible: true,
-          locked: true,
-        }]];
-      } else {
-        initialSlides = [[{
-          id: `uploaded-${templateFileName || resolvedName || 'template'}`,
-          type: 'rect',
-          x: 0,
-          y: 0,
-          width: cW,
-          height: cH,
-          fill: '#0f172a',
-          stroke: 'transparent',
-          strokeWidth: 0,
-          opacity: 1,
-          visible: true,
-          locked: true,
-        }]];
-      }
-    }
-
-    // Professional Fallback: If still empty, generate rich multi-element slides
-    if (initialSlides.length === 0) {
-      if (isPresentation) {
-        const generated = createProfessionalSlides(resolvedName, '1920×1080');
-        if (generated && generated.length > 0) {
-          initialSlides = generated.slice(0, 8).map(s => s.map((el: any) => ({ ...el, id: el.id || uid() })));
+    const handle = idleCallback(() => {
+      if (cancel) return;
+      slides.slice(1).forEach((slideEls, idx) => {
+        if (slideEls && slideEls.length > 0) {
+          preloadTemplateAssets({ elements: slideEls }, { templateId: templateName, pageId: idx + 2 });
+          loadTemplateFonts(slideEls, { templateId: templateName, pageId: idx + 2 });
         }
-      }
-
-      if (initialSlides.length === 0) {
-        const bgFill = templateGradient || (isPresentation ? '#0b0f19' : '#0f172a');
-        const accent = '#38bdf8';
-        initialSlides = [[
-          { id: uid(), type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: bgFill, stroke: 'transparent', strokeWidth: 0, opacity: 1, locked: true, visible: true },
-          { id: uid(), type: 'rect', x: Math.round(cW * 0.08), y: Math.round(cH * 0.12), width: 180, height: 32, fill: 'rgba(56,189,248,0.15)', stroke: accent, strokeWidth: 1, borderRadius: 16, opacity: 1, locked: false, visible: true },
-          { id: uid(), type: 'text', x: Math.round(cW * 0.08) + 16, y: Math.round(cH * 0.12) + 6, width: 150, height: 20, fill: accent, text: 'FEATURED DESIGN', fontSize: 12, fontFamily: 'Space Grotesk', fontWeight: 'bold', opacity: 1, locked: false, visible: true },
-          { id: uid(), type: 'text', x: Math.round(cW * 0.08), y: Math.round(cH * 0.22), width: Math.round(cW * 0.84), height: 90, fill: '#ffffff', text: resolvedName, fontSize: Math.min(56, Math.round(cW * 0.045)), fontFamily: 'Space Grotesk', fontWeight: 'bold', opacity: 1, locked: false, visible: true },
-          { id: uid(), type: 'rect', x: Math.round(cW * 0.08), y: Math.round(cH * 0.36), width: 120, height: 4, fill: accent, stroke: 'transparent', strokeWidth: 0, opacity: 1, locked: false, visible: true },
-          { id: uid(), type: 'text', x: Math.round(cW * 0.08), y: Math.round(cH * 0.40), width: Math.round(cW * 0.75), height: 70, fill: '#94a3b8', text: 'Professional high-impact visual design crafted for modern creative workflows.', fontSize: Math.min(22, Math.round(cW * 0.018)), fontFamily: 'Inter', fontWeight: 'normal', opacity: 1, locked: false, visible: true }
-        ]];
-      }
-    }
-    setSlides(initialSlides);
-    setElements(initialSlides[0] || []);
-    
-    const initialStep: HistoryStep = {
-      slides: initialSlides,
-      activeSlideIdx: 0
-    };
-    setHistory([initialStep]);
-    setHistoryIdx(0);
-    
-    const counts: Record<string, number> = {};
-    (initialSlides[0] || []).forEach(el => {
-      counts[el.type] = (counts[el.type] || 0) + 1;
+      });
     });
-    elemCountRef.current = counts;
-    
-    // Set background color from template elements if defined
-    const bgEl = (initialSlides[0] || []).find(e => e.id?.endsWith('-bg'));
-    if (bgEl && bgEl.fill) {
-      setBgColor(bgEl.fill);/* Init template */
-    }
-  }, [cW, cH, normalizedDesign, templateFileUrl, templateFileType, templateFileName, resolvedName, isPresentation]);
+
+    return () => {
+      cancel = true;
+      if (typeof window !== 'undefined' && (window as any).cancelIdleCallback) {
+        (window as any).cancelIdleCallback(handle);
+      }
+    };
+  }, [slides, templateName]);
 
   /* Preload image assets so Unsplash photography renders immediately */
   useEffect(() => {
@@ -1577,7 +1667,7 @@ if (editingText && selectedId !== editingText) {
 
   /* ── Render ───────────────────────────────────────────────── */
   return (
-    <div style={S.wrap} className="ce-wrap">
+    <div style={S.wrap(isMobile)} className="ce-wrap ce-root">
       {/* Hidden file input */}
       <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.gif,.svg,.webp" style={{ display: 'none' }}
         onChange={handleImageUpload} />
@@ -2379,7 +2469,7 @@ console.log("found element =", el);
       </div>
 
       {/* ─── Properties Bar ────────────────────────────────── */}
-      <div style={{ ...S.propsBar, position: 'relative' }} className="ce-propsbar">
+      <div style={{ ...S.propsBar(isMobile), position: 'relative' }} className="ce-propsbar">
         {selected ? (
           <>
             {/* Common: opacity */}

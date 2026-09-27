@@ -1118,11 +1118,31 @@ body {
   }
 
   .ce-slide-navigator {
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
     gap: 8px !important;
-    padding: 6px 10px !important;
+    padding: 6px 12px !important;
     justify-content: center !important;
-    max-width: 90vw !important;
+    max-width: 95vw !important;
+    scrollbar-width: none;
+  }
+  .ce-slide-navigator::-webkit-scrollbar {
+    display: none;
+  }
+
+  .vex-content:has(.ce-root),
+  .vex-content.has-canvas-editor {
+    padding: 0 !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .vex-root.is-mobile:has(.ce-root) > .vex-main > div:first-child.glass-3d,
+  .vex-root.is-mobile.has-canvas-editor > .vex-main > div:first-child.glass-3d {
+    display: none !important;
   }
 
   .ds-canvas-area {

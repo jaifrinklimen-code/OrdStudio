@@ -66,10 +66,10 @@ export function SmartSearch({ onNavigate, onOpenTemplate, query: queryProp, setQ
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Debounced backend search
-  useEffect(() => {
-    const trimmedQuery = query.trim();
-    if (!trimmedQuery) {
+  // Resilient search function that queries /api/search with fallback to canonical templates library
+  const performSearch = async (searchTerm: string, activeFilter: string) => {
+    const trimmed = searchTerm.trim();
+    if (!trimmed) {
       setSearchResults([]);
       setLoading(false);
       setError(null);
@@ -79,38 +79,96 @@ export function SmartSearch({ onNavigate, onOpenTemplate, query: queryProp, setQ
     setLoading(true);
     setError(null);
 
+    try {
+      let data: any[] = [];
+      let fetchSuccess = false;
+
+      try {
+        const r = await secureFetch(`/api/search?q=${encodeURIComponent(trimmed)}&filter=${encodeURIComponent(activeFilter)}`);
+        if (r.ok) {
+          data = await r.json();
+          fetchSuccess = true;
+        }
+      } catch (networkErr) {
+        console.warn("Backend /api/search unavailable, falling back to local canonical library:", networkErr);
+      }
+
+      // If backend was unreachable or returned empty, query local canonical template registry
+      if (!fetchSuccess || data.length === 0) {
+        const allTemplates = await loadAllCanonicalTemplates();
+        const qLower = trimmed.toLowerCase();
+
+        const localMatches = allTemplates.filter((t: any) => {
+          const name = (t.name || t.title || '').toLowerCase();
+          const cat = (t.category || t.type || '').toLowerCase();
+          const desc = (t.description || '').toLowerCase();
+          return name.includes(qLower) || cat.includes(qLower) || desc.includes(qLower);
+        }).map((t: any) => ({
+          id: `template-${t.id}`,
+          type: 'Template',
+          name: t.name || t.title,
+          cat: t.category || t.type || 'Design',
+          size: t.size || `${t.canvasWidth || 1920}×${t.canvasHeight || 1080}`,
+          gradient: t.gradient || 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'
+        }));
+
+        // Filter local matches by category filter if needed
+        let filteredLocal = localMatches;
+        if (activeFilter === 'Templates') {
+          filteredLocal = localMatches;
+        } else if (activeFilter !== 'All') {
+          filteredLocal = [];
+        }
+
+        if (data.length === 0) {
+          data = filteredLocal;
+        } else {
+          // Merge unique
+          const existingIds = new Set(data.map(d => d.id));
+          for (const item of filteredLocal) {
+            if (!existingIds.has(item.id)) {
+              data.push(item);
+            }
+          }
+        }
+      }
+
+      const processed = data.map((item: any) => {
+        if (item.type === 'Feature') {
+          let iconComp = Sparkles;
+          if (item.name.includes("Sticker")) iconComp = ToggleLeft;
+          if (item.name.includes("Photo")) iconComp = Grid;
+          return { ...item, icon: iconComp };
+        }
+        if (item.type === 'Guide') {
+          return { ...item, icon: BookOpen };
+        }
+        return item;
+      });
+
+      setSearchResults(processed);
+      setLoading(false);
+    } catch (err: any) {
+      console.error("Search failed completely:", err);
+      setError(err?.message || "Search failed. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  // Debounced search trigger
+  useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      secureFetch(`/api/search?q=${encodeURIComponent(trimmedQuery)}&filter=${encodeURIComponent(searchFilter)}`)
-        .then((r) => {
-          if (!r.ok) throw new Error("Search request failed");
-          return r.json();
-        })
-        .then((data) => {
-          // Map features and guides icon components based on static references
-          const processed = data.map((item: any) => {
-            if (item.type === 'Feature') {
-              let iconComp = Sparkles;
-              if (item.name.includes("Sticker")) iconComp = ToggleLeft;
-              if (item.name.includes("Photo")) iconComp = Grid;
-              return { ...item, icon: iconComp };
-            }
-            if (item.type === 'Guide') {
-              return { ...item, icon: BookOpen };
-            }
-            return item;
-          });
-          setSearchResults(processed);
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error("Search failed:", err);
-          setError(err.message || "Failed to retrieve search results.");
-          setLoading(false);
-        });
-    }, 300);
+      performSearch(query, searchFilter);
+    }, 280);
 
     return () => clearTimeout(delayDebounce);
   }, [query, searchFilter]);
+
+  // Explicit immediate search on button click or Enter key
+  const handleImmediateSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    performSearch(query, searchFilter);
+  };
 
   const getRelatedSuggestions = (q: string) => {
     const qLower = q.toLowerCase();
@@ -202,33 +260,62 @@ export function SmartSearch({ onNavigate, onOpenTemplate, query: queryProp, setQ
       {/* Main Search Panel */}
       <FadeIn delay={120} duration={500}>
         <div className="glass p-6 flex flex-col gap-5">
-          {/* Search bar input */}
-          <div className="relative">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder={isMobile ? "Search templates, guides..." : "Search templates, modules, help guides... (Press Ctrl + K)"}
-              className="w-full bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.12] focus:border-purple-500/50 rounded-xl py-3.5 pl-12 pr-20 text-sm text-white focus:outline-none transition-all focus:shadow-[0_0_16px_rgba(139,92,246,0.1)]"
-            />
-            {query ? (
+          {/* Search bar input with explicit Search Action Button */}
+          <form onSubmit={handleImmediateSearch} className="flex flex-col sm:flex-row gap-2.5">
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={isMobile ? "Search templates, guides..." : "Search templates, modules, help guides... (Press Enter or Ctrl+K)"}
+                className="w-full bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.12] focus:border-purple-500/50 rounded-xl py-3.5 pl-12 pr-12 text-sm text-white focus:outline-none transition-all focus:shadow-[0_0_16px_rgba(139,92,246,0.1)]"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('');
+                    setSearchResults([]);
+                    inputRef.current?.focus();
+                  }}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-white/40 hover:text-white transition-all p-1 hover:bg-white/10 rounded cursor-pointer"
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Dedicated Search Action Button */}
+            <button
+              type="submit"
+              onClick={handleImmediateSearch}
+              disabled={loading}
+              className="px-6 py-3.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 flex-shrink-0"
+            >
+              <Search size={14} className={loading ? "animate-spin" : ""} />
+              <span>{loading ? "Searching..." : "Search"}</span>
+            </button>
+          </form>
+
+          {/* Interactive Category Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+            {['All', 'Templates', 'Features', 'Guides', 'Stickers'].map((cat) => (
               <button
-                onClick={() => {
-                  setQuery('');
-                  inputRef.current?.focus();
-                }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-white/50 hover:text-white transition-all bg-white/[0.06] border border-white/[0.08] hover:bg-white/[0.1] px-2.5 py-1 rounded cursor-pointer font-medium"
+                key={cat}
+                type="button"
+                onClick={() => setSearchFilter(cat)}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap text-[11px] ${
+                  searchFilter === cat
+                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
+                    : 'bg-white/[0.03] text-white/50 border border-white/[0.06] hover:bg-white/[0.06] hover:text-white/80'
+                }`}
               >
-                Cancel
+                {cat}
               </button>
-            ) : (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white/[0.06] border border-white/[0.08] px-2 py-1 rounded text-[10px] text-white/45">
-                <Command size={10} />
-                <span>K</span>
-              </div>
-            )}
+            ))}
           </div>
 
           {/* Search Content */}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Play, Heart, Copy, ChevronLeft, ChevronRight, Sparkles, Layers, Type, Palette, Maximize2 } from 'lucide-react';
 import { TemplateMiniRenderer } from './TemplateMiniRenderer';
 
@@ -51,7 +52,7 @@ export function TemplatePreviewModal({
 
   const tags = Array.isArray(template.tags) ? template.tags : [];
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div 
         className="relative w-full max-w-5xl bg-[#0f111a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]"
@@ -229,4 +230,6 @@ export function TemplatePreviewModal({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }

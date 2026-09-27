@@ -429,6 +429,75 @@ export function createProfessionalSlides(title: string, size: string = '1920×10
       { id: 'p8-cta-btn', type: 'rect', x: 1240, y: 760, width: 520, height: 70, fill: cfg.themeColor, borderRadius: 14, visible: true, locked: false },
       { id: 'p8-cta-btn-t', type: 'text', x: 1240, y: 780, width: 520, height: 35, text: 'SCHEDULE EXECUTIVE INITIATION →', fontSize: 18, fontFamily: titleFont, fontWeight: '900', fill: isLight ? '#ffffff' : '#000000', alignment: 'center', visible: true, locked: false },
       { id: 'p8-confidential', type: 'text', x: 1240, y: 860, width: 520, height: 50, text: 'CONFIDENTIAL EXECUTIVE PRESENTATION DECK\nORD STUDIO CANONICAL TEMPLATES · ALL RIGHTS RESERVED 2026', fontSize: 13, fontFamily: bodyFont, fontWeight: '700', fill: '#94a3b8', alignment: 'center', lineHeight: 1.5, visible: true, locked: false }
+    ],
+
+    // ── Slide 9: Executive Leadership, Governance & Domain Experts ───────────
+    [
+      { id: 'p9-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: cfg.bgColor, visible: true, locked: true },
+      { id: 'p9-tag', type: 'text', x: 100, y: 80, width: 1200, height: 30, text: `✦  EXECUTIVE LEADERSHIP  ·  GOVERNANCE & STEWARDSHIP`, fontSize: 16, fontFamily: titleFont, fontWeight: '800', fill: cfg.themeColor, letterSpacing: 2, visible: true, locked: false },
+      { id: 'p9-head', type: 'text', x: 100, y: 120, width: 1720, height: 60, text: 'WORLD-CLASS LEADERSHIP & STRATEGIC BOARD', fontSize: 46, fontFamily: titleFont, fontWeight: '800', fill: textColor, visible: true, locked: false },
+      { id: 'p9-bar', type: 'rect', x: 100, y: 190, width: 140, height: 4, fill: cfg.themeColor, visible: true, locked: false },
+
+      // Leader 1
+      { id: 'p9-l1-card', type: 'rect', x: 100, y: 240, width: 540, height: 480, fill: cardBg, stroke: cardStroke, strokeWidth: 1, borderRadius: 20, visible: true, locked: false },
+      { id: 'p9-l1-tag', type: 'text', x: 140, y: 280, width: 460, height: 26, text: 'CHIEF EXECUTIVE OFFICER', fontSize: 14, fontFamily: titleFont, fontWeight: '800', fill: cfg.themeColor, letterSpacing: 1.5, visible: true, locked: false },
+      { id: 'p9-l1-name', type: 'text', x: 140, y: 315, width: 460, height: 50, text: 'Dr. Evelyn Sterling', fontSize: 32, fontFamily: titleFont, fontWeight: '900', fill: textColor, visible: true, locked: false },
+      { id: 'p9-l1-bio', type: 'text', x: 140, y: 380, width: 460, height: 180, text: 'Former Head of Strategy at global tier-one enterprise. 18+ years deploying transformative architecture across high-growth international ecosystems.', fontSize: 18, fontFamily: bodyFont, fill: subtextColor, lineHeight: 1.6, visible: true, locked: false },
+      { id: 'p9-l1-cred', type: 'text', x: 140, y: 640, width: 460, height: 30, text: 'PhD Distributed Systems · Ex-Principal Partner', fontSize: 14, fontFamily: bodyFont, fontWeight: '700', fill: cfg.themeColor, visible: true, locked: false },
+
+      // Leader 2
+      { id: 'p9-l2-card', type: 'rect', x: 690, y: 240, width: 540, height: 480, fill: cardBg, stroke: cfg.themeColor, strokeWidth: 1.5, borderRadius: 20, visible: true, locked: false },
+      { id: 'p9-l2-tag', type: 'text', x: 730, y: 280, width: 460, height: 26, text: 'CHIEF TECHNOLOGY OFFICER', fontSize: 14, fontFamily: titleFont, fontWeight: '800', fill: cfg.themeColor, letterSpacing: 1.5, visible: true, locked: false },
+      { id: 'p9-l2-name', type: 'text', x: 730, y: 315, width: 460, height: 50, text: 'Marcus Vance', fontSize: 32, fontFamily: titleFont, fontWeight: '900', fill: textColor, visible: true, locked: false },
+      { id: 'p9-l2-bio', type: 'text', x: 730, y: 380, width: 460, height: 180, text: 'Architect of foundational real-time infrastructure scaled to 50M+ users. Spearheaded next-generation systems engineering and reliability protocols.', fontSize: 18, fontFamily: bodyFont, fill: subtextColor, lineHeight: 1.6, visible: true, locked: false },
+      { id: 'p9-l2-cred', type: 'text', x: 730, y: 640, width: 460, height: 30, text: 'MS Computer Science · Patent Holder (6x)', fontSize: 14, fontFamily: bodyFont, fontWeight: '700', fill: cfg.themeColor, visible: true, locked: false },
+
+      // Leader 3
+      { id: 'p9-l3-card', type: 'rect', x: 1280, y: 240, width: 540, height: 480, fill: cardBg, stroke: cardStroke, strokeWidth: 1, borderRadius: 20, visible: true, locked: false },
+      { id: 'p9-l3-tag', type: 'text', x: 1320, y: 280, width: 460, height: 26, text: 'HEAD OF PRODUCT & OPERATIONS', fontSize: 14, fontFamily: titleFont, fontWeight: '800', fill: cfg.themeColor, letterSpacing: 1.5, visible: true, locked: false },
+      { id: 'p9-l3-name', type: 'text', x: 1320, y: 315, width: 460, height: 50, text: 'Aria Thorne', fontSize: 32, fontFamily: titleFont, fontWeight: '900', fill: textColor, visible: true, locked: false },
+      { id: 'p9-l3-bio', type: 'text', x: 1320, y: 380, width: 460, height: 180, text: 'Pioneered human-centered design systems and high-velocity product execution frameworks across hyper-scaling category leaders.', fontSize: 18, fontFamily: bodyFont, fill: subtextColor, lineHeight: 1.6, visible: true, locked: false },
+      { id: 'p9-l3-cred', type: 'text', x: 1320, y: 640, width: 460, height: 30, text: 'MBA Wharton · Product Design Lead', fontSize: 14, fontFamily: bodyFont, fontWeight: '700', fill: cfg.themeColor, visible: true, locked: false },
+
+      // Footer
+      { id: 'p9-foot', type: 'text', x: 100, y: 770, width: 1720, height: 30, text: 'BACKED BY LEADING INSTITUTIONAL INVESTORS AND GLOBAL STRATEGIC OPERATORS', fontSize: 14, fontFamily: titleFont, fontWeight: '800', fill: subtextColor, letterSpacing: 1.5, visible: true, locked: false }
+    ],
+
+    // ── Slide 10: Capital Allocation, 24-Month Roadmap & Executive Closing ───
+    [
+      { id: 'p10-bg', type: 'rect', x: 0, y: 0, width: cW, height: cH, fill: cfg.bgColor, visible: true, locked: true },
+      { id: 'p10-tag', type: 'text', x: 100, y: 80, width: 1200, height: 30, text: `✦  EXECUTION ROADMAP  ·  CAPITAL ALLOCATION & PROJECTIONS`, fontSize: 16, fontFamily: titleFont, fontWeight: '800', fill: cfg.themeColor, letterSpacing: 2, visible: true, locked: false },
+      { id: 'p10-head', type: 'text', x: 100, y: 120, width: 1720, height: 60, text: 'STRATEGIC CAPITAL DEPLOYMENT & MILESTONES', fontSize: 46, fontFamily: titleFont, fontWeight: '800', fill: textColor, visible: true, locked: false },
+      { id: 'p10-bar', type: 'rect', x: 100, y: 190, width: 140, height: 4, fill: cfg.themeColor, visible: true, locked: false },
+
+      // 4 Milestone Pillars
+      { id: 'p10-m1', type: 'rect', x: 100, y: 240, width: 395, height: 420, fill: cardBg, stroke: cardStroke, strokeWidth: 1, borderRadius: 18, visible: true, locked: false },
+      { id: 'p10-m1-q', type: 'text', x: 130, y: 275, width: 335, height: 30, text: 'Q1 - Q2 2026', fontSize: 18, fontFamily: titleFont, fontWeight: '900', fill: cfg.themeColor, visible: true, locked: false },
+      { id: 'p10-m1-t', type: 'text', x: 130, y: 315, width: 335, height: 60, text: 'Platform General Availability', fontSize: 22, fontFamily: titleFont, fontWeight: '800', fill: textColor, visible: true, locked: false },
+      { id: 'p10-m1-d', type: 'text', x: 130, y: 385, width: 335, height: 180, text: 'Rollout of core vector engine, enterprise SSO, and 50+ bespoke production workflows.', fontSize: 17, fontFamily: bodyFont, fill: subtextColor, lineHeight: 1.6, visible: true, locked: false },
+
+      { id: 'p10-m2', type: 'rect', x: 540, y: 240, width: 395, height: 420, fill: cardBg, stroke: cfg.themeColor, strokeWidth: 1.5, borderRadius: 18, visible: true, locked: false },
+      { id: 'p10-m2-q', type: 'text', x: 570, y: 275, width: 335, height: 30, text: 'Q3 - Q4 2026', fontSize: 18, fontFamily: titleFont, fontWeight: '900', fill: cfg.themeColor, visible: true, locked: false },
+      { id: 'p10-m2-t', type: 'text', x: 570, y: 315, width: 335, height: 60, text: 'AI Autonomous Pipeline', fontSize: 22, fontFamily: titleFont, fontWeight: '800', fill: textColor, visible: true, locked: false },
+      { id: 'p10-m2-d', type: 'text', x: 570, y: 385, width: 335, height: 180, text: 'Multi-modal generation agent integration and generative visual canvas co-pilots.', fontSize: 17, fontFamily: bodyFont, fill: subtextColor, lineHeight: 1.6, visible: true, locked: false },
+
+      { id: 'p10-m3', type: 'rect', x: 980, y: 240, width: 395, height: 420, fill: cardBg, stroke: cardStroke, strokeWidth: 1, borderRadius: 18, visible: true, locked: false },
+      { id: 'p10-m3-q', type: 'text', x: 1010, y: 275, width: 335, height: 30, text: 'H1 2027', fontSize: 18, fontFamily: titleFont, fontWeight: '900', fill: cfg.themeColor, visible: true, locked: false },
+      { id: 'p10-m3-t', type: 'text', x: 1010, y: 315, width: 335, height: 60, text: 'Global Market Expansion', fontSize: 22, fontFamily: titleFont, fontWeight: '800', fill: textColor, visible: true, locked: false },
+      { id: 'p10-m3-d', type: 'text', x: 1010, y: 385, width: 335, height: 180, text: 'EMEA & APAC data residency clusters with localized enterprise compliance frameworks.', fontSize: 17, fontFamily: bodyFont, fill: subtextColor, lineHeight: 1.6, visible: true, locked: false },
+
+      { id: 'p10-m4', type: 'rect', x: 1420, y: 240, width: 400, height: 420, fill: cardBg, stroke: cardStroke, strokeWidth: 1, borderRadius: 18, visible: true, locked: false },
+      { id: 'p10-m4-q', type: 'text', x: 1450, y: 275, width: 340, height: 30, text: 'H2 2027+', fontSize: 18, fontFamily: titleFont, fontWeight: '900', fill: cfg.themeColor, visible: true, locked: false },
+      { id: 'p10-m4-t', type: 'text', x: 1450, y: 315, width: 340, height: 60, text: 'Ecosystem & Marketplace', fontSize: 22, fontFamily: titleFont, fontWeight: '800', fill: textColor, visible: true, locked: false },
+      { id: 'p10-m4-d', type: 'text', x: 1450, y: 385, width: 340, height: 180, text: 'Third-party developer API, custom extensions, and institutional asset marketplace.', fontSize: 17, fontFamily: bodyFont, fill: subtextColor, lineHeight: 1.6, visible: true, locked: false },
+
+      // Closing Contact Banner
+      { id: 'p10-banner', type: 'rect', x: 100, y: 700, width: 1720, height: 260, fill: isLight ? '#0f172a' : 'rgba(255,255,255,0.06)', stroke: cfg.themeColor, strokeWidth: 2, borderRadius: 20, visible: true, locked: false },
+      { id: 'p10-cta-title', type: 'text', x: 150, y: 740, width: 900, height: 50, text: 'LET’S BUILD THE FUTURE OF CREATIVE SYSTEMS', fontSize: 32, fontFamily: titleFont, fontWeight: '900', fill: '#ffffff', visible: true, locked: false },
+      { id: 'p10-cta-sub', type: 'text', x: 150, y: 800, width: 900, height: 70, text: cfg.closingMessage || 'Direct contact: leadership@ordstudio.ai · +1 (800) 555-0199 · ordstudio.ai', fontSize: 20, fontFamily: bodyFont, fill: '#94a3b8', lineHeight: 1.5, visible: true, locked: false },
+      { id: 'p10-btn', type: 'rect', x: 1250, y: 760, width: 510, height: 70, fill: cfg.themeColor, borderRadius: 14, visible: true, locked: false },
+      { id: 'p10-btn-t', type: 'text', x: 1250, y: 780, width: 510, height: 35, text: 'CONTACT STRATEGY TEAM →', fontSize: 18, fontFamily: titleFont, fontWeight: '900', fill: isLight ? '#ffffff' : '#000000', alignment: 'center', visible: true, locked: false },
+      { id: 'p10-conf', type: 'text', x: 1250, y: 860, width: 510, height: 50, text: 'ORD STUDIO EXECUTIVE PRESENTATION ARCHIVE · 2026', fontSize: 12, fontFamily: bodyFont, fontWeight: '700', fill: '#94a3b8', alignment: 'center', lineHeight: 1.5, visible: true, locked: false }
     ]
   ];
 }
