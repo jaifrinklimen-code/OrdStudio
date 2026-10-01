@@ -35,7 +35,10 @@ export default function PublicHome() {
   const [toastMsg, setToastMsg] = useState<string>('');
 
   useEffect(() => {
+    let triggered = false;
     const fetchStats = () => {
+      if (triggered) return;
+      triggered = true;
       fetch('/api/stats', {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
       })
@@ -53,15 +56,21 @@ export default function PublicHome() {
         .catch(() => {});
     };
 
-    const timer = setTimeout(() => {
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(fetchStats, { timeout: 4000 });
-      } else {
+    const statsElem = document.getElementById('stats-section');
+    if (!statsElem || !('IntersectionObserver' in window)) {
+      const timer = setTimeout(fetchStats, 10000);
+      return () => clearTimeout(timer);
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)) {
+        observer.disconnect();
         fetchStats();
       }
-    }, 4000);
+    }, { rootMargin: '200px' });
 
-    return () => clearTimeout(timer);
+    observer.observe(statsElem);
+    return () => observer.disconnect();
   }, []);
 
   const triggerToast = (msg: string) => {
@@ -83,35 +92,32 @@ export default function PublicHome() {
       <div className="depth-orb depth-orb-cyan" />
 
       <div className="relative overflow-hidden bg-[#09090c] text-white">
-        
-        {/* HERO SECTION */}
-        <section className="hero-section relative pt-16 pb-12 sm:pt-20 sm:pb-16 lg:pt-24 lg:pb-16 border-b border-white/[0.03]">
+               {/* HERO SECTION */}
+        <section className="hero-section relative pt-12 pb-10 sm:pt-20 sm:pb-16 lg:pt-24 lg:pb-16 border-b border-white/[0.03]">
           <div className="hero-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="hero-grid grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-              
+            <div className="hero-grid grid lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-8 items-center">
+
               {/* Hero Left Column */}
               <div className="hero-left lg:col-span-5 text-left space-y-6">
                 <div className="text-xs font-mono tracking-widest text-purple-300/80 uppercase flex items-center gap-2">
                   IDEAS <ArrowRight size={10} className="text-purple-400/50" /> VISUALS <ArrowRight size={10} className="text-purple-400/50" /> IMPACT
                 </div>
-                
-                <h1 className="hero-h1 text-5xl sm:text-6xl lg:text-[4.5rem] font-bold tracking-tight leading-[1.05]" style={{ fontFamily: 'Syne, sans-serif' }}>
-                  <span className="text-white block">Create</span>
-                  <span className="text-white block">Stunning</span>
-                  <span className="block mt-1">
-                    <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">3D Visuals</span> <span className="text-white">with</span>
-                  </span>
-                  <span className="bg-gradient-to-r from-cyan-400 to-teal-300 bg-clip-text text-transparent block mt-1">AI</span>
+
+                <h1 className="hero-h1 text-4xl sm:text-6xl lg:text-[4.5rem] font-bold tracking-tight leading-[1.1] sm:leading-[1.05]" style={{ fontFamily: 'Syne, sans-serif' }}>
+                  <span className="text-white">Create Stunning </span>
+                  <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent inline-block">3D Visuals</span>{' '}
+                  <span className="text-white">with </span>
+                  <span className="bg-gradient-to-r from-cyan-400 to-teal-300 bg-clip-text text-transparent inline-block">AI</span>
                 </h1>
-                
-                <p className="hero-p min-h-[5.25rem] sm:min-h-[4.5rem] text-base sm:text-lg text-white/55 leading-relaxed max-w-xl">
+
+                <p className="hero-p min-h-[5.25rem] sm:min-h-[4.5rem] text-base sm:text-lg text-white/80 leading-relaxed max-w-xl">
                   OrdStudio combines conversational AI models with an infinite vector editing canvas. Instantly build slide decks, design stickers, write copywriting, and export editable files.
                 </p>
-                
+
                 <div className="hero-btn-container flex flex-col sm:flex-row flex-wrap gap-4 pt-2">
                   <Link
                     to="/signup"
-                    className="hero-btn-primary btn-3d px-8 py-4 rounded-xl text-sm font-bold hover:shadow-[0_8px_30px_rgba(124,58,237,0.4)]"
+                    className="hero-btn-primary btn-3d px-8 py-4 rounded-xl text-sm font-bold hover:shadow-[0_8px_30px_rgba(124,58,237,0.4)] w-full sm:w-auto text-center justify-center"
                     style={{ fontFamily: 'DM Sans, sans-serif' }}
                   >
                     Start Designing Free
@@ -119,43 +125,43 @@ export default function PublicHome() {
                   </Link>
                   <a
                     href="#features"
-                    className="hero-btn-secondary inline-flex items-center justify-center gap-2 border border-white/10 text-white/80 font-semibold px-8 py-4 rounded-xl hover:bg-white/5 hover:text-white transition-all duration-200 text-sm"
+                    className="hero-btn-secondary inline-flex items-center justify-center gap-2 border border-white/10 text-white/80 font-semibold px-8 py-4 rounded-xl hover:bg-white/5 hover:text-white transition-all duration-200 text-sm w-full sm:w-auto text-center"
                     style={{ fontFamily: 'DM Sans, sans-serif' }}
                   >
                     Explore Features
                   </a>
                 </div>
-                
-                <div className="flex items-center gap-6 pt-4 text-xs text-white/30">
+
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-4 text-xs text-white/65">
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle2 size={12} className="text-purple-500" />
-                    No credit card required
+                    <CheckCircle2 size={12} className="text-purple-400 shrink-0" />
+                    <span>No credit card required</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle2 size={12} className="text-purple-500" />
-                    Commercial-use rights
+                    <CheckCircle2 size={12} className="text-purple-400 shrink-0" />
+                    <span>Commercial-use rights</span>
                   </div>
                 </div>
               </div>
-              
+
               {/* Hero Right Column */}
-              <div className="hero-right-col lg:col-span-7 relative mt-12 lg:mt-0 z-20 flex justify-end items-center lg:items-start">
-                
-                <div className="hero-img-wrap relative w-[125%] sm:w-[135%] max-w-[850px] right-[-15%] sm:right-[-20%] lg:right-[-25%] xl:right-[-15%] z-10 transform hover:scale-[1.02] transition-transform duration-700 lg:-mt-8 xl:-mt-12">
+              <div className="hero-right-col lg:col-span-7 relative mt-6 lg:mt-0 z-20 flex justify-center lg:justify-end items-center lg:items-start w-full overflow-hidden lg:overflow-visible">
+
+                <div className="hero-img-wrap relative w-full max-w-lg lg:max-w-[850px] lg:w-[135%] right-0 lg:right-[-25%] xl:right-[-15%] z-10 transform hover:scale-[1.02] transition-transform duration-700 lg:-mt-8 xl:-mt-12 mx-auto lg:mx-0">
                   {/* Subtle fade mask so the image's dark purple edges blend perfectly with the #09090c page background */}
                   <picture>
-                    <source media="(max-width: 640px)" srcSet="/design-studio-hero-mobile.avif" type="image/avif" />
-                    <source media="(max-width: 640px)" srcSet="/design-studio-hero-mobile.webp" type="image/webp" />
-                    <source srcSet="/design-studio-hero.avif" type="image/avif" />
-                    <source srcSet="/design-studio-hero.webp" type="image/webp" />
-                    <img 
-                      src="/design-studio-hero.webp" 
-                      alt="OrdStudio Design Studio Showcase" 
+                    <source media="(max-width: 640px)" srcSet="/design-studio-hero-mobile.webp" type="image/webp" width="768" height="524" />
+                    <source media="(max-width: 640px)" srcSet="/design-studio-hero-mobile.avif" type="image/avif" width="768" height="524" />
+                    <source srcSet="/design-studio-hero.webp" type="image/webp" width="1024" height="698" />
+                    <source srcSet="/design-studio-hero.avif" type="image/avif" width="1024" height="698" />
+                    <img
+                      src="/design-studio-hero-mobile.webp"
+                      alt="OrdStudio Design Studio Showcase"
                       width={1024}
                       height={698}
                       fetchPriority="high"
                       decoding="async"
-                      className="w-full h-auto object-contain"
+                      className="w-full h-auto object-contain mx-auto"
                       style={{ WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%, black 70%, transparent 100%)', maskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%, black 70%, transparent 100%)' }}
                     />
                   </picture>
@@ -168,86 +174,86 @@ export default function PublicHome() {
         </section>
 
           {/* STATS SECTION */}
-          <section className="py-8 relative z-30">
+          <section id="stats-section" className="py-8 relative z-30" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 180px' }}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              
-              <div className="bg-[#0f0f16]/90 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-6 lg:p-8 shadow-[0_0_50px_rgba(139,92,246,0.1)]">
-                <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-white/[0.08] gap-6 md:gap-0">
-                  
+
+              <div className="bg-[#0f0f16]/90 backdrop-blur-xl border border-purple-500/20 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-[0_0_50px_rgba(139,92,246,0.1)]">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-0 lg:divide-x lg:divide-white/[0.08]">
+
                   {/* Stat 1 */}
-                  <div className="flex-1 flex items-center gap-4 justify-center md:justify-start md:px-6 first:pl-0">
-                    <div className="w-12 h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
-                      <Layers size={20} className="text-purple-400" />
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 justify-center lg:justify-start p-3 sm:p-4 lg:px-6 lg:py-0 first:lg:pl-0 bg-white/[0.02] lg:bg-transparent rounded-2xl lg:rounded-none border border-white/[0.04] lg:border-none text-center sm:text-left">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
+                      <Layers className="w-5 h-5 text-purple-400" />
                     </div>
-                    <div className="flex flex-col text-left">
-                      <div className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
+                    <div className="flex flex-col">
+                      <div className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
                         300
                       </div>
-                      <div className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mt-1.5">Design Templates Available</div>
+                      <div className="text-[10px] sm:text-[11px] text-white/70 uppercase tracking-wider font-mono mt-1 sm:mt-1.5 leading-tight">Design Templates</div>
                     </div>
                   </div>
 
                   {/* Stat 2 */}
-                  <div className="flex-1 flex items-center gap-4 justify-center md:justify-start md:px-6 pt-6 md:pt-0">
-                    <div className="w-12 h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
-                      <Presentation size={20} className="text-blue-400" />
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 justify-center lg:justify-start p-3 sm:p-4 lg:px-6 lg:py-0 bg-white/[0.02] lg:bg-transparent rounded-2xl lg:rounded-none border border-white/[0.04] lg:border-none text-center sm:text-left">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
+                      <Presentation className="w-5 h-5 text-blue-400" />
                     </div>
-                    <div className="flex flex-col text-left">
-                      <div className="text-3xl font-extrabold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
+                    <div className="flex flex-col">
+                      <div className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
                         {stats.templatesCount}
                       </div>
-                      <div className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mt-1.5">Presentation Templates</div>
+                      <div className="text-[10px] sm:text-[11px] text-white/70 uppercase tracking-wider font-mono mt-1 sm:mt-1.5 leading-tight">Presentations</div>
                     </div>
                   </div>
 
                   {/* Stat 3 */}
-                  <div className="flex-1 flex items-center gap-4 justify-center md:justify-start md:px-6 pt-6 md:pt-0">
-                    <div className="w-12 h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
-                      <Star size={20} className="text-purple-400" />
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 justify-center lg:justify-start p-3 sm:p-4 lg:px-6 lg:py-0 bg-white/[0.02] lg:bg-transparent rounded-2xl lg:rounded-none border border-white/[0.04] lg:border-none text-center sm:text-left">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
+                      <Star className="w-5 h-5 text-purple-400" />
                     </div>
-                    <div className="flex flex-col text-left">
-                      <div className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
+                    <div className="flex flex-col">
+                      <div className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
                         {stats.stickersCount}
                       </div>
-                      <div className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mt-1.5">Stickers Exported</div>
+                      <div className="text-[10px] sm:text-[11px] text-white/70 uppercase tracking-wider font-mono mt-1 sm:mt-1.5 leading-tight">Stickers Exported</div>
                     </div>
                   </div>
 
                   {/* Stat 4 */}
-                  <div className="flex-1 flex items-center gap-4 justify-center md:justify-start md:px-6 pt-6 md:pt-0 last:pr-0">
-                    <div className="w-12 h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
-                      <Activity size={20} className="text-purple-400" />
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 justify-center lg:justify-start p-3 sm:p-4 lg:px-6 lg:py-0 last:lg:pr-0 bg-white/[0.02] lg:bg-transparent rounded-2xl lg:rounded-none border border-white/[0.04] lg:border-none text-center sm:text-left">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0 shadow-inner">
+                      <Activity className="w-5 h-5 text-purple-400" />
                     </div>
-                    <div className="flex flex-col text-left">
-                      <div className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
+                    <div className="flex flex-col">
+                      <div className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent leading-none" style={{ fontFamily: 'Syne, sans-serif' }}>
                         {stats.status === 'Operational' ? '100%' : '99.2%'}
                       </div>
-                      <div className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-widest font-mono mt-1.5">System Status (Operational)</div>
+                      <div className="text-[10px] sm:text-[11px] text-white/70 uppercase tracking-wider font-mono mt-1 sm:mt-1.5 leading-tight">Operational Status</div>
                     </div>
                   </div>
 
                 </div>
               </div>
-              
+
             </div>
           </section>
 
         {/* FEATURES GRID SECTION */}
-        <section id="features" className="py-16 relative border-b border-white/[0.03]">
+        <section id="features" className="py-16 relative border-b border-white/[0.03]" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 600px' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            
+
             <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
               <div className="text-xs font-extrabold text-purple-400 uppercase tracking-widest font-mono">Feature Workspace</div>
               <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
                 All-In-One AI Design Studio
               </h2>
-              <p className="text-white/55 text-sm sm:text-base leading-relaxed">
+              <p className="text-white/70 text-sm sm:text-base leading-relaxed">
                 Unlock advanced generative models tightly integrated with professional, vector-based layout tools.
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              
+
               <Link to="/features/ai-presentation-maker" className="card-3d p-8 group flex flex-col justify-between min-h-[250px]">
                 <div className="space-y-5">
                   <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-all border border-purple-500/15">
@@ -257,7 +263,7 @@ export default function PublicHome() {
                     <h3 className="text-lg font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
                       AI Presentation Maker
                     </h3>
-                    <p className="text-xs text-white/45 leading-relaxed">
+                    <p className="text-xs text-white/70 leading-relaxed">
                       Generate beautiful structured slides, speakers notes, and outlines automatically from a prompt.
                     </p>
                   </div>
@@ -276,7 +282,7 @@ export default function PublicHome() {
                     <h3 className="text-lg font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
                       AI Copywriter
                     </h3>
-                    <p className="text-xs text-white/45 leading-relaxed">
+                    <p className="text-xs text-white/70 leading-relaxed">
                       Draft landing page copy, marketing emails, or product descriptions that speak to your target audience.
                     </p>
                   </div>
@@ -295,7 +301,7 @@ export default function PublicHome() {
                     <h3 className="text-lg font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
                       AI Sticker Generator
                     </h3>
-                    <p className="text-xs text-white/45 leading-relaxed">
+                    <p className="text-xs text-white/70 leading-relaxed">
                       Generate transparent kawaii, retro, 3D clay, or vector-styled stickers with automatic white borders.
                     </p>
                   </div>
@@ -314,7 +320,7 @@ export default function PublicHome() {
                     <h3 className="text-lg font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
                       Vector Canvas Editor
                     </h3>
-                    <p className="text-xs text-white/45 leading-relaxed">
+                    <p className="text-xs text-white/70 leading-relaxed">
                       Refine designs with layers, coordinate parameters, fonts, customized shapes, and coordinates.
                     </p>
                   </div>
@@ -333,7 +339,7 @@ export default function PublicHome() {
                     <h3 className="text-lg font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
                       Editable PPTX Exporter
                     </h3>
-                    <p className="text-xs text-white/45 leading-relaxed">
+                    <p className="text-xs text-white/70 leading-relaxed">
                       Convert generated slides into fully editable native PowerPoint files while preserving custom vector shapes.
                     </p>
                   </div>
@@ -352,7 +358,7 @@ export default function PublicHome() {
                     <h3 className="text-lg font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
                       Multi-Format Export
                     </h3>
-                    <p className="text-xs text-white/45 leading-relaxed">
+                    <p className="text-xs text-white/70 leading-relaxed">
                       Download graphics as raw vector SVGs, print-ready high-density PDFs, or transparent web PNGs.
                     </p>
                   </div>
@@ -367,27 +373,27 @@ export default function PublicHome() {
         </section>
 
         {/* WORKFLOW VALUE PROP */}
-        <section className="py-16 relative bg-white/[0.01] border-b border-white/[0.03]">
+        <section className="py-16 relative bg-white/[0.01] border-b border-white/[0.03]" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 500px' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
-              
+
               <div className="space-y-6">
                 <div className="text-xs font-extrabold text-purple-400 uppercase tracking-widest font-mono">Built for Creators</div>
                 <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
                   Professional Design Quality, Zero Learning Curve
                 </h2>
-                <p className="text-sm sm:text-base text-white/55 leading-relaxed">
+                <p className="text-sm sm:text-base text-white/70 leading-relaxed">
                   Most design tools force you to waste hours learning complex keybindings and alignments. OrdStudio automates the formatting so you can focus entirely on the core creative idea.
                 </p>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0 border border-purple-500/10 text-purple-400">
                       <Zap size={16} />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">Save Hours on Grid Alignment</h4>
-                      <p className="text-xs text-white/45 mt-1">Our AI engines automatically compute text wrapping, margins, and contrasting color harmonies.</p>
+                      <h3 className="text-sm font-bold text-white">Save Hours on Grid Alignment</h3>
+                      <p className="text-xs text-white/70 mt-1">Our AI engines automatically compute text wrapping, margins, and contrasting color harmonies.</p>
                     </div>
                   </div>
 
@@ -396,8 +402,8 @@ export default function PublicHome() {
                       <ShieldCheck size={16} />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">Commercial Rights Protected</h4>
-                      <p className="text-xs text-white/45 mt-1">Every design asset you generate remains 100% yours. Sell your stickers, pitch decks, and brand copies legally.</p>
+                      <h3 className="text-sm font-bold text-white">Commercial Rights Protected</h3>
+                      <p className="text-xs text-white/70 mt-1">Every design asset you generate remains 100% yours. Sell your stickers, pitch decks, and brand copies legally.</p>
                     </div>
                   </div>
 
@@ -406,8 +412,8 @@ export default function PublicHome() {
                       <Heart size={16} />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">Cross-Platform File Handoffs</h4>
-                      <p className="text-xs text-white/45 mt-1">Download native PowerPoint or SVG vectors, allowing standard integration into Keynote, Figma, or Adobe Illustrator.</p>
+                      <h3 className="text-sm font-bold text-white">Cross-Platform File Handoffs</h3>
+                      <p className="text-xs text-white/70 mt-1">Download native PowerPoint or SVG vectors, allowing standard integration into Keynote, Figma, or Adobe Illustrator.</p>
                     </div>
                   </div>
                 </div>
@@ -421,23 +427,23 @@ export default function PublicHome() {
                 </h3>
                 <div className="space-y-4 text-xs">
                   <div className="flex justify-between border-b border-white/[0.04] pb-2.5">
-                    <span className="text-white/45">AI slide layout templates</span>
+                    <span className="text-white/70">AI slide layout templates</span>
                     <span className="text-purple-300 font-bold">✓ 36 Grid Variants</span>
                   </div>
                   <div className="flex justify-between border-b border-white/[0.04] pb-2.5">
-                    <span className="text-white/45">Vector sticker style presets</span>
+                    <span className="text-white/70">Vector sticker style presets</span>
                     <span className="text-purple-300 font-bold">✓ 4 Style Formats</span>
                   </div>
                   <div className="flex justify-between border-b border-white/[0.04] pb-2.5">
-                    <span className="text-white/45">Export formats support</span>
+                    <span className="text-white/70">Export formats support</span>
                     <span className="text-purple-300 font-bold">PPTX, SVG, PDF, PNG</span>
                   </div>
                   <div className="flex justify-between border-b border-white/[0.04] pb-2.5">
-                    <span className="text-white/45">Google Web Fonts index</span>
+                    <span className="text-white/70">Google Web Fonts index</span>
                     <span className="text-purple-300 font-bold">50+ Google Fonts</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-white/45">Copywriter tone profiles</span>
+                    <span className="text-white/70">Copywriter tone profiles</span>
                     <span className="text-purple-300 font-bold">Professional, Friendly, Hype</span>
                   </div>
                 </div>
@@ -447,20 +453,18 @@ export default function PublicHome() {
           </div>
         </section>
 
-
-
         {/* FINAL CTA SECTION */}
-        <section className="py-20 relative">
+        <section className="py-20 relative" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 260px' }}>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6">
             <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
               Bring Your Ideas to Life Instantly
             </h2>
-            <p className="text-white/55 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+            <p className="text-white/70 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
               Design pitch decks, cute stickers, and professional copywriting inside a modern, unified design engine.
             </p>
             <Link
               to="/signup"
-              className="btn-3d px-10 py-4 rounded-xl text-sm font-bold shadow-xl shadow-purple-500/20"
+              className="btn-3d px-10 py-4 rounded-xl text-sm font-bold shadow-xl shadow-purple-500/20 w-full sm:w-auto inline-flex items-center justify-center"
               style={{ fontFamily: 'DM Sans, sans-serif' }}
             >
               Sign Up Free

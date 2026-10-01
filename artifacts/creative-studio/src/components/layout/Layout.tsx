@@ -3,12 +3,13 @@ import { Footer } from './Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
+  isLoggedIn?: boolean;
 }
 
-export function PublicLayout({ children }: LayoutProps) {
+export function PublicLayout({ children, isLoggedIn }: LayoutProps) {
   return (
     <div className="pub-layout">
-      <Header />
+      <Header isLoggedIn={isLoggedIn} />
       <main id="main-content" className="pub-main" role="main">
         {children}
       </main>

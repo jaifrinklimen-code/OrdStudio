@@ -21,13 +21,21 @@ const navLinks = [
   { label: 'Contact', href: '/contact' },
 ];
 
-export function Header() {
+interface HeaderProps {
+  isLoggedIn?: boolean;
+}
+
+export function Header({ isLoggedIn: propsIsLoggedIn }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedInState, setIsLoggedInState] = useState(false);
   const location = useLocation();
 
+  const isLoggedIn = propsIsLoggedIn !== undefined ? propsIsLoggedIn : isLoggedInState;
+
   useEffect(() => {
+    if (propsIsLoggedIn !== undefined) return;
+
     let active = true;
     let subscription: any = null;
 
@@ -35,10 +43,10 @@ export function Header() {
       import('@/lib/supabase').then(({ supabase }) => {
         if (!active) return;
         supabase.auth.getSession().then(({ data: { session } }) => {
-          if (active) setIsLoggedIn(!!session);
+          if (active) setIsLoggedInState(!!session);
         });
         const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-          if (active) setIsLoggedIn(!!session);
+          if (active) setIsLoggedInState(!!session);
         });
         subscription = data.subscription;
       }).catch(() => {});
@@ -81,7 +89,7 @@ export function Header() {
       active = false;
       if (subscription) subscription.unsubscribe();
     };
-  }, [location.pathname]);
+  }, [location.pathname, propsIsLoggedIn]);
 
   const isActive = (href: string) => location.pathname === href;
 

@@ -65,13 +65,23 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+            const normalized = id.replace(/\\/g, '/');
+            if (
+              normalized.includes('/node_modules/react/') ||
+              normalized.includes('/node_modules/react-dom/') ||
+              normalized.includes('/node_modules/react-router/') ||
+              normalized.includes('/node_modules/react-router-dom/') ||
+              normalized.includes('/node_modules/scheduler/')
+            ) {
               return 'vendor-react';
             }
-            if (id.includes('lucide-react') || id.includes('@radix-ui') || id.includes('framer-motion')) {
+            if (normalized.includes('/node_modules/lucide-react/') || normalized.includes('/node_modules/react-icons/')) {
+              return 'vendor-icons';
+            }
+            if (normalized.includes('@radix-ui') || normalized.includes('framer-motion')) {
               return 'vendor-ui';
             }
-            if (id.includes('@supabase')) {
+            if (normalized.includes('@supabase')) {
               return 'vendor-supabase';
             }
           }

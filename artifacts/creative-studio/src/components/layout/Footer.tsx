@@ -65,7 +65,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="pub-footer" role="contentinfo">
+    <footer className="pub-footer" role="contentinfo" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 360px' }}>
       <div className="pub-footer-inner">
         {/* Top Section */}
         <div className="pub-footer-grid">
