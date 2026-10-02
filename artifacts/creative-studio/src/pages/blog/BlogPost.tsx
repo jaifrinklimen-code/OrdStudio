@@ -185,14 +185,14 @@ export default function BlogPost() {
       name: 'OrdStudio',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://ordstudio.com/logo.png',
+        url: 'https://ord-studio-creative-studio.vercel.app/logo.png',
       },
     },
     datePublished: article.publishedDate,
     dateModified: article.publishedDate,
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://ordstudio.com/blog/${article.slug}`,
+      '@id': `https://ord-studio-creative-studio.vercel.app/blog/${article.slug}`,
     },
   };
 

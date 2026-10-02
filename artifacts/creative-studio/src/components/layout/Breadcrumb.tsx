@@ -19,13 +19,13 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://ordstudio.com/',
+        item: 'https://ord-studio-creative-studio.vercel.app/',
       },
       ...items.map((item, index) => ({
         '@type': 'ListItem',
         position: index + 2,
         name: item.label,
-        ...(item.href ? { item: `https://ordstudio.com${item.href}` } : {}),
+        ...(item.href ? { item: `https://ord-studio-creative-studio.vercel.app${item.href}` } : {}),
       })),
     ],
   };

@@ -15,7 +15,7 @@ interface SEOHeadProps {
   };
 }
 
-const BASE_URL = 'https://ordstudio.com';
+const BASE_URL = 'https://ord-studio-creative-studio.vercel.app';
 
 function setMeta(name: string, content: string, isProperty = false) {
   const attr = isProperty ? 'property' : 'name';

@@ -5,4 +5,4 @@ Disallow: /login
 Disallow: /signup
 Disallow: /forgot-password
 
-Sitemap: https://ordstudio.com/sitemap.xml
+Sitemap: https://ord-studio-creative-studio.vercel.app/sitemap.xml
