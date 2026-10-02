@@ -145,61 +145,84 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Support configured Resend API key environment variable
+    // Server-side environment variables
     const resendApiKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const configuredFrom = process.env.RESEND_FROM_EMAIL || 'OrdStudio Contact <onboarding@resend.dev>';
     const toEmail = process.env.CONTACT_NOTIFICATION_EMAIL || process.env.RESEND_TO_EMAIL || 'ordinance37@gmail.com';
 
     if (resendApiKey) {
-      const emailResponse = await fetch('https://api.resend.com/emails', {
+      const buildResendBody = (fromAddress) => JSON.stringify({
+        from: fromAddress,
+        to: [toEmail],
+        reply_to: sanitizedEmail,
+        subject: `[OrdStudio Contact] ${sanitizedSubject} — from ${sanitizedName}`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head><meta charset="utf-8" /></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0d0d12; color: #ffffff; padding: 24px; margin: 0;">
+              <div style="max-width: 600px; margin: 0 auto; background-color: #16161f; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px;">
+                <div style="display: flex; align-items: center; margin-bottom: 24px;">
+                  <h2 style="margin: 0; color: #a855f7; font-size: 22px; font-weight: 700;">OrdStudio Contact Message</h2>
+                </div>
+                <div style="margin-bottom: 20px;">
+                  <p style="margin: 4px 0; color: rgba(255,255,255,0.6); font-size: 13px; text-transform: uppercase;">From</p>
+                  <p style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 600;">${sanitizedName} &lt;<a href="mailto:${sanitizedEmail}" style="color: #c084fc; text-decoration: none;">${sanitizedEmail}</a>&gt;</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                  <p style="margin: 4px 0; color: rgba(255,255,255,0.6); font-size: 13px; text-transform: uppercase;">Subject</p>
+                  <p style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 600;">${sanitizedSubject}</p>
+                </div>
+                <div style="margin-bottom: 24px;">
+                  <p style="margin: 4px 0; color: rgba(255,255,255,0.6); font-size: 13px; text-transform: uppercase;">Message</p>
+                  <div style="background-color: #0a0a0f; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 16px; color: #e4e4e7; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${sanitizedMessage}</div>
+                </div>
+                <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 24px 0;" />
+                <p style="margin: 0; color: rgba(255,255,255,0.4); font-size: 11px;">Sent from the OrdStudio Contact Form &bull; ordstudio.com</p>
+              </div>
+            </body>
+          </html>
+        `
+      });
+
+      let emailResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${resendApiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: toEmail,
-          reply_to: sanitizedEmail,
-          subject: `[OrdStudio Contact] ${sanitizedSubject} — from ${sanitizedName}`,
-          html: `
-            <!DOCTYPE html>
-            <html>
-              <head><meta charset="utf-8" /></head>
-              <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0d0d12; color: #ffffff; padding: 24px; margin: 0;">
-                <div style="max-width: 600px; margin: 0 auto; background-color: #16161f; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px;">
-                  <div style="display: flex; align-items: center; margin-bottom: 24px;">
-                    <h2 style="margin: 0; color: #a855f7; font-size: 22px; font-weight: 700;">OrdStudio Contact Message</h2>
-                  </div>
-                  <div style="margin-bottom: 20px;">
-                    <p style="margin: 4px 0; color: rgba(255,255,255,0.6); font-size: 13px; text-transform: uppercase;">From</p>
-                    <p style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 600;">${sanitizedName} &lt;<a href="mailto:${sanitizedEmail}" style="color: #c084fc; text-decoration: none;">${sanitizedEmail}</a>&gt;</p>
-                  </div>
-                  <div style="margin-bottom: 20px;">
-                    <p style="margin: 4px 0; color: rgba(255,255,255,0.6); font-size: 13px; text-transform: uppercase;">Subject</p>
-                    <p style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 600;">${sanitizedSubject}</p>
-                  </div>
-                  <div style="margin-bottom: 24px;">
-                    <p style="margin: 4px 0; color: rgba(255,255,255,0.6); font-size: 13px; text-transform: uppercase;">Message</p>
-                    <div style="background-color: #0a0a0f; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 16px; color: #e4e4e7; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${sanitizedMessage}</div>
-                  </div>
-                  <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 24px 0;" />
-                  <p style="margin: 0; color: rgba(255,255,255,0.4); font-size: 11px;">Sent from the OrdStudio Contact Form &bull; ordstudio.com</p>
-                </div>
-              </body>
-            </html>
-          `
-        })
+        body: buildResendBody(configuredFrom)
       });
+
+      // If the primary configured sender domain is rejected (e.g. unverified custom domain),
+      // fallback to the verified onboarding address to ensure zero silent message loss.
+      if (!emailResponse.ok && configuredFrom !== 'OrdStudio Contact <onboarding@resend.dev>' && configuredFrom !== 'onboarding@resend.dev') {
+        const primaryError = await emailResponse.text().catch(() => '');
+        console.warn(`Primary RESEND_FROM_EMAIL (${configuredFrom}) failed with status ${emailResponse.status}. Retrying with verified onboarding@resend.dev... Error details:`, primaryError);
+
+        emailResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: buildResendBody('OrdStudio Contact <onboarding@resend.dev>')
+        });
+      }
 
       if (!emailResponse.ok) {
         const errorText = await emailResponse.text().catch(() => '');
-        console.error('Resend API error:', emailResponse.status, errorText);
+        console.error('Resend API final rejection status:', emailResponse.status, 'Body:', errorText);
         res.statusCode = 502;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'Email service failed to deliver message. Please try again.' }));
+        res.end(JSON.stringify({ error: 'Email service failed to deliver message. Please verify domain setup or try again.' }));
         return;
       }
+
+      const resData = await emailResponse.json().catch(() => ({}));
+      console.log('Resend accepted email notification successfully. Resend ID:', resData.id);
+    } else {
+      console.warn('RESEND_API_KEY is not configured in environment variables.');
     }
 
     res.statusCode = 201;
@@ -215,9 +238,9 @@ export default async function handler(req, res) {
       }
     }));
   } catch (error) {
-    console.error('Contact form submission error:', error);
+    console.error('Contact form submission exception:', error?.message || error);
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: 'Failed to submit contact request. Please try again.' }));
+    res.end(JSON.stringify({ error: 'Failed to submit contact request. Please try again later.' }));
   }
 }
