@@ -1,5 +1,13 @@
 // Master Seed Data for API Server (300 Authentic Bespoke Templates)
 
+export interface SeedSlide {
+  id?: string | number;
+  name?: string;
+  title?: string;
+  elements?: any[];
+  [key: string]: unknown;
+}
+
 export interface SeedTemplate {
   id: number;
   name: string;
@@ -13,14 +21,18 @@ export interface SeedTemplate {
   orientation?: 'landscape' | 'portrait' | 'square';
   gradient?: string;
   elements?: any[];
-  slides?: any[][];
-  pages?: any[][];
+  slides?: (any[] | SeedSlide)[];
+  pages?: (any[] | SeedSlide)[];
   tags: string[];
   premium?: boolean;
   likes?: number;
   views?: number;
   author?: string;
+  isPublished?: boolean;
+  fonts?: string[];
+  colors?: string[];
 }
+
 
 export const templateSeedData: SeedTemplate[] = [
   {

@@ -28,6 +28,12 @@ router.post("/contact", async (req, res) => {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedEmail)) {
+      res.status(400).json({ error: "Please enter a valid email address" });
+      return;
+    }
+
     // Try to extract userId if token is provided
     let userId: string | undefined = undefined;
     const authHeader = req.headers.authorization;
@@ -66,17 +72,21 @@ router.post("/contact", async (req, res) => {
     });
 
     const resendApiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const toEmail = process.env.CONTACT_NOTIFICATION_EMAIL || process.env.RESEND_TO_EMAIL || 'ordinance37@gmail.com';
+
     if (resendApiKey) {
       try {
-        await fetch('https://api.resend.com/emails', {
+        const emailResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${resendApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'onboarding@resend.dev',
-            to: 'ordinance37@gmail.com',
+            from: fromEmail,
+            to: toEmail,
+            reply_to: sanitizedEmail,
             subject: `New Contact Submission: ${sanitizedSubject}`,
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px;">
@@ -92,9 +102,17 @@ router.post("/contact", async (req, res) => {
             `
           })
         });
-        logger.info("Sent contact submission email via Resend to ordinance37@gmail.com");
+        if (!emailResponse.ok) {
+          const errText = await emailResponse.text().catch(() => '');
+          logger.error({ status: emailResponse.status, errorText: errText }, "Resend API delivery failure");
+          res.status(502).json({ error: "Email service failed to deliver message. Please try again." });
+          return;
+        }
+        logger.info("Sent contact submission email via Resend");
       } catch (emailErr) {
         logger.error({ err: emailErr }, "Failed to send contact notification email via Resend");
+        res.status(502).json({ error: "Email service error. Please try again later." });
+        return;
       }
     }
 

@@ -50,7 +50,7 @@ router.get("/search", async (req, res) => {
       id: `template-${t.id}`,
       type: "Template" as const,
       name: t.name || t.title || 'Untitled',
-      cat: t.category || t.type || 'Design',
+      cat: t.category || t.subcategory || 'Design',
       size: t.size || '1920×1080',
       gradient: t.gradient
     }));
