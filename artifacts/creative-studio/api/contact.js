@@ -195,10 +195,10 @@ export default async function handler(req, res) {
       });
 
       // If the primary configured sender domain is rejected (e.g. unverified custom domain),
-      // fallback to the verified onboarding address to ensure zero silent message loss.
+      // retry with verified onboarding address to maximize delivery resilience.
       if (!emailResponse.ok && configuredFrom !== 'OrdStudio Contact <onboarding@resend.dev>' && configuredFrom !== 'onboarding@resend.dev') {
         const primaryError = await emailResponse.text().catch(() => '');
-        console.warn(`Primary RESEND_FROM_EMAIL (${configuredFrom}) failed with status ${emailResponse.status}. Retrying with verified onboarding@resend.dev... Error details:`, primaryError);
+        console.warn(`Primary RESEND_FROM_EMAIL (${configuredFrom}) failed with status ${emailResponse.status}. Retrying with onboarding@resend.dev... Details:`, primaryError);
 
         emailResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -212,17 +212,23 @@ export default async function handler(req, res) {
 
       if (!emailResponse.ok) {
         const errorText = await emailResponse.text().catch(() => '');
-        console.error('Resend API final rejection status:', emailResponse.status, 'Body:', errorText);
+        console.error('Resend API final rejection [Status ' + emailResponse.status + ']:', errorText);
         res.statusCode = 502;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ error: 'Email service failed to deliver message. Please verify domain setup or try again.' }));
+        res.end(JSON.stringify({
+          error: 'Email delivery failed. If using a new Resend API key or custom domain, please verify your domain at resend.com/domains or check recipient restrictions.'
+        }));
         return;
       }
 
       const resData = await emailResponse.json().catch(() => ({}));
       console.log('Resend accepted email notification successfully. Resend ID:', resData.id);
     } else {
-      console.warn('RESEND_API_KEY is not configured in environment variables.');
+      console.warn('RESEND_API_KEY is not configured in Vercel environment variables.');
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Email service is not configured on the server. Please add RESEND_API_KEY to environment variables.' }));
+      return;
     }
 
     res.statusCode = 201;
